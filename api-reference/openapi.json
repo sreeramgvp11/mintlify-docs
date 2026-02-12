@@ -1520,13 +1520,13 @@
         ]
       }
     },
-    "/recall/full_context_recall": {
+    "/recall/full_recall": {
       "post": {
         "tags": [
           "Search"
         ],
-        "summary": "Full-context recall (sources)",
-        "operationId": "full_context_recall_recall_full_context_recall_post",
+        "summary": "Full recall for knowledge base",
+        "operationId": "full_recall_recall_full_recall_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1635,7 +1635,7 @@
           }
         ],
         "x-fern-sdk-group-name": "recall",
-        "x-fern-sdk-method-name": "full_context_recall",
+        "x-fern-sdk-method-name": "full_recall",
         "x-fern-sdk-audience": [
           "public"
         ]
@@ -4428,7 +4428,7 @@
           },
           "mode": {
             "$ref": "#/components/schemas/RetrieveMode",
-            "description": "Retrieval mode to use ('fast' or 'thinking')",
+            "description": "Retrieval mode: 'fast' (personalised recall off) or 'thinking' (personalised recall on). Personalised recall is derived from mode only; it is not configurable via the request.",
             "default": "fast"
           },
           "alpha": {
@@ -4450,13 +4450,6 @@
             "description": "Preference for newer content (0.0 = no bias, 1.0 =             strong recency preference)",
             "default": 0,
             "example": 1.0
-          },
-          "personalise_recall": {
-            "type": "boolean",
-            "title": "Personalise Recall",
-            "description": "Enable personalized search results based on user preferences",
-            "default": false,
-            "example": true
           },
           "graph_context": {
             "type": "boolean",
@@ -4503,7 +4496,7 @@
           "query"
         ],
         "title": "RecallSearchRequest",
-        "description": "Request body for full-context recall (sources) and recall preferences (memories)."
+        "description": "Request body for full recall (sources) and recall preferences (memories)."
       },
       "RelationEvidence": {
         "properties": {
@@ -4638,7 +4631,8 @@
           "fast",
           "thinking"
         ],
-        "title": "RetrieveMode"
+        "title": "RetrieveMode",
+        "description": "Retrieval mode. 'fast': personalised recall off (equivalent to personalise_recall: false). 'thinking': personalised recall on (equivalent to personalise_recall: true). Personalised recall is not configurable via the request."
       },
       "ScoredPathResponse": {
         "properties": {

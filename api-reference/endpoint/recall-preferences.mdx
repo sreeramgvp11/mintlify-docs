@@ -6,7 +6,7 @@ description: "Hybrid search over user memories only. Use this when you need cont
 
 ### When to use it
 
-Use **recall preferences** when you want to search over **user memories** (preferences, conversations, inferred traits). Same request body as [full-context recall](/api-reference/endpoint/full-context-recall) (sources); the endpoint you call determines the search target.
+Use **recall preferences** when you want to search over **user memories** (preferences, conversations, inferred traits). Same request body as [full recall](/api-reference/endpoint/full-recall) (sources); the endpoint you call determines the search target.
 
 ### Examples
 
@@ -73,4 +73,4 @@ Range 1–1001; default 10. Start with 10–20 for most use cases.
 
 ## Response
 
-Same as full-context recall: `RetrievalResult` with `chunks` and `graph_context` (e.g. `chunk_relations`, `query_paths`).
+Same as full recall: `RetrievalResult` with `chunks` and `graph_context` (e.g. `chunk_relations`, `query_paths`).

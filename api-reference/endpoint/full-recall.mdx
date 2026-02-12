@@ -1,12 +1,12 @@
 ---
-openapi: "POST /recall/full_context_recall"
-title: "Full-context Recall"
-description: "Hybrid search over indexed sources (documents) only. Use this when you need context from your knowledge base or uploaded documents."
+openapi: "POST /recall/full_recall"
+title: "Full Recall"
+description: "Hybrid search over indexed sources (knowledge) only. Use this when you need context from your knowledge base or uploaded documents."
 ---
 
 ### When to use it
 
-Use **full-context recall** when you want to search over **indexed knowledge** (documents, knowledge base, uploaded files). Same request body as [recall preferences](/api-reference/endpoint/recall-preferences) (memories); the endpoint you call determines the search target.
+Use **full recall** when you want to search over **indexed knowledge** (documents, knowledge base, uploaded files). Same request body as [recall preferences](/api-reference/endpoint/recall-preferences) (memories); the endpoint you call determines the search target.
 
 ### Examples
 
@@ -14,7 +14,7 @@ Use **full-context recall** when you want to search over **indexed knowledge** (
   <Tab title="API Request">
     ```bash
     curl -X 'POST' \
-    'https://api.usecortex.ai/recall/full_context_recall' \
+    'https://api.usecortex.ai/recall/full_recall' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -29,7 +29,7 @@ Use **full-context recall** when you want to search over **indexed knowledge** (
   </Tab>
   <Tab title="TypeScript">
     ```ts
-    const results = await client.recall.fullContextRecall({
+    const results = await client.recall.fullRecall({
       query: "Which mode does user prefer",
       tenantId: "tenant_1234",
       subTenantId: "sub_tenant_4567",
@@ -41,7 +41,7 @@ Use **full-context recall** when you want to search over **indexed knowledge** (
   <Tab title="Python (Sync)">
     ```python
     # Async usage is similar, just use async_client and await
-    results = client.recall.full_context_recall(
+    results = client.recall.full_recall(
         query="Which mode does user prefer",
         tenant_id="tenant_1234",
         sub_tenant_id="sub_tenant_4567",
@@ -55,6 +55,15 @@ Use **full-context recall** when you want to search over **indexed knowledge** (
 <Info>
   **Default Sub-Tenant Behavior**: If you don't specify a `sub_tenant_id`, the search will be performed within the default sub-tenant created when your tenant was set up. This searches across organization-wide documents.
 </Info>
+
+## Retrieval modes
+
+The `mode` parameter controls retrieval behavior:
+
+- **`fast`** — Single-query retrieval. **Personalised recall is disabled**. 
+- **`thinking`** — Multi-query with reranking. **Personalised recall is enabled**.
+
+Personalised recall(results are personalised using user and behavioral context) is automatically disabled in fast mode and enabled in thinking mode.
 
 ## Optional Parameters
 

@@ -330,7 +330,7 @@ Store user preferences, conversation history, and personalized context that evol
   <Tab title="TypeScript">
     ```ts
     // Hybrid search over indexed sources (documents)
-    const results = await client.recall.fullContextRecall({
+    const results = await client.recall.fullRecall({
       query: "Which mode does user prefer",
       tenantId: "tenant_1234",
       subTenantId: "sub_tenant_4567",
@@ -357,7 +357,7 @@ Store user preferences, conversation history, and personalized context that evol
   <Tab title="Python (Sync)">
     ```python
     # Hybrid search over indexed sources (documents)
-    results = client.recall.full_context_recall(
+    results = client.recall.full_recall(
         query="Which mode does user prefer",
         tenant_id="tenant_1234",
         sub_tenant_id="sub_tenant_4567",
@@ -385,7 +385,7 @@ Store user preferences, conversation history, and personalized context that evol
     ```python
     # Hybrid search over indexed sources (documents)
     async def search_sources():
-        return await async_client.recall.full_context_recall(
+        return await async_client.recall.full_recall(
             query="Which mode does user prefer",
             tenant_id="tenant_1234",
             sub_tenant_id="sub_tenant_4567",
