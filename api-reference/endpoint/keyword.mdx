@@ -49,25 +49,33 @@ openapi: "POST /recall/boolean_recall"
 
 ### Boolean Operators
 
-#### AND Operator
-
-- **Usage**: `"operator": "and"`
-- **Behavior**: All search terms must be present in the document for it to match
-- **Best for**: Precise searches where you need all keywords to be present
-- **Example**: Searching for "machine learning algorithms" with AND will only return documents containing both "machine" AND "learning" AND "algorithms"
-
 #### OR Operator
 
 - **Usage**: `"operator": "or"`
-- **Behavior**: At least one search term must be present in the document for it to match
+- **Behavior**: At least one search term must be present in the chunk for it to match
 - **Best for**: Broad searches to find documents containing any of the specified terms
-- **Example**: Searching for "python javascript react" with OR will return documents containing any of these programming languages
+- **Example**: Searching for "python javascript react" with OR will return chunks containing any of these programming languages
+
+#### AND Operator
+
+- **Usage**: `"operator": "and"`
+- **Behavior**: All search terms must be present in the chunk for it to match
+- **Best for**: Precise searches where you need all keywords to be present
+- **Example**: Searching for "machine learning algorithms" with AND will only return chunks containing "machine" AND "learning" AND "algorithms"
+
+#### PHRASE Operator
+
+- **Usage**: `"operator": "phrase"`
+- **Behavior**: The exact phrase must appear in the chunk in the given word order
+- **Best for**: Finding specific terminology or multi-word expressions
+- **Example**: Searching for "mechanical engineer" with PHRASE will only return chunks where "mechanical engineer" appears as a contiguous phrase
 
 ### Optimization Tips
 
 #### For Better Precision
 
 - Use the **AND operator** when you need all terms to be present
+- Use the **PHRASE operator** when word order matters (e.g. "machine learning" vs "learning machine")
 - Use **specific terminology** rather than generic terms
 
 #### For Broader Results
@@ -85,6 +93,7 @@ The `operator` parameter controls how the search terms are combined:
 
 - **OR operator** (default): At least one token must be present in the document
 - **AND operator**: All tokens must be present in the document
+- **PHRASE operator**: The exact phrase must appear as-is in the document
 
 ### Max Results Parameter
 
@@ -97,4 +106,4 @@ The `max_results` parameter controls the maximum number of results returned:
 
 - **Precise keyword matching**: Use AND operator when you need all search terms to be present
 - **Broad search**: Use OR operator to find documents containing any of the search terms
-- **Exact phrase matching**: Ideal for finding specific terminology or phrases in your documents
+- **Exact phrase matching**: Use PHRASE operator for finding specific multi-word expressions in your documents
