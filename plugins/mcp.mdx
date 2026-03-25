@@ -5,16 +5,98 @@ description: "MCP (Model Context Protocol) server for [Hydra DB](https://hydradb
 
 ## Quick Start
 
-### Get Your Credentials
-
 <Steps>
-  <Step title="Get your API Key">
-    Retrieve your Hydra DB API Key from the [Hydra DB dashboard](https://app.hydradb.com).
+  <Step title="Get your credentials">
+    - Create an API key from [Hydra DB](https://app.hydradb.com/keys)
+    - Create or copy your tenant ID from the [Hydra DB dashboard](https://app.hydradb.com/tenants)
   </Step>
-  <Step title="Get your Tenant ID">
-    Copy your Tenant ID from the [Hydra DB dashboard](https://app.hydradb.com/tenants).
+
+  <Step title="Add the MCP server to your client">
+    <Tabs>
+      <Tab title="Claude Desktop">
+        ```json
+        {
+          "mcpServers": {
+            "hydradb": {
+              "command": "npx",
+              "args": ["-y", "@hydra_db/mcp@0.1.1"],
+              "env": {
+                "HYDRA_DB_API_KEY": "your-api-key",
+                "HYDRA_DB_TENANT_ID": "your-tenant-id"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+
+      <Tab title="Cursor">
+        Add to `~/.cursor/mcp.json`:
+        ```json
+        {
+          "mcpServers": {
+            "hydradb": {
+              "command": "npx",
+              "args": ["-y", "@hydra_db/mcp@0.1.1"],
+              "env": {
+                "HYDRA_DB_API_KEY": "your-api-key",
+                "HYDRA_DB_TENANT_ID": "your-tenant-id"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+
+      <Tab title="Windsurf">
+        Add to `~/.codeium/windsurf/mcp_config.json`:
+        ```json
+        {
+          "mcpServers": {
+            "hydradb": {
+              "command": "npx",
+              "args": ["-y", "@hydra_db/mcp@0.1.1"],
+              "env": {
+                "HYDRA_DB_API_KEY": "your-api-key",
+                "HYDRA_DB_TENANT_ID": "your-tenant-id"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+
+      <Tab title="VS Code">
+        Add to `.vscode/mcp.json`:
+        ```json
+        {
+          "servers": {
+            "hydradb": {
+              "type": "stdio",
+              "command": "npx",
+              "args": ["-y", "@hydra_db/mcp@0.1.1"],
+              "env": {
+                "HYDRA_DB_API_KEY": "your-api-key",
+                "HYDRA_DB_TENANT_ID": "your-tenant-id"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Replace the placeholder values">
+    Swap `your-api-key` and `your-tenant-id` with the credentials you copied in Step 1.
+  </Step>
+
+  <Step title="Restart your client">
+    Restart your editor or client so it picks up the new MCP server configuration.
   </Step>
 </Steps>
+
+## Configuration
 
 ### Environment Variables
 
@@ -24,82 +106,6 @@ description: "MCP (Model Context Protocol) server for [Hydra DB](https://hydradb
 | `HYDRA_DB_TENANT_ID`     | Your Hydra DB tenant identifier     | *Required*     |
 | `HYDRA_DB_SUB_TENANT_ID` | Sub-tenant for data partitioning    | `hydra-db-mcp` |
 | `HYDRA_DB_LOG_LEVEL`     | Log level: DEBUG, INFO, WARN, ERROR | `ERROR`        |
-
-### Client Setup
-
-<Tabs>
-  <Tab title="Claude Desktop">
-    ```json
-    {
-      "mcpServers": {
-        "hydradb": {
-          "command": "npx",
-          "args": ["-y", "@hydra_db/mcp@0.1.1"],
-          "env": {
-            "HYDRA_DB_API_KEY": "your-api-key",
-            "HYDRA_DB_TENANT_ID": "your-tenant-id"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-
-  <Tab title="Cursor">
-    Add to `~/.cursor/mcp.json`:
-    ```json
-    {
-      "mcpServers": {
-        "hydradb": {
-          "command": "npx",
-          "args": ["-y", "@hydra_db/mcp@0.1.1"],
-          "env": {
-            "HYDRA_DB_API_KEY": "your-api-key",
-            "HYDRA_DB_TENANT_ID": "your-tenant-id"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-
-  <Tab title="Windsurf">
-    Add to `~/.codeium/windsurf/mcp_config.json`:
-    ```json
-    {
-      "mcpServers": {
-        "hydradb": {
-          "command": "npx",
-          "args": ["-y", "@hydra_db/mcp@0.1.1"],
-          "env": {
-            "HYDRA_DB_API_KEY": "your-api-key",
-            "HYDRA_DB_TENANT_ID": "your-tenant-id"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-
-  <Tab title="VS Code">
-    Add to `.vscode/mcp.json`:
-    ```json
-    {
-      "servers": {
-        "hydradb": {
-          "type": "stdio",
-          "command": "npx",
-          "args": ["-y", "@hydra_db/mcp@0.1.1"],
-          "env": {
-            "HYDRA_DB_API_KEY": "your-api-key",
-            "HYDRA_DB_TENANT_ID": "your-tenant-id"
-          }
-        }
-      }
-    }
-    ```
-  </Tab>
-</Tabs>
 
 ### Custom Sub-Tenant
 
@@ -139,3 +145,18 @@ To partition data across projects, set the `HYDRA_DB_SUB_TENANT_ID` environment 
 | `hydra_db_list_sources` | `GET /list/data` | Browse all stored sources |
 | `hydra_db_delete_memory` | `DELETE /memories/delete_memory` | Remove a specific memory by ID |
 | `hydra_db_fetch_content` | `GET /fetch/content` | Retrieve the original ingested content |
+
+## Source & Show Support
+
+<Note>
+  If this HydraDB MCP server makes your agentic memory workflow faster (and smarter), please
+  star the open-source repos that power it. It helps keep them discoverable and motivates
+  maintainers to keep shipping improvements.
+  <Card
+    title="hydradb-mcp"
+    icon="star"
+    href="https://github.com/usecortex/hydradb-mcp"
+  >
+    Star on GitHub if you found it useful.
+  </Card>
+</Note>
