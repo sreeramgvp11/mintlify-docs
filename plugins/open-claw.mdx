@@ -3,52 +3,52 @@ title: "Open Claw"
 description: "State-of-the-art agentic memory for OpenClaw powered by [Hydra DB](https://hydradb.com). Automatically captures conversations, recalls relevant context with knowledge-graph connections, and injects them before every AI turn."
 ---
 
-## Install
+## Quick Start
 
-```bash
-openclaw plugins install @hydra_db/openclaw
-```
+<Steps>
+  <Step title="Install the plugin">
+    ```bash
+    openclaw plugins install @hydra_db/openclaw
+    ```
+  </Step>
 
-Restart OpenClaw after installing.
+  <Step title="Get credentials">
+    1. Create a Hydra API key from [Hydra DB](https://app.hydradb.com)
+    2. Create or copy your tenant ID from the [Hydra DB dashboard](https://app.hydradb.com/tenants)
+  </Step>
 
-If you run OpenClaw via the local gateway, restart it too:
+  <Step title="Run interactive onboarding (recommended)">
+    ```bash
+    # Basic onboarding
+    openclaw hydra onboard
 
-```bash
-openclaw gateway restart
-```
+    # Advanced onboarding
+    openclaw hydra onboard --advanced
+    ```
 
-## Get Your Credentials
-1. Get your Hydra API Key from [Hydra DB](https://app.hydradb.com)
-2. Create your Tenant from the [Hydra DB dashboard](https://app.hydradb.com/tenants)
+    The wizard writes to `plugins.entries.openclaw.config` inside OpenClaw settings.
+  </Step>
 
-## Interactive Onboarding
+  <Step title="Restart OpenClaw gateway">
+    ```bash
+    openclaw gateway restart
+    ```
+  </Step>
+</Steps>
 
-Run the interactive CLI wizard (recommended):
+<Note>
+  The onboarding wizard auto-detects your config path using OpenClaw's normal
+  resolution order, so manual path selection is usually not needed.
+</Note>
 
-```bash
-# Basic onboarding (API key, tenant ID, sub-tenant, ignore term)
-openclaw hydra onboard
+Config path resolution order:
 
-# Advanced onboarding (all options including recall mode, graph context, etc.)
-openclaw hydra onboard --advanced
-```
-
-The wizard guides you through configuration with colored prompts and **writes your config to** `plugins.entries.openclaw.config` inside OpenClaw's settings file.
-
-The path is resolved in the same order OpenClaw itself uses:
-
-1. `$OPENCLAW_CONFIG_PATH` — if set, used directly
-2. `$OPENCLAW_STATE_DIR/openclaw.json` — if `OPENCLAW_STATE_DIR` is set
-3. `$OPENCLAW_HOME/.openclaw/openclaw.json` — if `OPENCLAW_HOME` is set
-4. Default: `~/.openclaw/openclaw.json` (macOS/Linux) or `%USERPROFILE%\.openclaw\openclaw.json` (Windows)
-
-No manual adjustment needed — the wizard auto-detects the correct path.
-
-After onboarding, restart the gateway:
-
-```bash
-openclaw gateway restart
-```
+1. `$OPENCLAW_CONFIG_PATH` (if set)
+2. `$OPENCLAW_STATE_DIR/openclaw.json` (if set)
+3. `$OPENCLAW_HOME/.openclaw/openclaw.json` (if set)
+4. Default path by OS:
+   - macOS/Linux: `~/.openclaw/openclaw.json`
+   - Windows: `%USERPROFILE%\.openclaw\openclaw.json`
 
 ## Manual Configuration
 
@@ -61,15 +61,32 @@ Two required values:
 
 Environment variables (recommended for secrets):
 
-```bash
-export HYDRA_OPENCLAW_API_KEY="your-api-key"
-export HYDRA_OPENCLAW_TENANT_ID="your-tenant-id"
-```
+<Tabs>
+  <Tab title="macOS/Linux (bash or zsh)">
+    ```bash
+    export HYDRA_OPENCLAW_API_KEY="your-api-key"
+    export HYDRA_OPENCLAW_TENANT_ID="your-tenant-id"
+    ```
+  </Tab>
+
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    [System.Environment]::SetEnvironmentVariable("HYDRA_OPENCLAW_API_KEY", "your-api-key", "User")
+    [System.Environment]::SetEnvironmentVariable("HYDRA_OPENCLAW_TENANT_ID", "your-tenant-id", "User")
+    ```
+  </Tab>
+</Tabs>
 
 Or configure directly in OpenClaw's settings file:
 
-- **macOS / Linux:** `~/.openclaw/openclaw.json`
-- **Windows:** `%USERPROFILE%\.openclaw\openclaw.json`
+<Tabs>
+  <Tab title="macOS/Linux path">
+    `~/.openclaw/openclaw.json`
+  </Tab>
+  <Tab title="Windows path">
+    `%USERPROFILE%\.openclaw\openclaw.json`
+  </Tab>
+</Tabs>
 
 ```json5
 {
@@ -146,24 +163,22 @@ openclaw hydra status              # Show plugin configuration
 
 ## Troubleshooting
 
-### `Not configured. Run openclaw hydra onboard`
+<Accordion title="`Not configured. Run openclaw hydra onboard`">
+  This means the plugin is enabled, but credentials are missing.
 
-This means the plugin is enabled, but credentials are missing.
+  ```bash
+  openclaw hydra onboard
+  openclaw gateway restart
+  ```
+</Accordion>
 
-Run:
+<Accordion title="CLI says a command is unknown">
+  Restart the gateway so OpenClaw reloads plugin commands:
 
-```bash
-openclaw hydra onboard
-openclaw gateway restart
-```
-
-### CLI says a command is unknown
-
-Update/restart the gateway so it reloads the plugin:
-
-```bash
-openclaw gateway restart
-```
+  ```bash
+  openclaw gateway restart
+  ```
+</Accordion>
 
 ## Context Injection
 

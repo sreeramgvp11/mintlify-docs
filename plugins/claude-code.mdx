@@ -3,93 +3,92 @@ title: "Claude Code"
 description: "A Claude Code plugin that provides persistent memory and contextual awareness across sessions and projects."
 ---
 
-## How to Install
-Run these commands in Claude Code:
+## Quick Start
 
-**1. Add the marketplace**
+<Steps>
+  <Step title="Install the plugin">
+    Run these commands in Claude Code:
 
-```bash
-/plugin marketplace add usecortex/hydradb-claude-code
-```
+    ```bash
+    /plugin marketplace add usecortex/hydradb-claude-code
+    /plugin install hydradb@hydradb
+    /reload-plugins
+    ```
+  </Step>
 
-**2. Install the plugin**
+  <Step title="Get credentials">
+    - Create an API key in [Hydra DB](https://app.hydradb.com/keys)
+    - Create or copy your tenant ID from the [Hydra DB dashboard](https://app.hydradb.com/tenants)
+  </Step>
 
-```bash
-/plugin install hydradb@hydradb
-```
+  <Step title="Set environment variables by OS">
+    <Tabs>
+      <Tab title="macOS/Linux (bash)">
+        ```bash
+        echo 'export HYDRADB_API_KEY="your-api-key"' >> ~/.bashrc
+        echo 'export HYDRADB_TENANT_ID="your-tenant-id"' >> ~/.bashrc
+        echo 'export HYDRADB_SUB_TENANT_ID=""' >> ~/.bashrc
+        source ~/.bashrc
+        ```
+      </Tab>
 
-**3. Reload plugins**
+      <Tab title="macOS/Linux (zsh)">
+        ```bash
+        echo 'export HYDRADB_API_KEY="your-api-key"' >> ~/.zshrc
+        echo 'export HYDRADB_TENANT_ID="your-tenant-id"' >> ~/.zshrc
+        echo 'export HYDRADB_SUB_TENANT_ID=""' >> ~/.zshrc
+        source ~/.zshrc
+        ```
+      </Tab>
 
-```bash
-/reload-plugins
-```
+      <Tab title="Windows (PowerShell)">
+        ```powershell
+        [System.Environment]::SetEnvironmentVariable("HYDRADB_API_KEY", "your-api-key", "User")
+        [System.Environment]::SetEnvironmentVariable("HYDRADB_TENANT_ID", "your-tenant-id", "User")
+        [System.Environment]::SetEnvironmentVariable("HYDRADB_SUB_TENANT_ID", "", "User")
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
 
+  <Step title="Run setup and verify">
+    ```bash
+    /hydradb:setup
+    /hydradb:status
+    ```
+  </Step>
+</Steps>
 
-## How to Use
+<Note>
+  `subTenantId` must be provided explicitly. If you want HydraDB to use its default
+  sub-tenant, set `HYDRADB_SUB_TENANT_ID` to an empty string (`""`) instead of omitting
+  it.
+</Note>
 
-### Step 1: Set required credentials
+For `HYDRADB_SUB_TENANT_ID` strategy:
 
-1. Get your Hydra API Key from [Hydra DB](https://app.hydradb.com/keys)
-2. Create your Tenant from the [Hydra DB dashboard](https://app.hydradb.com/tenants)
+- Use a workspace-specific value for project-isolated memory.
+- Use a shared value for global memory across sessions/workspaces.
 
-These variables must be set permanently so they persist across terminal sessions.
+To verify values are set:
 
-#### macOS/Linux (bash)
+<Tabs>
+  <Tab title="macOS/Linux">
+    ```bash
+    echo $HYDRADB_API_KEY
+    echo $HYDRADB_TENANT_ID
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    echo $env:HYDRADB_API_KEY
+    echo $env:HYDRADB_TENANT_ID
+    ```
+  </Tab>
+</Tabs>
 
-
-```bash
-echo 'export HYDRADB_API_KEY="your-api-key"' >> ~/.bashrc
-echo 'export HYDRADB_TENANT_ID="your-tenant-id"' >> ~/.bashrc
-echo 'export HYDRADB_SUB_TENANT_ID=""' >> ~/.bashrc
-source ~/.bashrc
-```
-
-#### macOS/Linux (zsh)
-
-
-```bash
-echo 'export HYDRADB_API_KEY="your-api-key"' >> ~/.zshrc
-echo 'export HYDRADB_TENANT_ID="your-tenant-id"' >> ~/.zshrc
-echo 'export HYDRADB_SUB_TENANT_ID=""' >> ~/.zshrc
-source ~/.zshrc
-```
-
-
-#### Windows (PowerShell)
-
-
-```powershell
-[System.Environment]::SetEnvironmentVariable("HYDRADB_API_KEY", "your-api-key", "User")
-[System.Environment]::SetEnvironmentVariable("HYDRADB_TENANT_ID", "your-tenant-id", "User")
-[System.Environment]::SetEnvironmentVariable("HYDRADB_SUB_TENANT_ID", "", "User")
-```
-
-**Note**: `subTenantId` must be provided explicitly. If you want HydraDB to use its default sub-tenant, set it to an empty string ("") instead of omitting it. Sub-tenants in Hydra DB are logical separators (somewhat similar to tables in SQL DB and collections in NoSQL). Hence, you can't search across sub-tenants.
-
-Our suggestion:
-1. If you want to have project/workspace level subtenant, then configure the plugin with that `HYDRADB_SUB_TENANT_ID` for that workspace. 
-2. If you want global shared memory across sessions, then configure a global `HYDRADB_SUB_TENANT_ID`
-
-You can verify the variables are set with:
-
-```powershell
-echo $env:HYDRADB_API_KEY
-echo $env:HYDRADB_TENANT_ID
-```
-
-### Step 2: Run setup
-
-```bash
-/hydradb:setup
-```
-
-### Step 3: Check status
-
-```bash
-/hydradb:status
-```
-
-Once configured, the plugin works automatically in the background. It syncs workspace docs on session start, recalls relevant context, and captures conversation memory.
+Once configured, the plugin runs in the background: it syncs workspace docs on session
+start, recalls relevant context, and captures conversation memory.
 
 ### Available commands
 
@@ -106,39 +105,45 @@ Once configured, the plugin works automatically in the background. It syncs work
 
 ## Modes
 
-### `captureMode`: controls how conversations are saved
 
-| Value | Behavior |
-|---|---|
-| `session-upsert` | **(default)** Maintains one evolving session transcript, upserted after each response |
-| `turn` | Saves each user/assistant exchange as an isolated memory |
-| `both` | Does both: isolated turns AND a rolling session transcript |
-| `off` | No automatic saves; you can still save manually with `/hydradb:save-session` |
+### `captureMode`: how conversations are saved
 
-Note: By default, the HydraDB is configured to sync every conversation pair (user & assistant) that doesn't have `ignoreMarker (hydra-ignore)`. If you want to avoid it, you can keep the captureMode as `off` and use `/hydradb:save-session` or `/hydradb:remember <text>` commands
+| Value           | Behavior                                                                                   |
+|-----------------|-------------------------------------------------------------------------------------------|
+| `session-upsert`| **(default)** Maintains one evolving session transcript, upserted after each response     |
+| `turn`          | Saves each user/assistant exchange as an isolated memory                                  |
+| `both`          | Saves isolated turns and a rolling session transcript                                     |
+| `off`           | No automatic saves; manual saves still work (`/hydradb:save-session`)                    |
 
-### `searchMode`: controls what is recalled at prompt time
+### `searchMode`: what is recalled at prompt time
 
-| Value | Behavior |
-|---|---|
-| `memory` | **(default)** Recalls from memory only |
-| `knowledge` | Recalls from knowledge base only |
-| `both` | Recalls from memory and knowledge in parallel, merges results |
+| Value         | Behavior                                                                      |
+|---------------|-------------------------------------------------------------------------------|
+| `memory`      | **(default)** Recalls from memory only                                        |
+| `knowledge`   | Recalls from knowledge base only                                              |
+| `both`        | Recalls from memory and knowledge in parallel, then merges                    |
 
-### `ingestionMode`: controls where workspace docs are synced
+### `ingestionMode`: where workspace docs are synced
 
-| Value | Behavior |
-|---|---|
-| `memory` | **(default)** Syncs workspace docs into memory using `infer` |
-| `knowledge` | Syncs workspace docs into the knowledge base |
-| `auto` | Prefers memory, falls back to knowledge for larger files. Must pair with `searchMode: "both"` |
+| Value         | Behavior                                                                                                    |
+|---------------|------------------------------------------------------------------------------------------------------------|
+| `memory`      | **(default)** Syncs workspace docs into memory using `infer`                                                |
+| `knowledge`   | Syncs workspace docs into the knowledge base                                                               |
+| `auto`        | Prefers memory, falls back to knowledge for larger files. Pair with `searchMode: "both"`                   |
 
-### `recallMode`: controls recall speed vs depth
+### `recallMode`: speed vs depth
 
-| Value | Behavior |
-|---|---|
-| `fast` | **(default)** Faster recall, lower latency |
-| `thinking` | Deeper reasoning-based recall |
+| Value       | Behavior                           |
+|-------------|------------------------------------|
+| `fast`      | **(default)** Faster recall, lower latency |
+| `thinking`  | Deeper reasoning-based recall      |
+
+
+<Warning>
+  By default, HydraDB syncs each conversation pair (user and assistant) that does not
+  include the `ignoreMarker` (`hydra-ignore`). If you want manual-only capture, set
+  `captureMode` to `off` and use `/hydradb:save-session` or `/hydradb:remember <text>`.
+</Warning>
 
 
 ## Config Variables
@@ -189,6 +194,10 @@ Note: By default, the HydraDB is configured to sync every conversation pair (use
 | `includeGlobs` | `CLAUDE.md`, `.claude/**/*.md`, `**/*.md`, `**/*.mdx` | Files included in workspace sync |
 | `excludeGlobs` | `.git/**`, `node_modules/**`, `dist/**`, `**/.env*`, `**/*.key`, etc. | Files excluded from workspace sync |
 | `ignoreMarker` | `hydra-ignore` | Add this string to a file or prompt to skip capture/sync for it |
+
+<Note>
+By default, HydraDB automatically includes `.md` files in the workspace sync. To include additional file types, adjust the `includeGlobs` option.
+</Note>
 
 ### Advanced
 
