@@ -1,0 +1,547 @@
+---
+title: How to Use API Results (full_recall)
+description: Transform raw full_recall responses into clean context strings ready to pass into your LLM.
+---
+
+The `/recall/full_recall` endpoint returns a structured JSON response containing retrieved chunks, graph context, and source metadata. While this raw JSON has everything you need, you cannot pass it directly to an LLM, because it contains nested objects, IDs, and metadata the model doesn't need, and lacks the clean readable structure that produces good answers.
+
+This guide explains the response format and how to transform it into a clean, formatted context string that you can pass directly into your LLM prompt.
+
+---
+
+## Response Structure
+
+```json
+{
+  "chunks": [
+    {
+      "chunk_uuid": "doc-001_chunk_0",
+      "source_title": "my_document.pdf",
+      "chunk_content": "Text content of the retrieved chunk...",
+      "relevancy_score": 1.09,
+      "extra_context_ids": ["ctx-id-1"],
+      "document_metadata": { ... }
+    }
+  ],
+  "graph_context": {
+    "query_paths": [
+      {
+        "triplets": [
+          {
+            "source": { "name": "EntityA" },
+            "target": { "name": "EntityB" },
+            "relation": {
+              "canonical_predicate": "DEPENDS_ON",
+              "context": "reason text",
+              "temporal_details": "2024-01"
+            }
+          }
+        ]
+      }
+    ],
+    "chunk_id_to_group_ids": {
+      "doc-001_chunk_0": ["group-1"]
+    },
+    "chunk_relations": [
+      {
+        "group_id": "group-1",
+        "triplets": [ ... ]
+      }
+    ]
+  },
+  "additional_context": {
+    "ctx-id-1": {
+      "source_title": "related_doc.pdf",
+      "chunk_content": "Extra related content..."
+    }
+  }
+}
+```
+
+### Key Fields
+
+| Field | Description |
+|---|---|
+| `chunks[]` | Retrieved document chunks ranked by relevance |
+| `chunks[].chunk_content` | The raw text of the chunk |
+| `chunks[].source_title` | Document name the chunk came from |
+| `chunks[].relevancy_score` | Relevance score for the chunk |
+| `chunks[].extra_context_ids` | IDs of additional related chunks |
+| `graph_context.query_paths` | Entity relationship paths relevant to the query |
+| `graph_context.chunk_relations` | Graph triplets associated with each chunk |
+| `graph_context.chunk_id_to_group_ids` | Maps chunk UUIDs to their relation groups |
+| `additional_context` | Extra chunks referenced by `extra_context_ids` |
+
+---
+
+## Transforming the Response into LLM Context
+
+To generate a useful answer, your LLM needs a clean, readable string, not raw JSON. You need to extract the relevant parts of the response (chunk content, source titles, graph relations, and extra context) and format them into a single context string.
+
+The two helper functions below handle this. Save them into your project in the language of your choice.
+
+<CodeGroup>
+
+```python context_builder.py
+from __future__ import annotations
+
+from typing import Any
+
+
+def _format_path_chain(path: Any) -> str:
+    """Format a ScoredPathResponse into a readable chain string.
+
+    Each triplet becomes: [src] -> predicate -> [tgt]: context [Time: ...]
+    Multiple triplets are joined with ↳ to show traversal direction.
+    """
+    if not isinstance(path, dict):
+        return str(path)
+
+    triplets = path.get("triplets") or []
+    parts = []
+    for t in triplets:
+        src  = (t.get("source") or {}).get("name", "")
+        tgt  = (t.get("target") or {}).get("name", "")
+        rel  = t.get("relation") or {}
+        pred = rel.get("canonical_predicate", "")
+        line = f"[{src}] -> {pred} -> [{tgt}]"
+        ctx  = rel.get("context")
+        if ctx:
+            line += f": {ctx}"
+        temporal = rel.get("temporal_details")
+        if temporal:
+            line += f" [Time: {temporal}]"
+        parts.append(line)
+
+    return "\n  ↳ ".join(parts)
+
+
+def build_context_string(result: dict[str, Any]) -> str:
+    """
+    Build a formatted context string from a HydraDB full_recall response dict.
+
+    Combines entity paths, chunk content, graph relations, and extra context
+    into a single readable string ready to pass into an LLM prompt.
+    """
+    lines: list[str] = []
+    gc: dict[str, Any] = result.get("graph_context") or {}
+
+    # --- Entity paths -----------------------------------------------------------
+    query_paths = gc.get("query_paths") or []
+    if query_paths:
+        lines.append("=== ENTITY PATHS ===")
+        for path in query_paths:
+            lines.append(_format_path_chain(path))
+        lines.append("")
+
+    # --- Chunks -----------------------------------------------------------------
+    chunks: list[dict[str, Any]] = result.get("chunks") or []
+    additional_context: dict[str, Any] = result.get("additional_context") or {}
+    chunk_id_to_group_ids: dict[str, list[str]] = gc.get("chunk_id_to_group_ids") or {}
+    chunk_relations: list[dict[str, Any]] = gc.get("chunk_relations") or []
+
+    if chunks:
+        lines.append("=== CONTEXT ===")
+        for i, chunk in enumerate(chunks):
+            lines.append(f"Chunk {i + 1}")
+            source = chunk.get("source_title") or chunk.get("source") or ""
+            if source:
+                lines.append(f"Source: {source}")
+            lines.append(chunk.get("chunk_content") or chunk.get("content") or "")
+
+            # Graph relations for this chunk
+            chunk_uuid = chunk.get("chunk_uuid") or chunk.get("id") or ""
+            if chunk_uuid and chunk_id_to_group_ids and chunk_relations:
+                group_ids = chunk_id_to_group_ids.get(chunk_uuid, [])
+                relevant_relations = [
+                    r for r in chunk_relations
+                    if r.get("group_id") in group_ids
+                ]
+                if relevant_relations:
+                    lines.append("Graph Relations:")
+                    for rel in relevant_relations:
+                        for triplet in rel.get("triplets") or []:
+                            src  = (triplet.get("source") or {}).get("name", "")
+                            tgt  = (triplet.get("target") or {}).get("name", "")
+                            rel_ = triplet.get("relation") or {}
+                            pred = rel_.get("canonical_predicate", "")
+                            ctx  = rel_.get("context", "")
+                            line = f"  [{src}] -> {pred} -> [{tgt}]: {ctx}"
+                            temporal = rel_.get("temporal_details")
+                            if temporal:
+                                line += f" [Time: {temporal}]"
+                            lines.append(line)
+
+            # Extra context
+            extra_ids = chunk.get("extra_context_ids") or []
+            if extra_ids and additional_context:
+                extras = [
+                    additional_context[eid]
+                    for eid in extra_ids
+                    if eid in additional_context
+                ]
+                if extras:
+                    lines.append("Extra Context:")
+                    for extra in extras:
+                        extra_source = extra.get("source_title", "")
+                        extra_content = extra.get("chunk_content") or extra.get("content", "")
+                        lines.append(f"  Related Context ({extra_source}): {extra_content}")
+
+            lines.append("---")
+            lines.append("")
+
+    return "\n".join(lines)
+```
+
+```typescript contextBuilder.ts
+export interface VectorStoreChunk {
+  chunk_uuid: string;
+  source_id: string;
+  chunk_content: string;
+  source_type: string;
+  source_upload_time: string;
+  source_title: string;
+  source_last_updated_time: string;
+  layout: string | null;
+  relevancy_score: number | null;
+  document_metadata: Record<string, unknown> | null;
+  tenant_metadata: Record<string, unknown> | null;
+  extra_context_ids: string[] | null;
+}
+
+export interface Entity {
+  name: string;
+  type: string;
+  namespace: string;
+  entity_id: string;
+  identifier: string | null;
+}
+
+export interface RelationEvidence {
+  canonical_predicate: string;
+  raw_predicate: string;
+  context: string;
+  confidence: number;
+  temporal_details: string | null;
+  timestamp: string;
+  relationship_id: string;
+  chunk_id: string | null;
+  source_entity_id: string | null;
+  target_entity_id: string | null;
+}
+
+export interface PathTriplet {
+  source: Entity;
+  relation: RelationEvidence;
+  target: Entity;
+}
+
+export interface ScoredPathResponse {
+  triplets: PathTriplet[];
+  relevancy_score: number;
+  combined_context: string | null;
+  group_id: string | null;
+  source_chunk_ids: string[] | null;
+}
+
+export interface GraphContext {
+  query_paths: ScoredPathResponse[];
+  chunk_relations: ScoredPathResponse[];
+  chunk_id_to_group_ids: Record<string, string[]>;
+}
+
+export interface SourceInfo {
+  id: string;
+  title: string;
+  type: string;
+  description: string;
+  url: string;
+  timestamp: string;
+  tenant_metadata: Record<string, unknown>;
+  document_metadata: Record<string, unknown>;
+}
+
+export interface RetrievalResult {
+  chunks: VectorStoreChunk[];
+  sources: SourceInfo[];
+  graph_context: GraphContext;
+  additional_context: Record<string, VectorStoreChunk>;
+}
+
+function formatPathChain(path: ScoredPathResponse): string {
+  return path.triplets
+    .map((t) => {
+      let str = `[${t.source.name}] -> ${t.relation.canonical_predicate} -> [${t.target.name}]`;
+      if (t.relation.context) str += `: ${t.relation.context}`;
+      if (t.relation.temporal_details) str += ` [Time: ${t.relation.temporal_details}]`;
+      return str;
+    })
+    .join("\n  ↳ ");
+}
+
+export function buildContextString(result: RetrievalResult): string {
+  const lines: string[] = [];
+  const gc = result.graph_context;
+
+  // --- Entity paths -----------------------------------------------------------
+  if (gc?.query_paths?.length) {
+    lines.push("=== ENTITY PATHS ===");
+    for (const path of gc.query_paths) {
+      lines.push(formatPathChain(path));
+    }
+    lines.push("");
+  }
+
+  // --- Chunks -----------------------------------------------------------------
+  if (result.chunks?.length) {
+    lines.push("=== CONTEXT ===");
+    for (let i = 0; i < result.chunks.length; i++) {
+      const chunk = result.chunks[i];
+      lines.push(`Chunk ${i + 1}`);
+      lines.push(`Source: ${chunk.source_title}`);
+      lines.push(chunk.chunk_content);
+
+      // Graph relations for this chunk
+      if (gc?.chunk_id_to_group_ids && gc.chunk_relations) {
+        const groupIds = gc.chunk_id_to_group_ids[chunk.chunk_uuid] || [];
+        const relations = gc.chunk_relations.filter(
+          (r) => r.group_id && groupIds.includes(r.group_id)
+        );
+        if (relations.length) {
+          lines.push("Graph Relations:");
+          for (const rel of relations) {
+            for (const t of rel.triplets) {
+              let line = `  [${t.source.name}] -> ${t.relation.canonical_predicate} -> [${t.target.name}]: ${t.relation.context}`;
+              if (t.relation.temporal_details) line += ` [Time: ${t.relation.temporal_details}]`;
+              lines.push(line);
+            }
+          }
+        }
+      }
+
+      // Extra context
+      if (chunk.extra_context_ids?.length && result.additional_context) {
+        const extras = chunk.extra_context_ids
+          .map((id) => result.additional_context[id])
+          .filter(Boolean);
+        if (extras.length) {
+          lines.push("Extra Context:");
+          for (const extra of extras) {
+            lines.push(`  Related Context (${extra.source_title}): ${extra.chunk_content}`);
+          }
+        }
+      }
+
+      lines.push("---");
+      lines.push("");
+    }
+  }
+
+  return lines.join("\n");
+}
+```
+
+</CodeGroup>
+
+---
+
+## Usage Example
+
+<Steps>
+
+  <Step title="Install packages">
+    <Tabs>
+      <Tab title="Python">
+        ```bash
+        pip install httpx openai
+        ```
+      </Tab>
+      <Tab title="TypeScript">
+        ```bash
+        npm install openai
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Call the full_recall endpoint">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        import httpx
+
+        response = httpx.post(
+            "https://api.hydradb.com/recall/full_recall",
+            headers={"Authorization": "Bearer YOUR_HYDRADB_API_KEY"},
+            json={
+                "tenant_id": "your-tenant",
+                "sub_tenant_id": "your-sub-tenant",
+                "query": "How does authentication work?",
+                "max_results": 5,
+                "mode": "fast",                            # "fast" | "thinking"
+                "alpha": 0.8,                              # hybrid search weight: 0.0=keyword, 1.0=semantic
+                "recency_bias": 0,                         # boost recent documents (0 = disabled)
+                "graph_context": True,                     # include graph relations in response
+                "search_forceful_relations": True,         # force relation search even for low-confidence matches
+                "metadata_filters": {                      # filter by document metadata
+                    "category": "engineering",
+                },
+            }
+        )
+
+        result = response.json()
+        ```
+      </Tab>
+      <Tab title="TypeScript">
+        ```typescript
+        const res = await fetch("https://api.hydradb.com/recall/full_recall", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer YOUR_HYDRADB_API_KEY",
+          },
+          body: JSON.stringify({
+            tenant_id: "your-tenant",
+            sub_tenant_id: "your-sub-tenant",
+            query: "How does authentication work?",
+            max_results: 5,
+            mode: "fast",                           // "fast" | "thinking"
+            alpha: 0.8,                             // hybrid search weight: 0.0=keyword, 1.0=semantic
+            recency_bias: 0,                        // boost recent documents (0 = disabled)
+            graph_context: true,                    // include graph relations in response
+            search_forceful_relations: true,        // force relation search even for low-confidence matches
+            metadata_filters: {                     // filter by document metadata
+              category: "engineering",
+            },
+          }),
+        });
+
+        const result = await res.json() as RetrievalResult;
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Transform the response into a clean context string">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        from context_builder import build_context_string
+
+        context = build_context_string(result)
+        ```
+      </Tab>
+      <Tab title="TypeScript">
+        ```typescript
+        import { buildContextString, RetrievalResult } from "./contextBuilder";
+
+        const context = buildContextString(result);
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Pass to OpenAI and get an answer">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        from openai import OpenAI
+
+        client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+        question = "How does authentication work?"
+
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Context:\n{context}\n\nQuestion: {question}",
+                },
+            ],
+        )
+
+        print(completion.choices[0].message.content)
+        ```
+      </Tab>
+      <Tab title="TypeScript">
+        ```typescript
+        import OpenAI from "openai";
+
+        const client = new OpenAI({ apiKey: "YOUR_OPENAI_API_KEY" });
+        const question = "How does authentication work?";
+
+        const completion = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
+            },
+            {
+              role: "user",
+              content: `Context:\n${context}\n\nQuestion: ${question}`,
+            },
+          ],
+        });
+
+        console.log(completion.choices[0].message.content);
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+</Steps>
+
+---
+
+## What the Formatted Output Looks Like
+
+After transformation, the context string passed to your LLM looks like this:
+
+```
+=== ENTITY PATHS ===
+[auth-service] -> DEPENDS_ON -> [user-db]: database dependency
+  ↳ [user-db] -> MODIFIED_BY -> [migration-v2]: schema change [Time: 2024-03]
+
+=== CONTEXT ===
+Chunk 1
+Source: architecture.pdf
+The authentication service validates tokens against the user database.
+Each request goes through a JWT verification step before reaching the API layer.
+Graph Relations:
+  [auth-service] -> DEPENDS_ON -> [user-db]: primary dependency
+Extra Context:
+  Related Context (security.pdf): Token expiry is set to 24 hours by default.
+---
+
+Chunk 2
+Source: deployment.pdf
+The auth service runs as a stateless container and scales horizontally.
+---
+```
+
+<Note>
+  If `graph_context` fields are empty (no graph data for the tenant), only the `=== CONTEXT ===` section appears with chunk content.
+</Note>
+
+---
+
+
+## Important
+
+<Warning>
+  The `/full_recall` endpoint returns retrieved context, not a synthesized answer. You must pass the formatted context string to your LLM to generate the final response.
+</Warning>
+
+<Info>
+  Graph context fields (`query_paths`, `chunk_relations`) are only populated when `graph_context: true` is set in the request and graph data exists for your documents. If neither condition is met, these fields return as empty arrays and only the chunk content will appear in the formatted output.
+</Info>
+
+<Tip>
+  `extra_context_ids` reference entries in `additional_context`, which are supplementary chunks that HydraDB surfaces beyond the top-k results based on relevance to the retrieved chunks.
+</Tip>
