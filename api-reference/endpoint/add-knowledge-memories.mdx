@@ -204,7 +204,7 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
 
 #### `metadata` (object, optional)
 
-- **Description**: Key-value pairs that represent tenant-level metadata. This metadata is shared across all documents within the tenant and is useful for organization-wide filtering and categorization.
+- **Description**: Key-value pairs for tenant-level `metadata`. If `tenant_metadata_schema` is configured for the tenant, matching keys are validated and indexed.
 - **Use Case**: Store department information, project tags, organizational units, or any tenant-scoped attributes that help organize and filter documents.
 - **Example**:
 
@@ -249,8 +249,26 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
 The `app_knowledge` parameter accepts an array of `AppKnowledgeModel` objects. Each object represents a knowledge source from a workplace app with comprehensive metadata and content.
 
 <Info>
-  **Backward Compatibility**: The legacy field name `app_sources` is still accepted as an alias for `app_knowledge` but is deprecated — migrate to `app_knowledge`.
+  **Backward Compatibility**: The legacy field name `app_sources` is still accepted as an alias for `app_knowledge`, but `app_knowledge` is preferred. Inside `app_knowledge` items, legacy `tenant_metadata` and `document_metadata` fields are also accepted as aliases for `metadata` and `additional_metadata`.
 </Info>
+
+Old app knowledge metadata fields are accepted:
+
+```json
+{
+  "tenant_metadata": { "dept": "sales" },
+  "document_metadata": { "author": "Alice" }
+}
+```
+
+Prefer the current field names in new integrations:
+
+```json
+{
+  "metadata": { "dept": "sales" },
+  "additional_metadata": { "author": "Alice" }
+}
+```
 
 ### `app_knowledge` Array Structure
 

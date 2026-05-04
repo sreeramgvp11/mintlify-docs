@@ -85,6 +85,15 @@ The flow: a user or agent sends a natural-language task to the Action Orchestrat
 
 One tenant for the whole Chief of Staff system. All functions, all user memories, and all execution history live under this tenant. Sub-tenants scope function access per team or department - the sales team's agent only sees sales functions, the engineering team's agent only sees deployment and monitoring functions.
 
+Install the Python packages used by the examples and set both API keys:
+
+```bash
+pip install requests openai
+export HYDRADB_API_KEY="your_hydradb_key"
+export OPENAI_API_KEY="your_openai_key"
+```
+
+HydraDB handles retrieval and memory. The OpenAI SDK is used only in the app layer for turning retrieved function schemas into executable parameters and multi-step plans; you can replace it with any LLM provider.
 
 ```python title="setup.py"
 import requests, os
@@ -357,6 +366,7 @@ The Orchestrator is the runtime layer between HydraDB suggestions and real API c
 
 ```python title="orchestrator/core.py"
 import uuid, json, requests as req_lib
+from openai import OpenAI
 
 class ChiefOfStaffOrchestrator:
     """
@@ -374,6 +384,7 @@ class ChiefOfStaffOrchestrator:
         self.registry      = registry
         self.policy        = policy_engine
         self.vault         = auth_vault
+        self.llm           = OpenAI()
 
     def handle_task(
         self,
@@ -443,28 +454,22 @@ class ChiefOfStaffOrchestrator:
 
     def _extract_params(self, task: str, schema: dict, user_id: str, session_id: str) -> dict:
         """
-        Use /search/qna to extract structured parameters from the task.
-        The question is the task, the context is the function schema.
-        Returns a dict matching the schema's required parameters.
+        Extract structured parameters locally after HydraDB has selected the function.
+        HydraDB should be used for retrieval (`/recall/full_recall`); parameter extraction
+        belongs in your app/LLM layer because the schema is already in memory here.
         """
-        result = req_lib.post(
-            f"{BASE_URL}/search/qna",
-            headers=HEADERS,
-            json={
-                "question":    (
-                    f"Extract the parameters needed to call this function.\n"
-                    f"Task: {task}\n"
-                    f"Function schema: {json.dumps(schema['parameters'])}\n"
-                    f"Return ONLY a valid JSON object with the extracted parameter values."
-                ),
-                "session_id":  session_id,
-                "tenant_id":   TENANT_ID,
-                "user_name":   user_id,
-                "max_results": 3,
-                "mode":        "thinking",
-            },
-        ).json()
-        answer = result.get("answer", "{}")
+        prompt = (
+            "Extract the parameters needed to call this function.\n"
+            f"Task: {task}\n"
+            f"Function schema: {json.dumps(schema['parameters'])}\n"
+            "Return ONLY a valid JSON object with the extracted parameter values."
+        )
+        response = self.llm.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+        )
+        answer = response.choices[0].message.content or "{}"
         try:
             return json.loads(answer)
         except json.JSONDecodeError:
@@ -1461,7 +1466,7 @@ Header: `Authorization: Bearer YOUR_API_KEY`
 ### Upload function schemas
 
 
-**`POST /ingestion/upload_knowledgewas: /upload/upload_app_sources?tenant_id=chief-of-staff&sub_tenant_id=functions`** - Max 20/call, 1s between batches
+**`POST /ingestion/upload_knowledge`** - Upload function schemas as app knowledge or files. Max 20/call, 1s between batches
 
 
 ```json title="body - one function"
@@ -1597,20 +1602,26 @@ Header: `Authorization: Bearer YOUR_API_KEY`
 ```
 
 
-### Parameter extraction via Q&A
+### Parameter extraction
 
 
-**`POST /search/qna`** - Used to extract structured params from a natural language task
+**Local LLM parameter extraction** - Extract structured params after HydraDB returns the best function schema
 
 
-```json title="body"
+```json title="LLM prompt inputs"
 {
-  "question":    "Extract the parameters needed to call send_slack_message for: 'ping #engineering that the deploy is done'. Return only valid JSON.",
-  "session_id":  "session-uuid",
-  "tenant_id":   "chief-of-staff",
-  "user_name":   "sarah",
-  "max_results": 3,
-  "mode":        "thinking"
+  "task": "ping #engineering that the deploy is done",
+  "function_schema": {
+    "id": "send_slack_message",
+    "parameters": {
+      "channel": "string",
+      "message": "string"
+    }
+  },
+  "expected_output": {
+    "channel": "#engineering",
+    "message": "the deploy is done"
+  }
 }
 ```
 

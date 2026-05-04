@@ -150,24 +150,23 @@ This enables HydraDB to reason about:
 
 ---
 
-## Automatic Availability
+## Availability In Recall
 
-Context graph signals are **automatically included in all recall and search responses**.
+Context graph signals are built during ingestion and can be requested in recall responses by passing `graph_context: true`.
 
-You don’t need special APIs.
-
-Every HydraDB retrieval call benefits from the graph.
+If graph context is requested and graph data exists for the tenant, HydraDB returns relationship paths alongside retrieved chunks. If graph data is not available yet, the response still returns ranked chunks and the graph fields are empty.
 
 ---
 
 ## Using Graph Context
 
-Search responses include:
+Recall responses include:
 
-- `chunk_triplets`  -  entity relationships per chunk
-- `entity_paths`  -  multi-hop relationship chains
+- `query_paths`  -  entity relationship paths relevant to the query
+- `chunk_relations`  -  graph relationships associated with returned chunks
+- `chunk_id_to_group_ids`  -  a mapping from chunk IDs to relation groups
 
-### entity_paths
+### query_paths
 
 Best for:
 

@@ -36,15 +36,13 @@ The **sub_tenant_id** represents a subdivision within a tenant - such as departm
 
 **Example - Creating a New Sub-Tenant:**
 
-```json
-POST /upload/upload_document?tenant_id=acme_corp&sub_tenant_id=engineering_team_alpha
-{
-  "file": "engineering_standards.pdf",
-  "document_metadata": {
-    "title": "Engineering Standards",
-    "department": "Engineering"
-  }
-}
+```bash
+curl -X POST 'https://api.hydradb.com/ingestion/upload_knowledge' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=engineering_team_alpha" \
+  -F "files=@engineering_standards.pdf" \
+  -F 'file_metadata=[{"additional_metadata":{"title":"Engineering Standards","department":"Engineering"}}]'
 ```
 
 

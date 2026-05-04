@@ -125,15 +125,15 @@ Upload documents, PDFs, and other content to your knowledge base for semantic se
       tenant_id: "tenant_123",
       file_metadata: [
         {
-          id: "doc_a",
-          tenant_metadata: { dept: "sales" },
-          document_metadata: { author: "Alice" },
+          file_id: "doc_a",
+          metadata: { dept: "sales" },
+          additional_metadata: { author: "Alice" },
           relations: false
         },
         {
-          id: "doc_b",
-          tenant_metadata: { dept: "marketing" },
-          document_metadata: { author: "Bob" },
+          file_id: "doc_b",
+          metadata: { dept: "marketing" },
+          additional_metadata: { author: "Bob" },
           relations: true
         }
       ]
@@ -153,14 +153,14 @@ Upload documents, PDFs, and other content to your knowledge base for semantic se
             files=files,
             file_metadata=[
                 {
-                    "id": "doc_a",
-                    "tenant_metadata": {"dept": "sales"},
-                    "document_metadata": {"author": "Alice"}
+                    "file_id": "doc_a",
+                    "metadata": {"dept": "sales"},
+                    "additional_metadata": {"author": "Alice"}
                 },
                 {
-                    "id": "doc_b",
-                    "tenant_metadata": {"dept": "marketing"},
-                    "document_metadata": {"author": "Bob"}
+                    "file_id": "doc_b",
+                    "metadata": {"dept": "marketing"},
+                    "additional_metadata": {"author": "Bob"}
                 }
             ]
         )
@@ -180,14 +180,14 @@ Upload documents, PDFs, and other content to your knowledge base for semantic se
                 files=files,
                 file_metadata=[
                     {
-                        "id": "doc_a",
-                        "tenant_metadata": {"dept": "sales"},
-                        "document_metadata": {"author": "Alice"}
+                        "file_id": "doc_a",
+                        "metadata": {"dept": "sales"},
+                        "additional_metadata": {"author": "Alice"}
                     },
                     {
-                        "id": "doc_b",
-                        "tenant_metadata": {"dept": "marketing"},
-                        "document_metadata": {"author": "Bob"}
+                        "file_id": "doc_b",
+                        "metadata": {"dept": "marketing"},
+                        "additional_metadata": {"author": "Bob"}
                     }
                 ]
             )

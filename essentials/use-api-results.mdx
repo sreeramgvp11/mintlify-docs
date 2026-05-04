@@ -383,7 +383,7 @@ export function buildContextString(result: RetrievalResult): string {
                 "recency_bias": 0,                         # boost recent documents (0 = disabled)
                 "graph_context": True,                     # include graph relations in response
                 "search_forceful_relations": True,         # force relation search even for low-confidence matches
-                "metadata_filters": {                      # filter by document metadata
+                "metadata_filters": {                      # filter by metadata fields
                     "category": "engineering",
                 },
             }
@@ -410,7 +410,7 @@ export function buildContextString(result: RetrievalResult): string {
             recency_bias: 0,                        // boost recent documents (0 = disabled)
             graph_context: true,                    // include graph relations in response
             search_forceful_relations: true,        // force relation search even for low-confidence matches
-            metadata_filters: {                     // filter by document metadata
+            metadata_filters: {                     // filter by metadata fields
               category: "engineering",
             },
           }),

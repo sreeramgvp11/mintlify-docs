@@ -564,7 +564,7 @@ store_user_profile(
 
 Three query patterns cover every internal search use case. All use `POST /recall/full_recall` with different parameters. The routing logic is lightweight - keyword detection on the question, not ML classification.
 
-> **Important**: The cookbook originally shows `/search/qna` with a `question` field for Q&A queries. This endpoint returns 404. The correct endpoint is `POST /recall/full_recall` with a `query` field. Use this for all three query patterns below.
+> **Important**: Use `POST /recall/full_recall` with a `query` field for all three query patterns below. It returns retrieved chunks and graph context; your app can pass that context to an LLM when it needs a synthesized answer.
 
 ### 5.1 Simple Q&A - "What is X?" / "How does X work?"
 
