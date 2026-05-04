@@ -125,9 +125,9 @@ project = "strawberry"
 
 before any semantic or graph-based ranking is applied.
 
-### Tenant Metadata
+### Metadata
 
-Organization-level metadata that applies consistently across all memories within a tenant. This is useful for enforcing global constraints and isolation.
+Tenant-level `metadata` applies consistently across memories and knowledge sources within a tenant. If you define `tenant_metadata_schema`, HydraDB can validate and index those keys for stricter governance.
 
 Common examples:
 
@@ -136,11 +136,11 @@ Common examples:
 - `region`
 - `data_sensitivity`
 
-Tenant metadata ensures that recall always respects **organizational boundaries and policies**.
+Tenant-level metadata helps recall respect **organizational boundaries and policies**.
 
-### Memory Metadata
+### Additional Metadata
 
-Document-level metadata that varies from memory to memory. This enables fine-grained filtering and control over retrieval.
+Flexible `additional_metadata` varies from memory to memory. This enables fine-grained filtering and control over retrieval.
 
 Common examples:
 
@@ -151,7 +151,7 @@ Common examples:
 - `timestamp`
 - `tags`
 
-Memory metadata allows you to scope recall to **specific users, teams, time ranges, or data sources**.
+Additional metadata allows you to scope recall to **specific users, teams, time ranges, or data sources**.
 
 ### Metadata Filtering
 

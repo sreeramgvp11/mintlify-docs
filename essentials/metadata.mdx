@@ -17,21 +17,20 @@ HydraDB metadata lets you **structure, scope, and constrain** recall  -  so your
 - **Recall & Search**: apply metadata filters to deterministically include/exclude results.
 - **Ranking**: metadata can also act as a scoring signal (e.g., boost approved docs).
 
-**Note:** When ingesting, use `metadata` (tenant-level) and `additional_metadata` (document-level) in the request body. In recall responses, these are returned under the same field names: `metadata` and `additional_metadata`.
+**Note:** When ingesting and reading recall responses, use `metadata` for tenant-level fields and `additional_metadata` for flexible source-level fields. If you configure `tenant_metadata_schema`, HydraDB validates and indexes matching `metadata` keys; `schema-backed` is documentation terminology, not a request parameter.
 
 ---
 
 ## Two-Tier Metadata Architecture
 
-HydraDB supports two tiers of metadata for enterprise-scale systems.
+HydraDB supports two metadata fields for enterprise-scale systems.
 
-### Tenant Metadata (`tenant_metadata`)
+### Tenant Metadata (`metadata`)
 
-Organization-level metadata that applies consistently across everything in a tenant.
+Tenant-level metadata for stable organizational context. These keys can be free-form, or you can define `tenant_metadata_schema` during tenant creation when you want validation and stronger indexing guarantees.
 
-- **Purpose:** global organizational context
-- **Schema:** keys are defined at tenant creation (via `tenant_metadata_schema`)
-- **Stability:** keys are immutable to prevent schema drift
+- **Purpose:** stable, filterable organizational context
+- **Optional schema:** keys can be defined at tenant creation via `tenant_metadata_schema`
 - **Best for:** compliance, business unit, region, retention policy, data classification
 
 Example:
@@ -39,16 +38,23 @@ Example:
 ```json
 {
   "tenant_metadata_schema": [
-    {"name": "compliance_framework", "data_type": "string", "searchable": true, "filterable": true},
-    {"name": "data_classification",  "data_type": "string", "filterable": true},
-    {"name": "region",               "data_type": "string", "filterable": true}
+    {
+      "name": "compliance_framework",
+      "data_type": "string",
+      "filterable": true
+    },
+    {
+      "name": "product_description",
+      "data_type": "string",
+      "searchable": true
+    }
   ]
 }
 ```
 
-### Document Metadata (`document_metadata`)
+### Additional Metadata (`additional_metadata`)
 
-Document-level metadata that can vary across memories.
+Flexible source-level metadata that can vary across memories and knowledge sources.
 
 - **Purpose:** fine-grained filtering and discovery
 - **Flexibility:** fully dynamic and mutable
@@ -56,9 +62,9 @@ Document-level metadata that can vary across memories.
 
 Example:
 
-```
+```json
 {
-  "document_metadata": {
+  "additional_metadata": {
     "title": "API Security Guidelines",
     "project": "phoenix",
     "owner": "sarah.chen@acme.com",
@@ -75,8 +81,8 @@ Example:
 
 This split gives you:
 
-- **Organizational consistency** (tenant metadata)
-- **Per-document flexibility** (document metadata)
+- **Organizational consistency** (`metadata`)
+- **Per-source flexibility** (`additional_metadata`)
 - **Efficient filtering at scale** (metadata-first candidate retrieval)
 - **Governance and isolation** (compliance-aware recall)
 
@@ -97,15 +103,13 @@ Pass it as `metadata_filters` in a recall request:
   "tenant_id": "your_tenant_id",
   "query": "Project Strawberry updates",
   "metadata_filters": {
-    "document_metadata": {
-      "project": "strawberry",
-      "created_at": {"$gte": "2025-03-01", "$lt": "2025-04-01"}
-    }
+    "project": "strawberry",
+    "created_at": {"$gte": "2025-03-01", "$lt": "2025-04-01"}
   }
 }
 ```
 
-The filter is applied _before_ semantic and graph ranking — only matching documents enter the retrieval pipeline.
+The filter is applied _before_ semantic and graph ranking, so only matching sources enter the retrieval pipeline.
 
 ### Common Filtering Patterns
 
@@ -119,12 +123,16 @@ The filter is applied _before_ semantic and graph ranking — only matching docu
 
 ## Supported Data Types
 
-Metadata supports primitive and structured values:
+Metadata supports friendly data types:
 
-- strings, numbers, booleans
-- dates / datetimes (ISO 8601)
-- arrays (tags, categories)
-- nested objects (ownership, workflows)
+- `string`
+- `integer`
+- `float`
+- `boolean`
+- `array`
+- `object`
+
+For `tenant_metadata_schema` fields, use `filterable: true` for exact filtering and `searchable: true` for dense and sparse search indexing. Use `string` for searchable text fields.
 
 **Tip:** keep metadata small and structured  -  avoid storing large text blobs in metadata.
 

@@ -124,7 +124,7 @@ The following keywords are **reserved** and cannot be used as keys in `tenant_me
 - `layout`
 - `description`
 
-These keywords are used internally by HydraDB for document processing and search functionality. Using any of these reserved keywords as tenant metadata keys will result in an error during tenant creation.
+These keywords are used internally by HydraDB for document processing and search functionality. Using any of these reserved keywords in `tenant_metadata_schema` will result in an error during tenant creation.
 
 ## Metadata Schema Structure
 
@@ -314,28 +314,28 @@ department = "Engineering" AND data_classification = "internal" AND is_confident
 
 **Schema**: Department, employee type, salary band, status **Query**: "Find all active full-time employees in the Engineering department" **Filter**: `department = "Engineering" AND employee_type = "full_time" AND status = "active"`
 
-### Metadata Inheritance
+### Metadata Schema Usage
 
-All documents in your tenant automatically inherit the tenant metadata schema you define. This means:
+All documents in your tenant can use the metadata schema you define. This means:
 
-1. **Consistency**: Every document will have the same tenant metadata structure
+1. **Consistency**: Documents can share the same tenant-level metadata structure
 2. **Compliance**: Organizational policies are enforced across all documents
-3. **Queryability**: You can always filter and search by tenant-level attributes
-4. **Scalability**: New documents automatically follow your established schema
+3. **Queryability**: You can filter and search by configured metadata attributes
+4. **Scalability**: New documents can follow your established metadata model
 
 ### Migration and Updates
 
 <Warning>
   **Schema Immutability**: Once you create a tenant with a metadata schema, the keys cannot be changed. However, you can:
 
-  - Add new fields to document metadata (fully flexible)
-  - Update values for existing tenant metadata fields
+ - Add new fields to `additional_metadata` (fully flexible)
+ - Update values for existing `metadata` fields
   - Create new sub-tenants with different schemas if needed
 </Warning>
 
 > **Note:**
 >
-> - The `tenant_metadata_schema` field in the request body is optional but recommended for enterprise setups. It defines immutable tenant-level metadata keys that will apply to all documents in this tenant.
+> - The `tenant_metadata_schema` field in the request body is optional but recommended for enterprise setups. It defines immutable tenant-level `metadata` keys that can apply to documents in this tenant.
 > - For more detailed information about metadata usage, filtering, and querying, see our [Metadata documentation](/essentials/metadata).
 
 ## Sample Response

@@ -31,7 +31,9 @@
           {
             "group": "Essentials",
             "pages": [
+              "essentials/architecture",
               "essentials/recall",
+              "essentials/semantic-search",
               "essentials/memories",
               "essentials/context-graph",
               "essentials/multi-tenant",

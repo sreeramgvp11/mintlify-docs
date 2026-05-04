@@ -31,8 +31,8 @@ HydraDB fixes this with two capabilities:
 ```mermaid
 graph LR
     A["Decision logs<br/>Org charts<br/>Meeting notes<br/>Product specs"] -->|"upload.knowledge()"| B["HydraDB<br/>tenant: onboarding<br/>sub_tenant: company-context"]
-    C["New hire question"] -->|"recall.qna()"| B
-    B -->|"cited answer"| D["Onboarding agent"]
+    C["New hire question"] -->|"recall.full_recall()"| B
+    B -->|"retrieved context"| D["Onboarding agent"]
     D -->|"upload.add_memory()"| E["HydraDB<br/>sub_tenant: hire-{id}"]
     E -->|"recall_preferences()"| F["Manager dashboard"]
 ```
@@ -176,8 +176,8 @@ def upload_doc(filepath: str, doc_id: str, doc_type: str, team: str):
             files=[f],
             file_metadata=json.dumps([
                 {
-                    "id": doc_id,
-                    "document_metadata": {
+                    "file_id": doc_id,
+                    "additional_metadata": {
                         "doc_type": doc_type,
                         "team": team,
                     }
@@ -225,18 +225,20 @@ from hydra_db import HydraDB
 
 client = HydraDB(token=API_KEY)
 
-def ask(question: str) -> str:
-    result = client.recall.qna(
+def retrieve_context(question: str):
+    return client.recall.full_recall(
         tenant_id=TENANT_ID,
-        question=question,
-        max_chunks=5,
+        query=question,
+        max_results=5,
         mode="thinking",
+        graph_context=True,
     )
-    return result.answer
 
 if __name__ == "__main__":
-    answer = ask("Why did we choose Postgres over MySQL?")
-    print("\nAnswer:", answer)
+    result = retrieve_context("Why did we choose Postgres over MySQL?")
+    for chunk in result.chunks:
+        print(f"\nSource: {chunk.source_title}")
+        print(chunk.chunk_content[:500])
 ```
 
 ```bash
@@ -245,16 +247,17 @@ python phase0/query.py
 
 **Expected output:**
 ```
-Answer: Postgres was chosen over MySQL for three reasons: better support for
-JSON columns (JSONB) required by the API response caching layer, stronger ACID
-compliance for financial transaction records, and better performance for complex
-analytical queries. MySQL was rejected due to limited JSON support and licensing
-concerns. Decision made by Alice Chen in Q1 2024. [Source: adr_postgres.txt]
+Source: adr_postgres.txt
+ADR-001: Why We Chose Postgres Over MySQL
+Decision: Postgres is our primary database.
+Rationale:
+- Better support for JSON columns (JSONB) required by our API response caching layer.
+...
 ```
 
-If `answer` is empty - the document is still indexing. Wait 30 seconds and re-run.
+If no chunks are returned, the document is still indexing. Wait 30 seconds and re-run.
 
-> Phase 0 complete. The same `client.recall.qna()` call is used in every later phase. You will only add parameters, not change the structure.
+> Phase 0 complete. The same `client.recall.full_recall()` retrieval pattern is used in every later phase. Your application can pass returned chunks into an LLM to generate the final answer.
 
 ---
 
@@ -300,8 +303,8 @@ def ingest_decision_docs(folder: str):
         file_handles = [open(f, "rb") for f in batch]
         metadata = json.dumps([
             {
-                "id": f"adr-{f.stem}",
-                "document_metadata": {"doc_type": "adr", "team": "engineering"}
+                "file_id": f"adr-{f.stem}",
+                "additional_metadata": {"doc_type": "adr", "team": "engineering"}
             }
             for f in batch
         ])
@@ -369,8 +372,8 @@ def ingest_people(people: list):
 
         file_handles.append(open(filepath, "rb"))
         metadata_list.append({
-            "id": f"person-{p['name'].lower().replace(' ', '-')}",
-            "document_metadata": {"doc_type": "person", "team": p["team"]},
+            "file_id": f"person-{p['name'].lower().replace(' ', '-')}",
+            "additional_metadata": {"doc_type": "person", "team": p["team"]},
         })
 
     try:
@@ -441,8 +444,8 @@ def ingest_product_docs(folder: str, team: str = "product", status: str = "curre
     file_handles = [open(f, "rb") for f in files]
     metadata = json.dumps([
         {
-            "id": f"product-{f.stem}",
-            "document_metadata": {
+            "file_id": f"product-{f.stem}",
+            "additional_metadata": {
                 "doc_type": "product_spec",
                 "team": team,
                 "status": status,
@@ -499,8 +502,8 @@ def ingest_meeting_notes(folder: str):
     file_handles = [open(f, "rb") for f in files]
     metadata = json.dumps([
         {
-            "id": f"meeting-{f.stem}",
-            "document_metadata": {
+            "file_id": f"meeting-{f.stem}",
+            "additional_metadata": {
                 "doc_type": "meeting_notes",
                 "team": "all",
             }
@@ -552,13 +555,15 @@ TEST_QUESTIONS = [
 
 for question in TEST_QUESTIONS:
     print(f"\nQ: {question}")
-    result = client.recall.qna(
+    result = client.recall.full_recall(
         tenant_id=TENANT_ID,
-        question=question,
-        max_chunks=5,
+        query=question,
+        max_results=5,
         mode="thinking",
+        graph_context=True,
     )
-    print(f"A: {result.answer[:300]}")
+    top_chunk = result.chunks[0].chunk_content[:300] if result.chunks else "No context returned yet"
+    print(f"Context: {top_chunk}")
     print("-" * 60)
 ```
 
@@ -569,14 +574,10 @@ python phase1/test_queries.py
 **Expected output:**
 ```
 Q: Why did we choose Postgres over MySQL?
-A: Postgres was chosen for JSON column support (JSONB), stronger ACID compliance
-for financial records, and better analytical query performance. MySQL was rejected
-for limited JSON support and licensing concerns under Oracle. [Source: adr_postgres.txt]
+Context: ADR-001: Why We Chose Postgres Over MySQL. Decision: Postgres is our primary database...
 ------------------------------------------------------------
 Q: Who owns the payments service and how do I reach them?
-A: Alice Chen (Senior Engineer) owns the payments pipeline. Her Slack handle is
-@alice-chen. She also owns the auth service and database architecture.
-[Source: org_chart]
+Context: Alice Chen (Senior Engineer) owns the payments pipeline. Her Slack handle is @alice-chen...
 ------------------------------------------------------------
 ```
 
@@ -677,7 +678,7 @@ if __name__ == "__main__":
 
 ### Step 2 - Personalized Q&A
 
-Use the hire's `sub_tenant_id` alongside the company knowledge to get personalized answers:
+Use the hire's `sub_tenant_id` for personal memory and the default company knowledge scope for source context:
 
 ```python
 # phase2/ask.py
@@ -696,13 +697,23 @@ def ask_onboarding(hire_id: str, question: str, topic: str = "") -> str:
     """
     log_question(hire_id, question, topic)
 
-    result = client.recall.qna(
+    company_context = client.recall.full_recall(
         tenant_id=TENANT_ID,
-        question=question,
-        max_chunks=5,
+        query=question,
+        max_results=5,
         mode="thinking",
+        graph_context=True,
     )
-    return result.answer
+    hire_context = client.recall.recall_preferences(
+        tenant_id=TENANT_ID,
+        sub_tenant_id=hire_sub(hire_id),
+        query=question,
+        max_results=3,
+    )
+    return {
+        "company_context": company_context.chunks,
+        "hire_context": hire_context.chunks,
+    }
 
 if __name__ == "__main__":
     answer = ask_onboarding(
@@ -799,7 +810,7 @@ All SDK methods used in this cookbook.
 | `client.tenant.get_infra_status(tenant_id=...)` | Check tenant is ready |
 | `client.upload.knowledge(tenant_id=..., files=..., file_metadata=...)` | Upload company knowledge documents |
 | `client.upload.add_memory(tenant_id=..., sub_tenant_id=..., memories=[...])` | Store per-hire memory |
-| `client.recall.qna(tenant_id=..., question=..., max_chunks=..., mode=...)` | Answer a hire question from company knowledge |
+| `client.recall.full_recall(tenant_id=..., query=..., max_results=..., mode=...)` | Retrieve company context for a hire question |
 | `client.recall.recall_preferences(tenant_id=..., sub_tenant_id=..., query=...)` | Recall hire memory for manager dashboard |
 
 ### client.upload.knowledge - key parameters
@@ -808,16 +819,17 @@ All SDK methods used in this cookbook.
 |---|---|---|
 | `tenant_id` | `str` | Required. Your tenant ID. |
 | `files` | `list[IO[bytes]]` | Required. Open file handles - not file paths, not dicts. |
-| `file_metadata` | `str` | Optional. JSON **string** (not dict) with per-file `id` and `document_metadata`. |
+| `file_metadata` | `str` | Optional. JSON **string** (not dict) with per-file `file_id` and `additional_metadata`. |
 
-### client.recall.qna - key parameters
+### client.recall.full_recall - key parameters
 
 | Parameter | Type | Notes |
 |---|---|---|
 | `tenant_id` | `str` | Required. |
-| `question` | `str` | Required. The hire's question in natural language. |
-| `max_chunks` | `int` | Optional. Number of document chunks to retrieve. Default: 10. |
+| `query` | `str` | Required. The hire's question in natural language. |
+| `max_results` | `int` | Optional. Number of chunks to retrieve. |
 | `mode` | `str` | Optional. `"fast"` or `"thinking"`. Use `"thinking"` for complex questions. |
+| `graph_context` | `bool` | Optional. Set to `True` to return entity paths and chunk relations when available. |
 
 ---
 
