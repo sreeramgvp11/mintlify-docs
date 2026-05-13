@@ -7,7 +7,7 @@ description: "What Knowledge is, how it differs from Memories, and how to ingest
 
 ## 1. What it is
 
-Knowledge is shared, tenant-wide context that all users and agents in a tenant can recall — product documents, internal wikis, policy PDFs, Slack threads, Notion pages, CSVs, emails, and any other source content.
+Knowledge is shared, tenant-wide context that all users and agents in a tenant can recall - product documents, internal wikis, policy PDFs, Slack threads, Notion pages, CSVs, emails, and any other source content.
 
 Knowledge is the counterpart to [Memories](/essentials/memories). Both are retrievable through Recall, but they live in separate stores and are retrieved through separate endpoints:
 
@@ -15,7 +15,7 @@ Knowledge is the counterpart to [Memories](/essentials/memories). Both are retri
 |---|---|---|
 | **Content** | Documents, files, app-generated content | User preferences, conversations, inferred traits |
 | **Scope** | Shared across all users in a tenant | Per-user, scoped by `sub_tenant_id` |
-| **Mutability** | Versioned — replaced or deleted explicitly | Dynamic — evolves with every interaction |
+| **Mutability** | Versioned - replaced or deleted explicitly | Dynamic - evolves with every interaction |
 | **Recall endpoint** | `full_recall` | `recall_preferences` |
 | **`vectorstore_status`** | Index `1` | Index `0` |
 
@@ -31,7 +31,7 @@ When you upload Knowledge, HydraDB:
 
 1. Parses the source (PDF, DOCX, Markdown, CSV, plain text, or app-source JSON).
 2. Chunks the content into semantically coherent segments.
-3. Runs entity and relationship extraction — building graph nodes and edges.
+3. Runs entity and relationship extraction - building graph nodes and edges.
 4. Embeds chunks into the dense and sparse vector stores.
 5. Makes the content searchable through [`/recall/full_recall`](/api-reference/endpoint/full-recall).
 
@@ -64,7 +64,7 @@ Use [Memories](/essentials/memories) instead for:
 
 The `POST /ingestion/upload_knowledge` endpoint accepts two content formats in one request. Send either or both.
 
-### Path A — Files
+### Path A - Files
 
 Binary files HydraDB should parse and chunk: PDF, DOCX, Markdown, CSV, TXT.
 
@@ -111,7 +111,7 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
 ```
 </CodeGroup>
 
-### Path B — App sources
+### Path B - App sources
 
 Pre-parsed text from connected apps. You supply the text, metadata, and an optional URL.
 
@@ -123,7 +123,7 @@ curl -X POST 'https://api.hydradb.com/ingestion/upload_knowledge' \
   -F 'app_sources=[
     {
       "source_id": "slack_thread_001",
-      "title": "Pricing discussion — Slack #product",
+      "title": "Pricing discussion - Slack #product",
       "text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
       "metadata": { "channel": "product", "status": "finalized" },
       "additional_metadata": { "slack_ts": "1715012345.000100" }
@@ -136,7 +136,7 @@ const result = await client.upload.knowledge({
   app_sources: [
     {
       source_id: "slack_thread_001",
-      title: "Pricing discussion — Slack #product",
+      title: "Pricing discussion - Slack #product",
       text: "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
       metadata: { channel: "product", status: "finalized" },
       additional_metadata: { slack_ts: "1715012345.000100" },
@@ -150,7 +150,7 @@ result = client.upload.knowledge(
     app_sources=[
         {
             "source_id": "slack_thread_001",
-            "title": "Pricing discussion — Slack #product",
+            "title": "Pricing discussion - Slack #product",
             "text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
             "metadata": {"channel": "product", "status": "finalized"},
             "additional_metadata": {"slack_ts": "1715012345.000100"},
@@ -241,7 +241,7 @@ Poll every few seconds. Most documents complete in 1–5 minutes.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `tenant_id` | string | — *(required)* | Target tenant. |
+| `tenant_id` | string | - *(required)* | Target tenant. |
 | `sub_tenant_id` | string | none | Scope this knowledge to a sub-tenant. If omitted, knowledge is available to all sub-tenants. |
 | `upsert` | boolean | `true` | Replace existing items with the same `source_id` / `file_id`. |
 
@@ -276,9 +276,9 @@ See [Essentials → Metadata](/essentials/metadata) for schema design and filter
 
 | Mistake | What goes wrong | Fix |
 |---|---|---|
-| Querying Knowledge via `recall_preferences` | Nothing is returned — wrong store | Use `full_recall` for Knowledge |
+| Querying Knowledge via `recall_preferences` | Nothing is returned - wrong store | Use `full_recall` for Knowledge |
 | Using `additional_metadata` for filterable fields | Filters are silently ignored | Move filterable fields to `metadata`, declare them in the tenant schema |
-| Not polling `verify_processing` before recall | Chunks are not yet indexed — empty recall results | Wait for `indexing_status: completed` |
+| Not polling `verify_processing` before recall | Chunks are not yet indexed - empty recall results | Wait for `indexing_status: completed` |
 | Sending `file_metadata` as a JSON object instead of a JSON string | `multipart/form-data` validation fails | Stringify `file_metadata` before sending in the `-F` field |
 | Omitting `tenant_id` | `422` validation error | Required on every call |
 
@@ -286,8 +286,8 @@ See [Essentials → Metadata](/essentials/metadata) for schema design and filter
 
 ## Related
 
-- [Memories](/essentials/memories) — user-scoped dynamic context
-- [Recall](/essentials/recall) — how `full_recall` retrieves Knowledge
-- [Metadata](/essentials/metadata) — designing filterable schemas
+- [Memories](/essentials/memories) - user-scoped dynamic context
+- [Recall](/essentials/recall) - how `full_recall` retrieves Knowledge
+- [Metadata](/essentials/metadata) - designing filterable schemas
 - [Upload Knowledge API Reference](/api-reference/endpoint/upload-knowledge)
 - [Verify Processing API Reference](/api-reference/endpoint/verify-processing)

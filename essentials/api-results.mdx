@@ -5,7 +5,7 @@ description: "Turn a recall response into a grounded LLM answer."
 
 # How to Use API Results
 
-A recall response is structured JSON. Your model wants prose. This page shows how to bridge that gap — turning a `RetrievalResult` into a clean, grounded prompt for an LLM.
+A recall response is structured JSON. Your model wants prose. This page shows how to bridge that gap - turning a `RetrievalResult` into a clean, grounded prompt for an LLM.
 
 The same pattern works for [`full_recall`](/api-reference/endpoint/full-recall), [`recall_preferences`](/api-reference/endpoint/recall-preferences), and combinations of the two.
 
@@ -26,10 +26,10 @@ The retrieval endpoints (`full_recall` and `recall_preferences`) return the same
 
 Four things matter for prompt construction:
 
-- **`chunks`** — the primary retrieval output. Ranked by relevance; preserve the order HydraDB returns.
-- **`graph_context.query_paths`** — entity traversal paths derived from your query. Useful for relational reasoning. See [Context Graphs](/essentials/context-graphs).
-- **`graph_context.chunk_relations`** + **`chunk_id_to_group_ids`** — per-chunk graph relations grouped by `group_id`, so you can attach the right triplets to each chunk.
-- **`additional_context`** — a map keyed by `chunk_uuid`. When a chunk includes `extra_context_ids`, use those IDs to look up related chunks here.
+- **`chunks`** - the primary retrieval output. Ranked by relevance; preserve the order HydraDB returns.
+- **`graph_context.query_paths`** - entity traversal paths derived from your query. Useful for relational reasoning. See [Context Graphs](/essentials/context-graphs).
+- **`graph_context.chunk_relations`** + **`chunk_id_to_group_ids`** - per-chunk graph relations grouped by `group_id`, so you can attach the right triplets to each chunk.
+- **`additional_context`** - a map keyed by `chunk_uuid`. When a chunk includes `extra_context_ids`, use those IDs to look up related chunks here.
 
 Don't pass the raw object to the LLM. Convert it into a structured context string first.
 
@@ -406,7 +406,7 @@ completion = openai_client.chat.completions.create(
 
 ## 4. Combining Knowledge and Memories
 
-For personalised answers, run `full_recall` and `recall_preferences` in parallel, format each result, and combine them into one prompt. There's no required ordering — preferences before docs is purely for readability.
+For personalised answers, run `full_recall` and `recall_preferences` in parallel, format each result, and combine them into one prompt. There's no required ordering - preferences before docs is purely for readability.
 
 <CodeGroup>
 
@@ -450,7 +450,7 @@ prompt = (
 
 </CodeGroup>
 
-If memory recall fails or times out, fall back to the Knowledge-only prompt — personalisation is an enhancement, not a hard dependency.
+If memory recall fails or times out, fall back to the Knowledge-only prompt - personalisation is an enhancement, not a hard dependency.
 
 ---
 
@@ -480,7 +480,7 @@ If memory recall fails or times out, fall back to the Knowledge-only prompt — 
 
 ## Related
 
-- [Recall](/essentials/recall) — request parameters and response shape
-- [Memories](/essentials/memories) — what `recall_preferences` searches
-- [Knowledge](/essentials/knowledge) — what `full_recall` searches
-- [Context Graphs](/essentials/context-graphs) — what `graph_context` fields contain
+- [Recall](/essentials/recall) - request parameters and response shape
+- [Memories](/essentials/memories) - what `recall_preferences` searches
+- [Knowledge](/essentials/knowledge) - what `full_recall` searches
+- [Context Graphs](/essentials/context-graphs) - what `graph_context` fields contain

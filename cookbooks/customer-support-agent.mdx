@@ -688,7 +688,7 @@ Tested across 2,400 real support tickets (mix of billing, technical, onboarding,
 | "Agent knew my history" (CSAT signal) | 12% of sessions | 84% of sessions | +600% |
 | Unnecessary escalation rate | 41% | 9% | −78% |
 | Repeated troubleshooting steps (already tried) | 67% of tickets | 4% of tickets | −94% |
-| P95 recall latency (HydraDB step) | N/A | &lt;200ms | Sub-second |
+| P95 recall latency (HydraDB step) | N/A | under 200 ms | Sub-second |
 
 > The 94% drop in repeated troubleshooting steps is the most direct result of persistent memory. Without HydraDB, a customer who reports the same SSO issue for the third time gets the same "try clearing your browser cache" suggestion. With HydraDB, the agent knows that was already tried - and tried twice - and goes straight to the next level of diagnosis.
 

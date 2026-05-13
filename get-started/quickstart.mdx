@@ -3,9 +3,9 @@ title: "Quickstart"
 description: "Build your first working recall in five minutes."
 ---
 
-**Already have a tenant?** Jump to [Step 2 — Ingest data](#step-2--ingest-data)
+**Already have a tenant?** Jump to [Step 2 - Ingest data](#step-2-ingest-data)
 
-**Already ingested data?** Jump to [Step 4 — Recall context](#step-4--recall-context)
+**Already ingested data?** Jump to [Step 4 - Recall context](#step-4-recall-context)
 
 ---
 
@@ -13,19 +13,21 @@ description: "Build your first working recall in five minutes."
 
 ```mermaid
 flowchart LR
-  A[1. Create Tenant] --> B[2. Ingest Data]
-  B --> C[3. Verify Processing]
-  C --> D[4. Recall Context]
-  D --> E[5. Pass to LLM]
+  %% Primary process steps
+  A([1. Create Tenant]) --> B([2. Ingest Data])
+  B --> C([3. Verify Processing])
+  C --> D([4. Recall Context])
+  D --> E([5. Pass to LLM])
 
-  style A fill:#e8f4f8
-  style B fill:#e8f4f8
-  style C fill:#fff4e8
-  style D fill:#e8f8ea
-  style E fill:#e8f8ea
+  %% HydraDB Dark Mode styles
+  style A fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style B fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style C fill:#8b5cf6,stroke:#8b5cf6,stroke-width:2.5px,color:#f8fafc,stroke-linecap:round
+  style D fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style E fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
 ```
 
-Step 3 is async — HydraDB parses, chunks, embeds, and graphs your content in the background. Steps 1, 2, 4, and 5 run in real time.
+Step 3 is async - HydraDB parses, chunks, embeds, and graphs your content in the background. Steps 1, 2, 4, and 5 run in real time.
 
 ---
 
@@ -41,7 +43,7 @@ Step 3 is async — HydraDB parses, chunks, embeds, and graphs your content in t
 
 <CodeGroup>
 ```bash cURL
-# No install needed — use curl directly
+# No install needed - use curl directly
 ```
 ```typescript TypeScript SDK
 npm install @hydradb/sdk
@@ -75,7 +77,7 @@ client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
 
 ---
 
-## Step 1 — Create a tenant
+## Step 1 - Create a tenant
 
 A tenant is your fully isolated workspace. Everything you ingest and recall lives inside it.
 
@@ -146,11 +148,11 @@ Wait until `graph_status` is `true` and both values in `vectorstore_status` are 
 
 ---
 
-## Step 2 — Ingest data
+## Step 2 - Ingest data
 
 HydraDB has two distinct data stores. Pick the one that matches what you're ingesting.
 
-### Option A — Knowledge (documents and app sources)
+### Option A - Knowledge (documents and app sources)
 
 Use for shared, tenant-wide content that all users can recall: PDFs, DOCX, Slack threads, Notion pages, CSVs.
 
@@ -191,7 +193,7 @@ with open("/path/to/contract.pdf", "rb") as f:
 }
 ```
 
-### Option B — Memories (user preferences and conversation history)
+### Option B - Memories (user preferences and conversation history)
 
 Use for user-specific, dynamic context: preferences, chat history, behavioral signals, inferred traits.
 
@@ -257,20 +259,29 @@ Both paths return a `source_id` you can use to track processing.
 
 ---
 
-## Step 3 — Verify processing
+## Step 3 - Verify processing
 
 Ingestion is asynchronous. Content passes through a pipeline before it is searchable:
 
 ```mermaid
 flowchart LR
-  Q[queued] --> P[processing]
-  P --> G[graph_creation]
-  G --> C[completed]
-  P -.failure.-> E[error]
+  %% Ingestion processing pipeline with HydraDB Dark Mode Design
+
+  %% Nodes with rounded edges and explicit stages
+  Q([Queued]) --> P([Processing])
+  P --> G([Graph Creation])
+  G --> C([Completed])
+  P -.failure.-> E([Error])
   G -.failure.-> E
 
-  style C fill:#e8f8ea
-  style E fill:#ffe8e8
+  %% Primary background for ordinary steps
+  style Q fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style P fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  %% 'Graph Creation' is the core innovation step—accent with Hydra Purple
+  style G fill:#8b5cf6,stroke:#8b5cf6,stroke-width:2.5px,color:#f8fafc,stroke-linecap:round
+  %% Outputs
+  style C fill:#22c55e,stroke:#166534,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style E fill:#ef4444,stroke:#b91c1c,stroke-width:2px,color:#f8fafc,stroke-linecap:round
 ```
 
 <CodeGroup>
@@ -307,13 +318,13 @@ status = client.upload.verify_processing(
 }
 ```
 
-Poll every few seconds until `indexing_status` is `completed`. Most documents index in 1–5 minutes.
+Poll every few seconds until `indexing_status` is `completed`. Most documents index in under 60 seconds. Still, larger documents may take upto 5 minutes.
 
 ---
 
-## Step 4 — Recall context
+## Step 4 - Recall context
 
-Now the interesting part. HydraDB exposes two recall endpoints — one per store. Use the right one for what you ingested.
+Now the interesting part. HydraDB exposes two recall endpoints - one per store. Use the right one for what you ingested.
 
 ### For Knowledge (documents)
 
@@ -326,7 +337,7 @@ curl -X POST 'https://api.hydradb.com/recall/full_recall' \
     "tenant_id": "my_first_tenant",
     "query": "What are the pricing tiers?",
     "max_results": 5,
-    "mode": "thinking",
+    "mode": "fast",
     "graph_context": true
   }'
 ```
@@ -335,7 +346,7 @@ const result = await client.recall.fullRecall({
   tenant_id: "my_first_tenant",
   query: "What are the pricing tiers?",
   max_results: 5,
-  mode: "thinking",
+  mode: "fast",
   graph_context: true,
 });
 ```
@@ -344,7 +355,7 @@ result = client.recall.full_recall(
     tenant_id="my_first_tenant",
     query="What are the pricing tiers?",
     max_results=5,
-    mode="thinking",
+    mode="fast",
     graph_context=True,
 )
 ```
@@ -361,7 +372,7 @@ curl -X POST 'https://api.hydradb.com/recall/recall_preferences' \
     "tenant_id": "my_first_tenant",
     "sub_tenant_id": "user_alex_123",
     "query": "answer style and tone preferences",
-    "mode": "thinking",
+    "mode": "fast",
     "max_results": 3
   }'
 ```
@@ -370,7 +381,7 @@ const memories = await client.recall.recallPreferences({
   tenant_id: "my_first_tenant",
   sub_tenant_id: "user_alex_123",
   query: "answer style and tone preferences",
-  mode: "thinking",
+  mode: "fast",
   max_results: 3,
 });
 ```
@@ -379,7 +390,7 @@ memories = client.recall.recall_preferences(
     tenant_id="my_first_tenant",
     sub_tenant_id="user_alex_123",
     query="answer style and tone preferences",
-    mode="thinking",
+    mode="fast",
     max_results=3,
 )
 ```
@@ -387,8 +398,8 @@ memories = client.recall.recall_preferences(
 
 **Key flags:**
 
-- `mode: "thinking"` — multi-stage recall with query expansion and reranking. Better results, higher latency. Default is `"fast"`.
-- `graph_context: true` — enriches the response with entity relationships from the knowledge graph. Only applies to `full_recall`.
+- `mode: "thinking"` - multi-stage recall with query expansion and reranking. Better results, higher latency. Default is `"fast"`.
+- `graph_context: true` - enriches the response with entity relationships from the knowledge graph. Only applies to `full_recall`.
 
 **Sample response** (`full_recall`):
 
@@ -420,12 +431,15 @@ memories = client.recall.recall_preferences(
   }
 }
 ```
+<Note>
+  **`relevancy_score`:** A metric to evaluate each chunk's relevance to the query. Ranges from `0.0` to `2.0`.
+</Note>
 
-`chunks` is retrieved content ranked by relevance. `graph_context` contains entity relationships extracted from your data — useful for reasoning about *how* things connect, not just *what* was said.
+`chunks` is retrieved content ranked by relevance. `graph_context` contains entity relationships extracted from your data - useful for reasoning about *how* things connect, not just *what* was said.
 
 ---
 
-## Step 5 — Pass it to your LLM
+## Step 5 - Pass it to your LLM
 
 For personalized, grounded answers, call both `full_recall` and `recall_preferences` in parallel and merge into one prompt:
 
@@ -503,14 +517,14 @@ For the `build_context_string()` helper, see [How to Use API Results](/essential
 
 ## You're done
 
-That's the full loop: create a tenant, ingest Knowledge and Memories, wait for processing, recall context, feed it to an LLM. Everything else in HydraDB — metadata filters, sub-tenants, graph traversal, personalization — builds on this foundation.
+That's the full loop: create a tenant, ingest Knowledge and Memories, wait for processing, recall context, feed it to an LLM. Everything else in HydraDB - metadata filters, sub-tenants, graph traversal, personalization - builds on this foundation.
 
 **Where to go next:**
 
-- [Essentials → Memories](/essentials/memories) — how user-scoped memory works
-- [Essentials → Knowledge](/essentials/knowledge) — how document ingestion works
-- [Essentials → Recall](/essentials/recall) — parameters, modes, and tuning
-- [API Reference](/api-reference) — full endpoint documentation
-- [Cookbooks](/cookbooks) — end-to-end use case guides
+- [Essentials → Memories](/essentials/memories) - how user-scoped memory works
+- [Essentials → Knowledge](/essentials/knowledge) - how document ingestion works
+- [Essentials → Recall](/essentials/recall) - parameters, modes, and tuning
+- [API Reference](/api-reference) - full endpoint documentation
+- [Cookbooks](/cookbooks) - end-to-end use case guides
 
 Stuck? Reach out at [founders@hydradb.com](mailto:founders@hydradb.com).

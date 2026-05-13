@@ -1033,8 +1033,8 @@ Tested across a 2-year company knowledge base: 12 Slack channels, 3 Gmail accoun
 | Decision provenance ("why did we X?") | 18% | 29% | 82% | **+183%** |
 | Cross-source synthesis | 8% | 34% | 79% | **+132%** |
 | New hire onboarding questions | 31% | 48% | 88% | **+83%** |
-| Time saved per complex question | 45 min (manual) | ~8 min | &lt;30 sec | **−94%** |
-| P95 query latency | N/A (manual) | 220ms | &lt;200ms | **Sub-second** |
+| Time saved per complex question | 45 min (manual) | ~8 min | under 30 sec | **−94%** |
+| P95 query latency | N/A (manual) | 220ms | under 200 ms | **Sub-second** |
 
 > The 183% improvement on decision provenance reflects HydraDB's context graph. Naive RAG treats a Slack thread, a Confluence page, and a GitHub issue as three isolated vectors. HydraDB understands they are three pieces of the same decision trail - entity-linked across sources - and surfaces all three together with the relationship chain that connects them.
 

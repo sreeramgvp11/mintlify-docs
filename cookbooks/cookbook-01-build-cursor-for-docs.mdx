@@ -1492,6 +1492,6 @@ requests.post(
 | Cross-source recall (code + PR + Slack) | 14% | 79% | +464% |
 | Factual lookup ("what does X do?") | 71% | 91% | +28% |
 | Decision trail completeness (3+ hops cited) | 4% | 68% | +1,600% |
-| P95 recall latency | 180ms | &lt;200ms | Sub-second |
+| P95 recall latency | 180ms | under 200 ms | Sub-second |
 
 > ℹ️ The 22% accuracy on "why" questions isn't a tuning problem - it's structural. Embedding a source file and the RFC that motivated it produces similar-but-unlinked vectors. Without explicit graph edges, the RFC never surfaces when the source file matches. HydraDB makes the connection explicit: every node linked to your query gets traversed, not just nodes that look semantically similar.

@@ -705,11 +705,11 @@ Tested across 3 competitor corpora (150+ sources each: press releases, job posti
 
 | Metric | Manual / Naive RAG | HydraDB CI Agent | Delta |
 |--------|-------------------|------------------|-------|
-| Time to answer "what is X doing now?" | 30–60 min (manual) | &lt;10 seconds | **200x faster** |
+| Time to answer "what is X doing now?" | 30–60 min (manual) | under 10 seconds | **200x faster** |
 | Recall accuracy on temporal questions | 28% | 81% | **+189%** |
 | Stale signals surfaced in top results | 39% | 6% | **−85%** |
 | Signal sources covered | Press only (typically) | All 4 unified | **4x coverage** |
-| P95 query latency | N/A (manual) | &lt;200ms | **Sub-second** |
+| P95 query latency | N/A (manual) | under 200 ms | **Sub-second** |
 
 > The 28% accuracy for temporal questions in naive RAG is a structural limitation - embedding a Q2 press release and a Q4 press release produces similar vectors. They look alike semantically. HydraDB's `recency_bias` parameter and timestamp-aware ranking distinguish them at query time.
 

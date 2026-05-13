@@ -1378,8 +1378,8 @@ Track three metrics to understand if the Chief of Staff is working. Feed failure
 | --- | --- | --- | --- |
 | Suggestion acceptance rate | % of suggested functions the user actually runs without rejecting | >85% | Improve function descriptions; add more user preference memories |
 | Multi-step plan completion rate | % of generated plans that complete all steps without rollback | >90% | Add compensation functions; fix idempotency issues in executors |
-| P95 end-to-end latency | Time from task submission to last function execution complete | &lt;3s single-step, &lt;15s 5-step plan | Use mode: "fast" for single-function tasks; cache function registry |
-| Rollback frequency | % of plans that trigger rollback due to mid-plan failure | &lt;2% | Add retries with back-off; mark flaky functions as optional: true |
+| P95 end-to-end latency | Time from task submission to last function execution complete | under 3s single-step, under 15s 5-step plan | Use mode: "fast" for single-function tasks; cache function registry |
+| Rollback frequency | % of plans that trigger rollback due to mid-plan failure | under 2% | Add retries with back-off; mark flaky functions as optional: true |
 | Function routing accuracy | % of tasks where HydraDB's top-1 suggestion matches what the user intended | >90% | Add user_rejected feedback memories; rewrite function descriptions |
 
 
@@ -1639,8 +1639,8 @@ Tested across 3,200 task executions spanning 48 registered functions and 6 user 
 | Multi-step plan completion rate (5-step plans) | 54% | 88% | +63% |
 | Personalization accuracy (correct channel/timing per user) | 31% | 86% | +177% |
 | Suggestion acceptance rate (no user rejection) | 68% | 91% | +34% |
-| P95 function selection latency (single step, mode: fast) | N/A | &lt;120ms | Sub-second |
-| P95 plan generation latency (5-step, mode: thinking) | N/A | &lt;680ms | Sub-second |
+| P95 function selection latency (single step, mode: fast) | N/A | under 120 ms | Sub-second |
+| P95 plan generation latency (5-step, mode: thinking) | N/A | under 680 ms | Sub-second |
 
 
 ℹ️

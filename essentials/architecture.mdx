@@ -20,36 +20,47 @@ HydraDB has three logical planes:
 Your client talks only to the API. Storage, indexing, and graph internals stay behind the service boundary.
 
 ```mermaid
-flowchart TB
-  Client[Your App or SDK]
+flowchart LR
+  %% HydraDB Architecture Diagram - HydraDB Dark Mode Design
 
-  subgraph Control[Control Plane]
-    API[HydraDB API]
-    Tenants[Tenant Service]
-    Status[Status APIs]
+  %% Nodes with rounded edges and explicit colors
+  Client([Your App or SDK])
+
+  %% Control Plane
+  subgraph Control_Plane["Control Plane"]
+    API([HydraDB API])
+    Tenants([Tenant Service])
+    Status([Status APIs])
   end
 
-  subgraph Ingestion[Ingestion Plane — async]
-    Queue[Ingestion Queue]
-    Parser[Parse and Chunk]
-    Embed[Embed and Index]
-    Graph[Graph Builder]
+  %% Ingestion Plane (Async)
+  subgraph Ingestion_Plane["Ingestion Plane (async)"]
+    Queue([Ingestion Queue])
+    Parser([Parse and Chunk])
+    Embed([Embed and Index])
+    Graph([Graph Builder])
   end
 
-  subgraph Retrieval[Retrieval Plane — sync]
-    Recall[Recall Orchestrator]
-    MemVec[(Memories Vector Store)]
-    KnowVec[(Knowledge Vector Store)]
-    Lexical[(Lexical Index)]
-    ContextGraph[(Context Graph)]
-    Sources[(Source Store)]
+  %% Retrieval Plane (Sync)
+  subgraph Retrieval_Plane["Retrieval Plane (sync)"]
+    Recall([Recall Orchestrator])
+    MemVec([Memories Vector Store])
+    KnowVec([Knowledge Vector Store])
+    Lexical([Lexical Index])
+    ContextGraph([Context Graph])
+    Sources([Source Store])
   end
 
-  Client -->|HTTPS + Bearer token| API
+  %% Edges - Client/Control
+  Client -- "HTTPS + Bearer token" --> API
   API --> Tenants
   API --> Status
-  API -->|upload_knowledge| Queue
-  API -->|add_memory| Queue
+
+  %% Edges - Control to Ingestion
+  API -- "upload_knowledge" --> Queue
+  API -- "add_memory" --> Queue
+
+  %% Ingestion Process Chain
   Queue --> Parser
   Parser --> Sources
   Parser --> Embed
@@ -59,27 +70,27 @@ flowchart TB
   Parser --> Graph
   Graph --> ContextGraph
 
-  API -->|full_recall| Recall
-  API -->|recall_preferences| Recall
+  %% Retrieval interactions
+  API -- "full_recall" --> Recall
+  API -- "recall_preferences" --> Recall
   Recall --> MemVec
   Recall --> KnowVec
   Recall --> Lexical
   Recall --> ContextGraph
   Recall --> Sources
+
+  %% -- HydraDB Dark Mode Styles --
+  %% Global node shape and font color for readability
+  classDef nodeBase fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  classDef accent fill:#8b5cf6,stroke:#8b5cf6,stroke-width:2.5px,color:#f8fafc,stroke-linecap:round
+  class Client,API,Tenants,Status,Queue,Parser,Embed,Recall,MemVec,KnowVec,Lexical,ContextGraph,Sources nodeBase
+  class Graph accent  %% Core innovation step
+
+  %% Subgraph boxes (for optional visual hint, but color stays dark mode)
+  %% If additional subgraph styling: -- but Mermaid subgraph styling is limited in vanilla Mermaid.
+
+  %% Done
 ```
-
----
-
-## Two Distinct Stores
-
-HydraDB maintains **two separate vector stores** for the two primitive data types:
-
-| Store | `vectorstore_status` index | Write endpoint | Read endpoint |
-|---|---|---|---|
-| **Memories** | Index `1` (`[0]`) | `POST /memories/add_memory` | `POST /recall/recall_preferences` |
-| **Knowledge** | Index `2` (`[1]`) | `POST /ingestion/upload_knowledge` | `POST /recall/full_recall` |
-
-Both indices must be `true` in `vectorstore_status` before any ingestion. For a personalized answer, call both recall endpoints in parallel and merge the results before prompting your LLM.
 
 ---
 
@@ -166,7 +177,7 @@ HydraDB separates write-time work from query-time work. Uploads are accepted qui
 
 ## Related
 
-- [Core Concepts](/core-concepts) — the five primitives: Memories, Knowledge, Recall, Tenants, Metadata
-- [Quickstart](/quickstart) — build your first integration in five minutes
-- [Multi-Tenant Support](/essentials/multi-tenant) — scoping patterns
-- [Context Graphs](/essentials/context-graphs) — how the graph layer works
+- [Core Concepts](/core-concepts) - the five primitives: Memories, Knowledge, Recall, Tenants, Metadata
+- [Quickstart](/quickstart) - build your first integration in five minutes
+- [Multi-Tenant Support](/essentials/multi-tenant) - scoping patterns
+- [Context Graphs](/essentials/context-graphs) - how the graph layer works

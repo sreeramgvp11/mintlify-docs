@@ -35,9 +35,9 @@
               "essentials/memories",
               "essentials/knowledge",
               "essentials/recall",
+              "essentials/multi-tenant",
               "essentials/metadata",
               "essentials/context-graphs",
-              "essentials/multi-tenant",
               "essentials/api-results",
               "essentials/semantic-search"
             ]

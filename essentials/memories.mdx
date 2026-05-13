@@ -9,7 +9,7 @@ description: "What Memories are, how they differ from Knowledge, and how to writ
 
 Memories are user-scoped context HydraDB stores so your application can personalize responses over time.
 
-A memory is a unit of user-specific context HydraDB stores on behalf of an agent — a preference, a past conversation, an inferred trait, or a raw fact. Memories let an agent adapt its responses to a specific user across sessions, and surface again through [Recall](/essentials/recall) when relevant.
+A memory is a unit of user-specific context HydraDB stores on behalf of an agent - a preference, a past conversation, an inferred trait, or a raw fact. Memories let an agent adapt its responses to a specific user across sessions, and surface again through [Recall](/essentials/recall) when relevant.
 
 Think of memories as persistent user-specific context. That's distinct from **Knowledge**, which is shared, tenant-wide context ingested from documents and apps.
 
@@ -31,7 +31,7 @@ When you add a memory, HydraDB:
 3. Processes and indexes it for future retrieval.
 4. Makes it available to [`recall_preferences`](/api-reference/endpoint/recall-preferences).
 
-The `infer` flag controls how much structure HydraDB extracts on your behalf — see [How `infer` works](#5-how-it-works).
+The `infer` flag controls how much structure HydraDB extracts on your behalf - see [How `infer` works](#5-how-it-works).
 
 ---
 
@@ -44,7 +44,7 @@ Use memories when responses need to adapt to a specific user over time:
 - Record decisions, outcomes, or feedback tied to a user.
 - Build up a behavioral profile that compounds across sessions.
 
-Use [Knowledge ingestion](/api-reference/endpoint/upload-knowledge) instead when the content is shared across users — product docs, policy PDFs, internal wikis, Slack threads.
+Use [Knowledge ingestion](/api-reference/endpoint/upload-knowledge) instead when the content is shared across users - product docs, policy PDFs, internal wikis, Slack threads.
 
 | If the content is... | Store it as... |
 |---|---|
@@ -97,9 +97,9 @@ Best for capturing implicit signals from dialogue.
 
 The `infer` flag is the most important decision when writing a memory. It controls how much work your application has to do *before* sending content to HydraDB.
 
-**`infer: true` — HydraDB extracts the preference for you.**
+**`infer: true` - HydraDB extracts the preference for you.**
 
-You hand HydraDB raw signal — interaction logs, dialogue, behavior, observations — and HydraDB infers the underlying preference, trait, or fact.
+You hand HydraDB raw signal - interaction logs, dialogue, behavior, observations - and HydraDB infers the underlying preference, trait, or fact.
 
 Concretely: ship the events that imply a preference, and HydraDB derives the preference. For example, dump a stream of UI interaction logs showing that a user switched to dark mode on Day 1, kept it on for a month, and toggled it back to light once before reverting. HydraDB infers `"user prefers dark mode"` and indexes that. Your application never has to write the extraction logic.
 
@@ -112,7 +112,7 @@ This is the right mode for:
 
 `custom_instructions` only takes effect when `infer: true`. Use it to guide what gets extracted (e.g., `"Focus on UI and notification preferences only"`).
 
-**`infer: false` (default) — HydraDB stores what you give it.**
+**`infer: false` (default) - HydraDB stores what you give it.**
 
 You've already done the extraction. The text you send *is* the memory, verbatim. HydraDB stores and indexes it as-is. No inference, no derivation.
 
@@ -138,7 +138,7 @@ Memories live in a separate vector store from Knowledge:
 
 Within a tenant, memories are scoped by `sub_tenant_id`. For per-user separation (B2C), use the user's ID as the `sub_tenant_id`. For shared memory across a workspace, use a stable workspace-level ID. If you omit `sub_tenant_id`, the memory is written to the tenant's default sub-tenant. See [Multi-tenant support](/essentials/multi-tenant).
 
-Ingestion is asynchronous — memories aren't immediately searchable. Poll [`/ingestion/verify_processing`](/api-reference/endpoint/verify-processing) with the returned `source_id` until `indexing_status` is `completed`.
+Ingestion is asynchronous - memories aren't immediately searchable. Poll [`/ingestion/verify_processing`](/api-reference/endpoint/verify-processing) with the returned `source_id` until `indexing_status` is `completed`.
 
 ---
 
@@ -324,7 +324,7 @@ client.upload.add_memory(
 
 When `recall_preferences` runs with a query like `"what UI settings does the user prefer?"`, HydraDB returns the *inferred* preference (`"prefers dark mode"`), not the raw log. Your application never had to write the extraction logic.
 
-The same input with `infer: false` would index the raw text verbatim — useful only if you actually want to retrieve the event log itself.
+The same input with `infer: false` would index the raw text verbatim - useful only if you actually want to retrieve the event log itself.
 
 ---
 
@@ -332,7 +332,7 @@ The same input with `infer: false` would index the raw text verbatim — useful 
 
 | Mistake | What goes wrong | Fix |
 |---|---|---|
-| Sending `"memory": "..."` (singular, string) | Validation fails | Use `"memories": [ { "text": "..." } ]` — always an array of objects |
+| Sending `"memory": "..."` (singular, string) | Validation fails | Use `"memories": [ { "text": "..." } ]` - always an array of objects |
 | Omitting `tenant_id` | Request validation error | Required on every call |
 | Omitting `sub_tenant_id` for per-user data | The memory lands in the default sub-tenant and may surface across users | Use the user's ID as `sub_tenant_id` for B2C separation |
 | Setting `custom_instructions` with `infer: false` | Instructions are ignored | Set `infer: true` if you need them to take effect |
@@ -347,7 +347,7 @@ The same input with `infer: false` would index the raw text verbatim — useful 
 
 ## Related
 
-- [Knowledge](/essentials/knowledge) — shared, tenant-wide document context
-- [Recall](/essentials/recall) — how memories are retrieved at query time
-- [Multi-tenant support](/essentials/multi-tenant) — scoping memories per user or workspace
-- [Metadata](/essentials/metadata) — designing filterable fields
+- [Knowledge](/essentials/knowledge) - shared, tenant-wide document context
+- [Recall](/essentials/recall) - how memories are retrieved at query time
+- [Multi-tenant support](/essentials/multi-tenant) - scoping memories per user or workspace
+- [Metadata](/essentials/metadata) - designing filterable fields

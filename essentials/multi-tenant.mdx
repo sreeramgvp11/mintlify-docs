@@ -9,8 +9,8 @@ description: "How HydraDB scopes data using tenants and sub-tenants, and how sco
 
 HydraDB scopes data using two identifiers:
 
-- **`tenant_id`** — the top-level scoping identifier. Use it for customers, environments, or other primary data boundaries.
-- **`sub_tenant_id`** — an optional scoping identifier within a tenant. Use it for users, workspaces, teams, or other logical partitions.
+- **`tenant_id`** - the top-level scoping identifier. Use it for customers, environments, or other primary data boundaries.
+- **`sub_tenant_id`** - an optional scoping identifier within a tenant. Use it for users, workspaces, teams, or other logical partitions.
 
 HydraDB write and recall operations are scoped by `tenant_id`. When `sub_tenant_id` is provided, it further narrows the scope for that operation. If you omit `sub_tenant_id`, HydraDB uses the tenant's default sub-tenant.
 
@@ -75,8 +75,8 @@ Typical flow:
 
 For personalized answers grounded in shared Knowledge, keep the two retrieval paths explicit:
 
-- Use `full_recall` for shared Knowledge — this hits the Knowledge vector store (`vectorstore_status` index `2`).
-- Use `recall_preferences` for user-specific Memories — this hits the Memories vector store (`vectorstore_status` index `1`).
+- Use `full_recall` for shared Knowledge - this hits the Knowledge vector store (`vectorstore_status` index `2`).
+- Use `recall_preferences` for user-specific Memories - this hits the Memories vector store (`vectorstore_status` index `1`).
 - Merge the two results in your application before prompting the LLM.
 
 This mirrors the pattern used throughout the Recall and Memories pages: shared context and personal context are retrieved separately, then combined at prompt time.
@@ -275,8 +275,8 @@ Avoid display names, emails that may change, or user-provided labels as long-ter
 
 ## Related
 
-- [Memories](/essentials/memories) — user-scoped context
-- [Knowledge](/essentials/knowledge) — shared document context
-- [Recall](/essentials/recall) — how scoping is applied at query time
-- [How to Use API Results](/essentials/api-results) — merging recall results into a prompt
-- [Create Tenant](/api-reference/endpoint/create-tenant) — defining tenants and their metadata schema
+- [Memories](/essentials/memories) - user-scoped context
+- [Knowledge](/essentials/knowledge) - shared document context
+- [Recall](/essentials/recall) - how scoping is applied at query time
+- [How to Use API Results](/essentials/api-results) - merging recall results into a prompt
+- [Create Tenant](/api-reference/endpoint/create-tenant) - defining tenants and their metadata schema

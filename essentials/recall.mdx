@@ -1,6 +1,6 @@
 ---
 title: "Recall"
-description: "How HydraDB retrieves the right context for each query — across Knowledge, Memories, and the context graph."
+description: "How HydraDB retrieves the right context for each query - across Knowledge, Memories, and the context graph."
 ---
 
 # Recall
@@ -13,7 +13,7 @@ For request/response schemas, see the API reference: [Full Recall](/api-referenc
 
 ## 1. What is Recall
 
-Recall returns the chunks most likely to help your agent succeed on a query — not just the chunks most textually similar to it. Pure vector search gives you similarity; recall gives you usefulness.
+Recall returns the chunks most likely to help your agent succeed on a query - not just the chunks most textually similar to it. Pure vector search gives you similarity; recall gives you usefulness.
 
 HydraDB stores two kinds of context in separate vector stores:
 
@@ -24,7 +24,7 @@ HydraDB stores two kinds of context in separate vector stores:
 
 A single recall call hits one store. To use both in one prompt, call the matching endpoint for each and merge the results.
 
-When `graph_context` is enabled, recall also traverses the **context graph** — a graph of relationships between stored context that HydraDB derives automatically from your data — so related material that pure similarity would miss can come back with the result.
+When `graph_context` is enabled, recall also traverses the **context graph** - a graph of relationships between stored context that HydraDB derives automatically from your data - so related material that pure similarity would miss can come back with the result.
 
 ---
 
@@ -54,9 +54,9 @@ HydraDB exposes three endpoints under `/recall/*`. Pick one based on what you ne
 | `POST /recall/recall_preferences` | Memories | `RetrievalResult` | You need user-specific context |
 | `POST /recall/boolean_recall` | Knowledge or Memories (`search_mode`) | `RetrievalResult` | You need exact term, AND, or phrase matching |
 
-`full_recall` and `recall_preferences` share the same request and response shape (`RecallSearchRequest` → `RetrievalResult`). `boolean_recall` accepts a smaller set of parameters and runs deterministic lexical matching — no graph traversal, no metadata filters.
+`full_recall` and `recall_preferences` share the same request and response shape (`RecallSearchRequest` → `RetrievalResult`). `boolean_recall` accepts a smaller set of parameters and runs deterministic lexical matching - no graph traversal, no metadata filters.
 
-To deliver a personalized answer, the canonical pattern is two parallel calls — `full_recall` for shared Knowledge, `recall_preferences` for the user's Memories — merged into a single LLM prompt. See [Minimal Working Example](#6-minimal-working-example).
+To deliver a personalized answer, the canonical pattern is two parallel calls - `full_recall` for shared Knowledge, `recall_preferences` for the user's Memories - merged into a single LLM prompt. See [Minimal Working Example](#6-minimal-working-example).
 
 ---
 
@@ -71,7 +71,7 @@ The semantic recall endpoints (`full_recall`, `recall_preferences`) accept a `mo
 
 `thinking` produces higher-quality results by expanding the query into sub-queries and reranking candidates. It also surfaces forceful-relation extras (`extra_context_ids` and the `additional_context` map on the response) when matching sources have them. `fast` skips both steps.
 
-`boolean_recall` has no `mode` parameter — it always runs deterministic term matching.
+`boolean_recall` has no `mode` parameter - it always runs deterministic term matching.
 
 **Rule of thumb.** If a human will read the result, use `thinking`. If a machine will filter it further or low latency is the priority, use `fast`.
 
@@ -83,9 +83,9 @@ These apply to `full_recall` and `recall_preferences` (`RecallSearchRequest`):
 
 | Parameter | Type | Default | Purpose |
 |---|---|---|---|
-| `tenant_id` | string | — *(required)* | Tenant identifier — the top-level scoping identifier. |
+| `tenant_id` | string | - *(required)* | Tenant identifier - the top-level scoping identifier. |
 | `sub_tenant_id` | string \| null | none | Scopes recall to a user, workspace, or partition. If omitted, HydraDB uses the tenant's default sub-tenant. |
-| `query` | string | — *(required)* | Search terms. |
+| `query` | string | - *(required)* | Search terms. |
 | `mode` | `"fast"` \| `"thinking"` | `"fast"` | Retrieval pipeline. |
 | `max_results` | integer \| null | server default | Maximum chunks to return. Start with 10. |
 | `alpha` | number \| `"auto"` | `0.8` | Hybrid ranking weight (`0.0` = keyword, `1.0` = semantic). |
@@ -99,7 +99,7 @@ These apply to `full_recall` and `recall_preferences` (`RecallSearchRequest`):
 
 | Parameter | Type | Default | Purpose |
 |---|---|---|---|
-| `tenant_id`, `sub_tenant_id`, `query` | — | — | As above. `query` and `tenant_id` are required. |
+| `tenant_id`, `sub_tenant_id`, `query` | - | - | As above. `query` and `tenant_id` are required. |
 | `operator` | `"or"` \| `"and"` \| `"phrase"` | `"or"` | How search terms combine. |
 | `max_results` | integer | `10` | Result cap. |
 | `search_mode` | `"sources"` \| `"memories"` | `"sources"` | Which store to search. |
@@ -109,8 +109,8 @@ It does **not** accept `mode`, `alpha`, `recency_bias`, `graph_context`, `metada
 <Warning>
   <strong>Two defaults that surprise developers</strong>
   <ul>
-    <li><code>graph_context</code> defaults to <code>false</code> — set it to <code>true</code> to receive graph data in the response.</li>
-    <li><code>recency_bias</code> defaults to <code>0</code> — no recency boost is applied unless you set it.</li>
+    <li><code>graph_context</code> defaults to <code>false</code> - set it to <code>true</code> to receive graph data in the response.</li>
+    <li><code>recency_bias</code> defaults to <code>0</code> - no recency boost is applied unless you set it.</li>
   </ul>
 </Warning>
 
@@ -122,10 +122,10 @@ It does **not** accept `mode`, `alpha`, `recency_bias`, `graph_context`, `metada
 
 ### Tuning heuristics
 
-- **`alpha`** — Start at `0.8`. Lower toward `0.3–0.5` when the query contains literal tokens (error codes, SKUs, product names). Raise toward `0.9` for conceptual questions. Use `"auto"` when the query shape varies.
-- **`recency_bias`** — Leave at `0` for static reference material. Set `0.2–0.4` for mixed content, `0.6–0.8` for changelogs, news, or status updates.
-- **`max_results`** — Start at `10`. Drop to `5` for tight context windows; raise to `20` if you rerank downstream.
-- **`additional_context`** — Use it when the query alone is ambiguous. Keep it short and factual.
+- **`alpha`** - Start at `0.8`. Lower toward `0.3–0.5` when the query contains literal tokens (error codes, SKUs, product names). Raise toward `0.9` for conceptual questions. Use `"auto"` when the query shape varies.
+- **`recency_bias`** - Leave at `0` for static reference material. Set `0.2–0.4` for mixed content, `0.6–0.8` for changelogs, news, or status updates.
+- **`max_results`** - Start at `10`. Drop to `5` for tight context windows; raise to `20` if you rerank downstream.
+- **`additional_context`** - Use it when the query alone is ambiguous. Keep it short and factual.
 
 ---
 
@@ -138,7 +138,7 @@ The canonical personalized-answer flow: recall Knowledge, recall the user's Memo
 <CodeGroup>
 
 ```bash cURL
-# Set your key as an environment variable — used in every request below
+# Set your key as an environment variable - used in every request below
 export HYDRADB_API_KEY="your_api_key"
 # All requests: -H "Authorization: Bearer $HYDRADB_API_KEY"
 ```
@@ -160,7 +160,7 @@ client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
 
 </CodeGroup>
 
-### Recall — Knowledge and Memories in parallel
+### Recall - Knowledge and Memories in parallel
 
 <CodeGroup>
 
@@ -246,7 +246,7 @@ async def gather_context(tenant_id: str, user_id: str, query: str):
 
 ### Merge into the LLM prompt
 
-Both calls return the same shape: `chunks[]`, `sources[]`, and (when applicable) `graph_context` and `additional_context`. Format each into a context string — the helper in [How to Use API Results](/essentials/api-results) does this — and feed both into your prompt:
+Both calls return the same shape: `chunks[]`, `sources[]`, and (when applicable) `graph_context` and `additional_context`. Format each into a context string - the helper in [How to Use API Results](/essentials/api-results) does this - and feed both into your prompt:
 
 ```typescript
 const knowledgeCtx = buildContextString(knowledge);
@@ -269,7 +269,7 @@ const completion = await openai.chat.completions.create({
 
 ### Production checklist
 
-- **Parallelize** the two recall calls — they're independent.
+- **Parallelize** the two recall calls - they're independent.
 - **Set per-call timeouts.** Generous for `thinking` (3–5s), tight for `fast` (≤500ms).
 - **Degrade gracefully.** If memory recall fails or times out, continue with Knowledge only.
 - **Pass `additional_context`** with known session state (page, feature, role). It can sharpen retrieval without requiring additional calls.
@@ -281,7 +281,7 @@ const completion = await openai.chat.completions.create({
 | Symptom | Cause | Fix |
 |---|---|---|
 | Empty `query_paths` / `chunk_relations` | `graph_context` not set, or no relations exist for the result set | Set `graph_context: true`; empty arrays are normal when there's nothing to return. |
-| Recent uploads don't appear | Indexing not finished | Poll [`/ingestion/verify_processing`](/api-reference/endpoint/verify-processing) — chunks are invisible until processing completes. |
+| Recent uploads don't appear | Indexing not finished | Poll [`/ingestion/verify_processing`](/api-reference/endpoint/verify-processing) - chunks are invisible until processing completes. |
 | `metadata_filters` does not narrow results | Filter key is undeclared or not match-enabled | Declare filterable keys in `tenant_metadata_schema` with `enable_match: true` before ingestion. |
 | Memories missing from `full_recall` (or vice versa) | Knowledge and Memories are separate stores | Call both endpoints and merge. |
 | Recency doesn't seem to matter | `recency_bias` defaults to `0` | Set it explicitly between `0.1` and `1.0`. |
@@ -293,14 +293,14 @@ const completion = await openai.chat.completions.create({
 
 **Hybrid: `boolean_recall` + `full_recall`.** When a query mixes a literal token (error code, SKU, function name) with natural-language intent, run both, dedupe by `chunk_uuid`, and treat boolean hits as a "must include" floor.
 
-**Recall-then-rerank.** Request more chunks than you need (`max_results: 20`), then apply your own reranker — recency windows, compliance filters, business rules — before picking the final top-k for the prompt.
+**Recall-then-rerank.** Request more chunks than you need (`max_results: 20`), then apply your own reranker - recency windows, compliance filters, business rules - before picking the final top-k for the prompt.
 
 ---
 
 ## Related
 
-- [Memories](/essentials/memories) — user-scoped dynamic context
-- [Knowledge](/essentials/knowledge) — shared document context
-- [Metadata](/essentials/metadata) — designing filterable fields
-- [Context Graphs](/essentials/context-graphs) — how graph traversal enriches recall
-- [How to Use API Results](/essentials/api-results) — turning `RetrievalResult` into an LLM prompt
+- [Memories](/essentials/memories) - user-scoped dynamic context
+- [Knowledge](/essentials/knowledge) - shared document context
+- [Metadata](/essentials/metadata) - designing filterable fields
+- [Context Graphs](/essentials/context-graphs) - how graph traversal enriches recall
+- [How to Use API Results](/essentials/api-results) - turning `RetrievalResult` into an LLM prompt
