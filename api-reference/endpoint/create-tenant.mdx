@@ -137,6 +137,10 @@ For text fields that need to be searchable, use `VARCHAR` and enable the appropr
 Schema field names are **immutable** after tenant creation. You can add new `additional_metadata` fields per document at ingestion time, but tenant-level fields cannot be renamed or removed. Plan the schema carefully before creating the tenant.
 </Warning>
 
+<Note>
+  **`vectorstore_status` index mapping:** Index `0` is the **Memories** vector store (user preferences, conversation history). Index `1` is the **Knowledge** vector store (documents, app sources). Both must be `true` before your first ingestion call.
+</Note>
+
 ## Behavior notes
 
 <Info>
