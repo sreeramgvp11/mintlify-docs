@@ -47,7 +47,8 @@
             "pages": [
               "plugins/claude-code",
               "plugins/mcp",
-              "plugins/cli"
+              "plugins/cli",
+              "plugins/openclaw"
             ]
           }
         ]
@@ -94,7 +95,6 @@
               "api-reference/endpoint/monitor-tenant",
               "api-reference/endpoint/infra-status",
               "api-reference/endpoint/list-sub-tenant-ids",
-              "api-reference/endpoint/list-tenant-ids",
               "api-reference/endpoint/delete-tenant"
             ]
           },
@@ -124,8 +124,8 @@
             "pages": [
               "api-reference/endpoint/list-overview",
               "api-reference/endpoint/list-data",
-              "api-reference/endpoint/graph-relations",
-              "api-reference/endpoint/fetch-content"
+              "api-reference/endpoint/fetch-content",
+              "api-reference/endpoint/graph-relations"
             ]
           }
         ]

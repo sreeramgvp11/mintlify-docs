@@ -70,7 +70,6 @@ SDK methods are grouped by capability, not by URL path. The mapping is mostly in
 | `/recall/*` | `client.recall` | All retrieval modes |
 | `/list/*`, `/fetch/*` | `client.fetch` | Browse and retrieve |
 | `/knowledge/*` | `client.data` | Bulk knowledge delete |
-| `/embeddings/*` | `client.embeddings` | Bring-your-own-vector workflows |
 
 Additional clients available: `client.key` for API key management, `client.ingestionPipeline` for pipeline operations, `client.graphHealth` for health checks.
 
@@ -119,16 +118,6 @@ Method names map to the URL by removing the leading slash and replacing path sep
 | Method | Endpoint |
 |---|---|
 | `client.data.delete()` | `POST /knowledge/delete_knowledge` |
-
-### Embeddings
-
-| Method | Endpoint |
-|---|---|
-| `client.embeddings.insert()` | `POST /embeddings/insert_raw_embeddings` |
-| `client.embeddings.search()` | `POST /embeddings/search_raw_embeddings` |
-| `client.embeddings.filter()` | `POST /embeddings/filter_raw_embeddings` |
-| `client.embeddings.delete()` | `DELETE /embeddings/delete_raw_embeddings` |
-
 In TypeScript, snake_case method names use camelCase: `client.tenant.getInfraStatus()`, `client.recall.fullRecall()`, etc.
 
 In Python, all method names use snake_case: `client.tenant.get_infra_status()`, `client.recall.full_recall()`, etc.

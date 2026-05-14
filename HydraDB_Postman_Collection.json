@@ -297,62 +297,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "Raw Embeddings",
-      "item": [
-        {
-          "name": "Insert Raw Embeddings",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/embeddings/insert_raw_embeddings", "host": ["{{base_url}}"], "path": ["embeddings", "insert_raw_embeddings"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"my_embeddings_tenant\",\n  \"embeddings\": [\n    {\n      \"source_id\": \"doc_001\",\n      \"metadata\": { \"category\": \"engineering\" },\n      \"embeddings\": [\n        { \"chunk_id\": \"doc_001_chunk_0\", \"embedding\": [0.123, -0.045, 0.789] }\n      ]\n    }\n  ],\n  \"upsert\": false\n}"
-            }
-          }
-        },
-        {
-          "name": "Search Raw Embeddings",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/embeddings/search_raw_embeddings", "host": ["{{base_url}}"], "path": ["embeddings", "search_raw_embeddings"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"my_embeddings_tenant\",\n  \"sub_tenant_id\": \"default\",\n  \"query_embedding\": [0.123, -0.045, 0.789],\n  \"limit\": 10\n}"
-            }
-          }
-        },
-        {
-          "name": "Filter Raw Embeddings (by source)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/embeddings/filter_raw_embeddings", "host": ["{{base_url}}"], "path": ["embeddings", "filter_raw_embeddings"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tenant_id\": \"my_embeddings_tenant\",\n  \"sub_tenant_id\": \"default\",\n  \"source_id\": \"doc_001\",\n  \"limit\": 100\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete Raw Embeddings (by source)",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/embeddings/delete_raw_embeddings?tenant_id=my_embeddings_tenant&source_id=doc_001",
-              "host": ["{{base_url}}"],
-              "path": ["embeddings", "delete_raw_embeddings"],
-              "query": [
-                { "key": "tenant_id", "value": "my_embeddings_tenant" },
-                { "key": "source_id", "value": "doc_001" }
-              ]
-            }
-          }
-        }
-      ]
     }
   ]
 }

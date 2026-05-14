@@ -16,10 +16,6 @@ For documents, files, and app-generated content, use [`POST /ingestion/upload_kn
 
 ## Endpoint
 
-```
-POST /memories/add_memory
-```
-
 - **Auth:** Bearer token
 - **Idempotency:** Controlled by `upsert` (default `true` – overwrites existing items with the same `source_id`)
 - **Async:** Yes – memories are queued for processing. Use [`POST /ingestion/verify_processing`](/api-reference/endpoint/verify-processing) to check status.

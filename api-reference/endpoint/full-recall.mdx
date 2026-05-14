@@ -19,10 +19,6 @@ For user-specific memories (preferences, conversation history), use [`POST /reca
 
 ## Endpoint
 
-```
-POST /recall/full_recall
-```
-
 - **Auth:** Bearer token
 - **Idempotency:** Read-only
 - **Async:** No
@@ -193,3 +189,7 @@ If either condition is missing, the fields return as empty arrays. See [Essentia
 Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`, `429 RATE_LIMITED`. See [Error Responses](/api-reference/error-responses) for the full list.
 
 Read more: [Essentials → Recall](/essentials/recall) · [Essentials → Context Graphs](/essentials/context-graphs)
+
+## How to use API Results
+
+Recall responses are chunks of data from knoledge, memory and graph relations in structured JSON. To extract context, we parse the data out of the response strucutre and feed it in prose to an LLM. For further details, explore [Essentials → How to Use API Results](/essentials/api-results).

@@ -17,10 +17,48 @@ The retrieval endpoints (`full_recall` and `recall_preferences`) return the same
 
 ```json
 {
-  "chunks": [ /* ranked content chunks */ ],
-  "sources": [ /* deduplicated source metadata */ ],
-  "graph_context": { /* paths and chunk relations, when requested */ },
-  "additional_context": { /* extra chunks keyed by chunk_uuid */ }
+  "chunks": [
+    {
+      "chunk_uuid": "doc-001_chunk_0",
+      "source_title": "my_document.pdf",
+      "chunk_content": "Text content of the retrieved chunk...",
+      "relevancy_score": 1.09,
+      "extra_context_ids": ["ctx-id-1"],
+      "additional_metadata": { ... }
+    }
+  ],
+  "graph_context": {
+    "query_paths": [
+      {
+        "triplets": [
+          {
+            "source": { "name": "EntityA" },
+            "target": { "name": "EntityB" },
+            "relation": {
+              "canonical_predicate": "DEPENDS_ON",
+              "context": "reason text",
+              "temporal_details": "2024-01"
+            }
+          }
+        ]
+      }
+    ],
+    "chunk_id_to_group_ids": {
+      "doc-001_chunk_0": ["group-1"]
+    },
+    "chunk_relations": [
+      {
+        "group_id": "group-1",
+        "triplets": [ ... ]
+      }
+    ]
+  },
+  "additional_context": {
+    "ctx-id-1": {
+      "source_title": "related_doc.pdf",
+      "chunk_content": "Extra related content..."
+    }
+  }
 }
 ```
 
@@ -46,22 +84,72 @@ The helper below takes a `RetrievalResult` and produces a single string with:
 
 The output is delimited by `=== ENTITY PATHS ===` and `=== CONTEXT ===` blocks so the LLM can read it cleanly.
 
+First, call the recall endpoint with the parameters you need:
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import httpx
+
+    response = httpx.post(
+        "https://api.hydradb.com/recall/full_recall",
+        headers={"Authorization": "Bearer YOUR_HYDRADB_API_KEY"},
+        json={
+            "tenant_id": "your-tenant",
+            "sub_tenant_id": "your-sub-tenant",
+            "query": "How does authentication work?",
+            "max_results": 5,
+            "mode": "fast",
+            "alpha": 0.8,
+            "recency_bias": 0,
+            "graph_context": True,
+            "search_forceful_relations": True,
+            "metadata_filters": {
+                "category": "engineering",
+            },
+        }
+    )
+
+    result = response.json()
+    ```
+  </Tab>
+  <Tab title="TypeScript">
+    ```typescript
+    const res = await fetch("https://api.hydradb.com/recall/full_recall", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer YOUR_HYDRADB_API_KEY",
+      },
+      body: JSON.stringify({
+        tenant_id: "your-tenant",
+        sub_tenant_id: "your-sub-tenant",
+        query: "How does authentication work?",
+        max_results: 5,
+        mode: "fast",
+        alpha: 0.8,
+        recency_bias: 0,
+        graph_context: true,
+        search_forceful_relations: true,
+        metadata_filters: {
+          category: "engineering",
+        },
+      }),
+    });
+
+    const result = await res.json();
+    ```
+  </Tab>
+</Tabs>
+
+Then pass the response into the helper below to build a context string:
+
 <CodeGroup>
 
 ```bash cURL
 # build_context_string is a client-side utility that transforms the JSON
 # returned by /recall/full_recall or /recall/recall_preferences.
-# First, get the raw response with a recall call:
-curl -X POST 'https://api.hydradb.com/recall/full_recall' \
-  -H "Authorization: Bearer $HYDRADB_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "acme_corp",
-    "query": "your query here",
-    "mode": "thinking",
-    "graph_context": true
-  }'
-# Then pass the JSON response body into the SDK helper shown in the other tabs.
+# See the other tabs for the SDK version of this logic.
 ```
 
 ```typescript TypeScript SDK
@@ -357,16 +445,16 @@ curl -X POST 'https://api.openai.com/v1/chat/completions' \
 ```typescript TypeScript SDK
 import OpenAI from "openai";
 
-const openai = new OpenAI();
-const context = buildContextString(result);
+const client = new OpenAI({ apiKey: "YOUR_OPENAI_API_KEY" });
+const question = "How does authentication work?";
 
-const completion = await openai.chat.completions.create({
+const completion = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [
     {
       role: "system",
       content:
-        "Answer the user's question using only the context below. If the answer is not in the context, say you don't know.",
+        "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
     },
     {
       role: "user",
@@ -374,23 +462,22 @@ const completion = await openai.chat.completions.create({
     },
   ],
 });
+
+console.log(completion.choices[0].message.content);
 ```
 
 ```python Python SDK
 from openai import OpenAI
 
-openai_client = OpenAI()
-context = build_context_string(result)
+client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+question = "How does authentication work?"
 
-completion = openai_client.chat.completions.create(
+completion = client.chat.completions.create(
     model="gpt-4o",
     messages=[
         {
             "role": "system",
-            "content": (
-                "Answer the user's question using only the context below. "
-                "If the answer is not in the context, say you don't know."
-            ),
+            "content": "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
         },
         {
             "role": "user",
@@ -398,6 +485,8 @@ completion = openai_client.chat.completions.create(
         },
     ],
 )
+
+print(completion.choices[0].message.content)
 ```
 
 </CodeGroup>

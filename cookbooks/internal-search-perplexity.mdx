@@ -52,7 +52,18 @@ curl -X POST 'https://api.hydradb.com/tenants/create' \
   -d '{"tenant_id": "company-knowledge"}'
 ```
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// setup.ts
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+
+await client.tenant.create({ tenant_id: TENANT_ID });
+```
+
+```python Python SDK
 # setup.py
 import os, requests
 
@@ -66,6 +77,7 @@ HEADERS   = {
 
 requests.post(f"{BASE_URL}/tenants/create", headers=HEADERS, json={"tenant_id": TENANT_ID})
 ```
+</CodeGroup>
 
 ---
 
@@ -102,7 +114,75 @@ Save `results[0].source_id` - you need it to verify indexing.
 
 Combine each thread (parent message + all replies) into one document. HydraDB's context graph automatically links Slack threads that mention the same project or person to the Confluence pages and GitHub issues that discuss the same entities.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// connectors/slack.ts
+import { HydraDBClient } from "@hydradb/sdk";
+import { createReadStream, writeFileSync } from "fs";
+import { WebClient } from "@slack/web-api";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+
+async function ingestSlackChannel(
+  channelId: string,
+  channelName: string,
+  daysBack: number = 365
+): Promise<string[]> {
+  const oldest = String(Date.now() / 1000 - daysBack * 86400);
+  const allIds: string[] = [];
+  let cursor: string | undefined;
+
+  while (true) {
+    const resp = await slack.conversations.history({
+      channel: channelId,
+      oldest,
+      limit: 200,
+      ...(cursor ? { cursor } : {}),
+    });
+    const messages = resp.messages ?? [];
+
+    for (const msg of messages) {
+      if (!msg.text) continue;
+      let threadText = msg.text;
+      if ((msg.reply_count ?? 0) > 0) {
+        const replies = await slack.conversations.replies({
+          channel: channelId,
+          ts: msg.ts!,
+        });
+        threadText += (replies.messages ?? [])
+          .slice(1)
+          .map((r) => `\n↳ ${r.text ?? ""}`)
+          .join("");
+      }
+      const tsDate = new Date(Number(msg.ts) * 1000)
+        .toISOString()
+        .slice(0, 10);
+      const content =
+        `Source: Slack #${channelName}\nDate: ${tsDate}\n\n${threadText}`;
+      const filename = `/tmp/slack-${channelName}-${msg.ts}.txt`;
+      writeFileSync(filename, content, "utf-8");
+
+      const result = await client.upload.knowledge({
+        tenant_id: TENANT_ID,
+        sub_tenant_id: "slack",
+        files: [createReadStream(filename)],
+      });
+      const results = (result as any).results ?? [];
+      if (results[0]?.source_id) allIds.push(results[0].source_id);
+    }
+
+    if (!resp.has_more) break;
+    cursor = (resp.response_metadata as any)?.next_cursor;
+  }
+
+  console.log(`Slack #${channelName}: ${allIds.length} threads uploaded`);
+  return allIds;
+}
+```
+
+```python Python SDK
 # connectors/slack.py
 import os, time, requests
 from slack_sdk  import WebClient
@@ -183,12 +263,89 @@ def _upload_batch(batch: list, sub_tenant: str) -> list:
         time.sleep(0.1)   # brief pause between individual uploads in a batch
     return source_ids
 ```
+</CodeGroup>
 
 ### 2.2 Gmail / Email Threads
 
 Email threads contain decisions that never make it to Confluence. Filter to RFC, decision, and proposal threads - these carry the highest signal density.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// connectors/gmail.ts
+import { HydraDBClient } from "@hydradb/sdk";
+import { createReadStream, writeFileSync } from "fs";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+
+async function ingestGmailThreads(
+  gmailService: any,
+  query: string,
+  maxThreads: number = 200
+): Promise<string[]> {
+  const allIds: string[] = [];
+  const listResp = await gmailService.users.threads.list({
+    userId: "me",
+    q: query,
+    maxResults: maxThreads,
+  });
+  const threads = listResp.data.threads ?? [];
+
+  for (const thread of threads) {
+    const threadData = await gmailService.users.threads.get({
+      userId: "me",
+      id: thread.id,
+    });
+    const messages = threadData.data.messages ?? [];
+    const parts: string[] = [];
+    let subject = "";
+    let date = "";
+
+    for (const msg of messages) {
+      const headers: Record<string, string> = {};
+      for (const h of msg.payload?.headers ?? []) {
+        headers[h.name] = h.value;
+      }
+      if (!subject) subject = headers["Subject"] ?? "No subject";
+      if (!date) date = headers["Date"] ?? "";
+
+      let body = "";
+      if (msg.payload?.parts) {
+        for (const part of msg.payload.parts) {
+          if (part.mimeType === "text/plain" && part.body?.data) {
+            body = Buffer.from(part.body.data, "base64").toString("utf-8");
+            break;
+          }
+        }
+      } else if (msg.payload?.body?.data) {
+        body = Buffer.from(msg.payload.body.data, "base64").toString("utf-8");
+      }
+      if (body) parts.push(`From: ${headers["From"] ?? ""}\n${body}`);
+    }
+
+    if (!parts.length) continue;
+
+    const content =
+      `Source: Gmail\nSubject: ${subject}\nDate: ${date}\n\n` +
+      parts.join("\n\n---\n\n");
+    const filename = `/tmp/email-${thread.id}.txt`;
+    writeFileSync(filename, content, "utf-8");
+
+    const result = await client.upload.knowledge({
+      tenant_id: TENANT_ID,
+      sub_tenant_id: "email",
+      files: [createReadStream(filename)],
+    });
+    const results = (result as any).results ?? [];
+    if (results[0]?.source_id) allIds.push(results[0].source_id);
+  }
+
+  console.log(`Gmail: ${allIds.length} threads uploaded`);
+  return allIds;
+}
+```
+
+```python Python SDK
 # connectors/gmail.py
 import os, time, base64, requests
 from google.oauth2.credentials import Credentials
@@ -260,12 +417,75 @@ def ingest_gmail_threads(credentials_path: str, query: str, max_threads: int = 2
     print(f"Gmail: {len(all_ids)} threads uploaded")
     return all_ids
 ```
+</CodeGroup>
 
 ### 2.3 Confluence & Notion
 
 Confluence pages are the most structured knowledge source. Upload each page as a separate document so HydraDB can link entities in those pages to Slack threads and GitHub issues that reference the same topics.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// connectors/confluence.ts
+import { HydraDBClient } from "@hydradb/sdk";
+import { createReadStream, writeFileSync } from "fs";
+import axios from "axios";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+const CONFLUENCE_URL = process.env.CONFLUENCE_BASE_URL!;
+const CONFLUENCE_AUTH = {
+  username: process.env.CONFLUENCE_EMAIL!,
+  password: process.env.CONFLUENCE_API_TOKEN!,
+};
+
+async function ingestConfluenceSpace(spaceKey: string): Promise<string[]> {
+  let start = 0;
+  const allIds: string[] = [];
+
+  while (true) {
+    const resp = await axios.get(`${CONFLUENCE_URL}/wiki/rest/api/content`, {
+      auth: CONFLUENCE_AUTH,
+      params: {
+        spaceKey,
+        expand: "body.storage,version",
+        limit: 50,
+        start,
+      },
+    });
+    const pages = resp.data.results ?? [];
+    if (!pages.length) break;
+
+    for (const page of pages) {
+      const rawBody: string = page.body.storage.value;
+      const text = rawBody.replace(/<[^>]+>/g, " ").trim();
+      const content =
+        `Source: Confluence\nSpace: ${spaceKey}\nTitle: ${page.title}\n` +
+        `Version: ${page.version.number}\n\n${text}`;
+      const filename = `/tmp/confluence-${spaceKey}-${page.id}.txt`;
+      writeFileSync(filename, content, "utf-8");
+
+      const result = await client.upload.knowledge({
+        tenant_id: TENANT_ID,
+        sub_tenant_id: "docs",
+        files: [createReadStream(filename)],
+      });
+      const results = (result as any).results ?? [];
+      if (results[0]?.source_id) allIds.push(results[0].source_id);
+    }
+
+    if (resp.data._links?.next) {
+      start += 50;
+    } else {
+      break;
+    }
+  }
+
+  console.log(`Confluence ${spaceKey}: ${allIds.length} pages uploaded`);
+  return allIds;
+}
+```
+
+```python Python SDK
 # connectors/confluence.py
 import os, time, requests as req
 
@@ -330,12 +550,78 @@ def ingest_confluence_space(space_key: str):
     print(f"Confluence {space_key}: {len(all_ids)} pages uploaded")
     return all_ids
 ```
+</CodeGroup>
 
 ### 2.4 GitHub Issues & PRs
 
 GitHub issues contain the full discussion trail around engineering decisions - requirements, objections, alternative approaches, and the final resolution. Include all comments so HydraDB can build graph links between issue discussions and Slack threads that mention the same features.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// connectors/github.ts
+import { HydraDBClient } from "@hydradb/sdk";
+import { createReadStream, writeFileSync } from "fs";
+import { Octokit } from "@octokit/rest";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+async function ingestGithubIssues(
+  repoName: string,
+  state: "open" | "closed" | "all" = "all",
+  limit: number = 500
+): Promise<string[]> {
+  const [owner, repo] = repoName.split("/");
+  const sub = repoName.toLowerCase().replace("/", "-");
+  const allIds: string[] = [];
+  let count = 0;
+
+  for await (const issue of octokit.paginate.iterator(
+    octokit.issues.listForRepo,
+    { owner, repo, state, sort: "updated", direction: "desc", per_page: 100 }
+  )) {
+    for (const item of issue.data) {
+      if (count >= limit) break;
+      count++;
+
+      const commentsResp = await octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number: item.number,
+      });
+      const comments = commentsResp.data
+        .map((c) => c.body ?? "")
+        .filter(Boolean);
+      const labelList = item.labels
+        .map((l) => (typeof l === "string" ? l : l.name ?? ""))
+        .join(", ");
+
+      const content =
+        `Source: GitHub\nRepo: ${repoName}\n` +
+        `Issue #${item.number}: ${item.title}\n` +
+        `State: ${item.state}\nLabels: ${labelList}\n\n` +
+        `${item.body ?? ""}\n\nDiscussion:\n${comments.join("\n\n")}`;
+      const filename = `/tmp/github-${sub}-issue-${item.number}.txt`;
+      writeFileSync(filename, content, "utf-8");
+
+      const result = await client.upload.knowledge({
+        tenant_id: TENANT_ID,
+        sub_tenant_id: "github",
+        files: [createReadStream(filename)],
+      });
+      const results = (result as any).results ?? [];
+      if (results[0]?.source_id) allIds.push(results[0].source_id);
+    }
+    if (count >= limit) break;
+  }
+
+  console.log(`GitHub ${repoName}: ${allIds.length} issues uploaded`);
+  return allIds;
+}
+```
+
+```python Python SDK
 # connectors/github.py
 import os, time, requests
 from github import Github   # pip install PyGithub
@@ -390,6 +676,7 @@ def ingest_github_issues(repo_name: str, state: str = "all", limit: int = 500):
     print(f"GitHub {repo_name}: {len(all_ids)} issues uploaded")
     return all_ids
 ```
+</CodeGroup>
 
 > **Linear connector**: Use the Linear GraphQL API (`https://api.linear.app/graphql`) with your API key. Format each issue + comments as a plain text file with `Source: Linear` prepended, and upload with `sub_tenant_id: "linear"`. The same multipart upload pattern applies.
 
@@ -423,7 +710,42 @@ curl -X POST \
 }
 ```
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// ingest/verify.ts
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+
+async function waitUntilIndexed(
+  sourceId: string,
+  maxTries: number = 20,
+  intervalMs: number = 3000
+): Promise<void> {
+  for (let i = 0; i < maxTries; i++) {
+    await new Promise((r) => setTimeout(r, intervalMs));
+    const result = await client.upload.verifyProcessing({
+      tenant_id: TENANT_ID,
+      file_ids: [sourceId],
+    });
+    const statuses = (result as any).statuses ?? [];
+    const status = statuses[0]?.indexing_status as string | undefined;
+
+    if (status === "completed") {
+      console.log(`Indexed ✓ (${sourceId})`);
+      return;
+    }
+    if (status === "errored") {
+      throw new Error(`Indexing failed for ${sourceId}`);
+    }
+    console.log(`Indexing... ${status ?? "queued"} (attempt ${i + 1}/${maxTries})`);
+  }
+  console.log(`Timeout - ${sourceId} may still complete in background.`);
+}
+```
+
+```python Python SDK
 # ingest/verify.py
 import os, time, requests
 
@@ -454,6 +776,7 @@ def wait_until_indexed(source_id: str, max_tries: int = 20, interval: int = 3) -
 
     print(f"Timeout - {source_id} may still complete in background.")
 ```
+</CodeGroup>
 
 ---
 
@@ -496,7 +819,67 @@ curl -X POST 'https://api.hydradb.com/memories/add_memory' \
 }
 ```
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// memory/profiles.ts
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+
+async function storeUserProfile(
+  userId: string,
+  profileText: string
+): Promise<string | null> {
+  /**
+   * Store a user profile for personalized search.
+   * userId:      their Slack/email handle - must be consistent across sessions.
+   * profileText: free-text description of their role, expertise, and preferences.
+   * infer: true  - HydraDB extracts expertise signals and builds graph links.
+   * Returns:     source_id of the stored memory.
+   */
+  const result = await client.upload.addMemory({
+    tenant_id: TENANT_ID,
+    sub_tenant_id: `user-${userId}`,
+    upsert: true,
+    memories: [
+      {
+        text: profileText,
+        infer: true,
+        user_name: userId,
+      },
+    ],
+  });
+  const results = (result as any).results ?? [];
+  const sourceId: string | null = results[0]?.source_id ?? null;
+  console.log(`Profile stored for ${userId} → source_id: ${sourceId}`);
+  return sourceId;
+}
+
+// Store profiles at onboarding or update when roles change
+await storeUserProfile(
+  "alice",
+  "Alice is a senior engineer on the platform team. She owns the auth service " +
+    "and data pipeline. Prefers technical depth with references to PRs and ADRs. " +
+    "She joined in 2021 and has context on major architectural decisions."
+);
+
+await storeUserProfile(
+  "priya",
+  "Priya is Head of Product. She cares about roadmap context, customer decisions, " +
+    "and strategic tradeoffs. Prefers clear summaries with timeline context. " +
+    "Avoid deep technical implementation details."
+);
+
+await storeUserProfile(
+  "carlos",
+  "Carlos joined the company 3 weeks ago as a backend engineer. He is onboarding " +
+    "and needs more background context on past decisions and system architecture. " +
+    "Give extra context on why things are built the way they are."
+);
+```
+
+```python Python SDK
 # memory/profiles.py
 import os, requests
 
@@ -557,6 +940,7 @@ store_user_profile(
     "Give extra context on why things are built the way they are."
 )
 ```
+</CodeGroup>
 
 ---
 
@@ -570,7 +954,61 @@ Three query patterns cover every internal search use case. All use `POST /recall
 
 Use balanced `recency_bias: 0.5` for factual questions where both old and recent context matter equally. Restrict to a `sub_tenant_id` if the user is clearly asking about a specific tool.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// search/qa.ts
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+
+async function search(
+  question: string,
+  userId: string,
+  subTenant?: string,
+  recencyBias: number = 0.5,
+  maxResults: number = 15
+): Promise<any> {
+  /**
+   * Core search function. Returns chunks + graph_context.
+   * userId personalizes answer depth based on stored profile.
+   * mode="thinking" enables multi-query reranking automatically.
+   */
+  const payload: Record<string, any> = {
+    tenant_id: TENANT_ID,
+    query: question,
+    max_results: maxResults,
+    graph_context: true,
+    mode: "thinking",
+    alpha: 0.5,
+    recency_bias: recencyBias,
+  };
+  if (subTenant) payload["sub_tenant_id"] = subTenant;
+
+  return await client.recall.fullRecall(payload);
+}
+
+function printResults(result: any): void {
+  const chunks = result?.chunks ?? [];
+  console.log(`\n${chunks.length} chunks retrieved:\n`);
+  for (const chunk of chunks) {
+    const fname = chunk?.additional_metadata?.filename ?? "memory";
+    const score = chunk?.relevancy_score ?? 0;
+    console.log(`  [${fname} - ${score.toFixed(2)}]`);
+    console.log(`  ${(chunk.chunk_content as string).slice(0, 200)}...`);
+    console.log();
+  }
+}
+
+// Example
+const result = await search(
+  "What is our data retention policy for user PII?",
+  "alice"
+);
+printResults(result);
+```
+
+```python Python SDK
 # search/qa.py
 import os, requests
 
@@ -627,12 +1065,107 @@ result = search(
 )
 print_results(result)
 ```
+</CodeGroup>
 
 ### 5.2 Decision Provenance - "Why did we decide X?" / "What led to Y?"
 
 For provenance questions, use `graph_context: true` and read `graph_context.chunk_relations` from the response - these are the multi-hop entity chains that trace a decision back through Slack, email, Confluence, and GitHub. Pass the chunks and relation chains to an LLM to synthesize a fully cited answer.
 
-```python
+<CodeGroup>
+```typescript TypeScript SDK
+// search/provenance.ts
+import { HydraDBClient } from "@hydradb/sdk";
+import OpenAI from "openai";
+
+const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const TENANT_ID = "company-knowledge";
+const openai = new OpenAI();
+
+async function getUserProfile(userId: string): Promise<string> {
+  /** Retrieve a user's stored memory profile via recallPreferences. */
+  const resp = await client.recall.recallPreferences({
+    tenant_id: TENANT_ID,
+    sub_tenant_id: `user-${userId}`,
+    query: "expertise background role preferences",
+    mode: "thinking",
+  });
+  const chunks = (resp as any).chunks ?? [];
+  return chunks[0]?.chunk_content ?? "";
+}
+
+async function explainDecision(
+  question: string,
+  userId: string
+): Promise<string> {
+  /**
+   * Answer 'why' / 'what led to' questions with full provenance.
+   * Step 1: recall chunks + graph relations from fullRecall.
+   * Step 2: retrieve user profile from recallPreferences.
+   * Step 3: synthesize with citations via LLM.
+   */
+  // Step 1: Recall with graph context
+  const data = await client.recall.fullRecall({
+    tenant_id: TENANT_ID,
+    query: question,
+    max_results: 18,
+    graph_context: true,
+    mode: "thinking",
+    recency_bias: 0.4,
+  });
+  const chunks = (data as any).chunks ?? [];
+  const chunkRelations =
+    (data as any).graph_context?.chunk_relations ?? [];
+
+  // Build context with source attribution
+  const ctxParts: string[] = [];
+  for (const c of chunks) {
+    const fname =
+      (c.additional_metadata as any)?.filename ?? "unknown source";
+    const score = c.relevancy_score ?? 0;
+    ctxParts.push(`[${fname} | score:${score.toFixed(2)}]\n${c.chunk_content}`);
+  }
+  for (const rel of chunkRelations.slice(0, 6)) {
+    const combined = rel.combined_context ?? "";
+    if (combined) ctxParts.push(`[Entity relationship]: ${combined}`);
+  }
+
+  // Step 2: Get user profile for answer calibration
+  const profile = await getUserProfile(userId);
+
+  // Step 3: Synthesize with citations
+  const resp = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a company historian. Answer the question using ONLY the provided sources. " +
+          "Cite each source inline (e.g. [Slack #arch, 2024-03-10]). " +
+          "Show the decision trail - who said what, when, and how the decision evolved. " +
+          "Adapt depth and detail to the user profile. " +
+          "If sources conflict, note the conflict. If evidence is thin, say so.",
+      },
+      {
+        role: "user",
+        content:
+          `User profile: ${profile}\n\nQuestion: ${question}\n\nSources:\n` +
+          ctxParts.join("\n\n"),
+      },
+    ],
+    temperature: 0.15,
+  });
+  return resp.choices[0].message.content ?? "";
+}
+
+// Example
+const answer = await explainDecision(
+  "What led to the decision to sunset Project X and migrate to the new platform?",
+  "priya"
+);
+console.log(answer);
+```
+
+```python Python SDK
 # search/provenance.py
 import os, requests
 from openai import OpenAI
@@ -742,6 +1275,7 @@ print(answer)
 #    2. [slack-product-1699430400.txt] Initial discussion when metrics showed...
 #    3. [email-thread-abc123.txt] Leadership confirmed the timeline in Q4..."
 ```
+</CodeGroup>
 
 ### 5.3 Cross-Source Synthesis - Complex multi-part questions
 
@@ -1096,3 +1630,12 @@ atlassian-python-api
 6. Schedule `sync/nightly.py` via cron once the initial ingest is complete.
 
 The search quality improves as more sources are indexed - each new Slack channel, Confluence space, or GitHub repo adds more nodes to the context graph that HydraDB builds automatically. There is no retraining step.
+
+---
+
+## Change Log
+
+| Version | Date | Notes |
+|---|---|---|
+| 1.1 | 2026-05-14 | Added TypeScript SDK tabs (CodeGroup) for all HydraDB API call blocks: tenant creation, all four connector uploads (Slack, Gmail, Confluence, GitHub), verify processing, add memory, full recall (factual + provenance), and recall preferences. |
+| 1.0 | 2026-05-09 | Initial release. Python SDK + curl examples for all six source connectors. |

@@ -12,10 +12,6 @@ In most cases, you create one tenant per organization. For per-user isolation (B
 
 ## Endpoint
 
-```
-POST /tenants/create
-```
-
 - **Auth:** Bearer token
 - **Idempotency:** Re-sending with the same `tenant_id` returns `409 CONFLICT`
 - **Async:** Yes – returns `status: accepted`. Poll `/tenants/infra/status` before use.
@@ -94,8 +90,7 @@ response = client.tenant.create(
 |---|---|---|---|
 | `tenant_id` | string | Yes | Unique identifier for the tenant. |
 | `tenant_metadata_schema` | array | No | Defines tenant-level metadata fields. See [Metadata schema](#metadata-schema) below. |
-| `is_embeddings_tenant` | boolean | No | Default `false`. Set `true` only if you plan to upload pre-computed vectors. See [Embeddings tenants](#embeddings-tenants). |
-| `embeddings_dimension` | integer | No | Default `1536`. Only used when `is_embeddings_tenant: true`. |
+
 
 ## Response
 
@@ -265,13 +260,6 @@ Only fields declared with `enable_match: true` are usable in `metadata_filters` 
 <Info>
 **Default sub-tenant.** A default sub-tenant is auto-created with your tenant. Any API call that omits `sub_tenant_id` targets this default. See [Essentials → Multi-Tenant](/essentials/multi-tenant) for details.
 </Info>
-
-## Embeddings tenants
-
-If you plan to upload pre-computed vectors (fine-tuned embedding models, custom pipelines), create the tenant with `is_embeddings_tenant: true` and set `embeddings_dimension` to match your model's output dimension.
-
-Embeddings tenants use a separate endpoint family at `/embeddings/*`. See [Essentials → Custom Embeddings](/essentials/custom-embeddings).
-
 ## Related endpoints
 
 - **Next:** [Check infra status](/api-reference/endpoint/infra-status) – poll until provisioning completes

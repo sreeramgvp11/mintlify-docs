@@ -15,10 +15,6 @@ For user-specific context (preferences, conversations), use [`POST /memories/add
 
 ## Endpoint
 
-```
-POST /ingestion/upload_knowledge
-```
-
 - **Auth:** Bearer token
 - **Content type:** `multipart/form-data` (always – even when sending only `app_knowledge`)
 - **Idempotency:** Controlled by `upsert` (default `true` – overwrites existing items with the same ID)
