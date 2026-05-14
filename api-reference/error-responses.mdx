@@ -64,7 +64,7 @@ Invalid input parameters or malformed requests.
 - Missing required parameters (`tenant_id`, `query`, etc.)
 - Invalid parameter formats
 - Malformed JSON in request body
-- Mutually exclusive parameters both provided (e.g., both `source_id` and `chunk_ids` on `/embeddings/filter_raw_embeddings`)
+- Mutually exclusive parameters both provided (e.g., both `source_id` and `chunk_ids`)
 
 ---
 
@@ -453,7 +453,6 @@ Common causes:
 - `file_metadata` array length doesn't match `files` array length on `/ingestion/upload_knowledge`
 - Sending `app_knowledge` as a JSON object instead of a JSON-encoded string in multipart form data
 - `MemoryItem` with no `text` and no `user_assistant_pairs`
-- Embedding vector length doesn't match the tenant's `embeddings_dimension`
 
 ### Empty results from recall
 

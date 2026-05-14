@@ -22,7 +22,6 @@ description: "Complete reference for every HydraDB endpoint, organized by group.
 | [List](/api-reference/endpoint/list-overview) | Browse stored content and inspect graph relationships | 2 endpoints |
 | [Fetch](/api-reference/endpoint/fetch-content) | Retrieve original file content | 1 endpoint |
 | [Knowledge Deletion](/api-reference/endpoint/delete-knowledge) | Remove knowledge sources | 1 endpoint |
-| [Embeddings](/api-reference/endpoint/embeddings-overview) | Bring-your-own-vector workflows | 4 endpoints |
 
 ## End-to-end lifecycle
 
@@ -136,15 +135,6 @@ See the full reference at [SDKs](/api-reference/sdks).
 | Endpoint | Method | Purpose |
 |---|---|---|
 | [`/knowledge/delete_knowledge`](/api-reference/endpoint/delete-knowledge) | `POST` | Bulk delete sources by IDs |
-
-### Embeddings
-
-| Endpoint | Method | Purpose |
-|---|---|---|
-| [`/embeddings/insert_raw_embeddings`](/api-reference/endpoint/insert-raw-embeddings) | `POST` | Insert pre-computed vectors |
-| [`/embeddings/search_raw_embeddings`](/api-reference/endpoint/search-raw-embeddings) | `POST` | Vector similarity search |
-| [`/embeddings/filter_raw_embeddings`](/api-reference/endpoint/filter-raw-embeddings) | `POST` | Retrieve embeddings by ID |
-| [`/embeddings/delete_raw_embeddings`](/api-reference/endpoint/delete-raw-embeddings) | `DELETE` | Delete embeddings |
 
 ## Conventions
 

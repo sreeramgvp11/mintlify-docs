@@ -18,10 +18,6 @@ For deleting an entire embeddings tenant, use [`DELETE /tenants/delete`](/api-re
 
 ## Endpoint
 
-```
-DELETE /embeddings/delete_raw_embeddings
-```
-
 - **Auth:** Bearer token
 - **Idempotency:** Re-sending for already-deleted items returns `delete_count: 0`
 - **Async:** No

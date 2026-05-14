@@ -18,10 +18,6 @@ To remove documents (knowledge) instead of user memories, use [`POST /knowledge/
 
 ## Endpoint
 
-```
-DELETE /memories/delete_memory
-```
-
 - **Auth:** Bearer token
 - **Idempotency:** Idempotent - re-sending for an already-deleted memory returns `200` with `user_memory_deleted: false`
 - **Async:** No
