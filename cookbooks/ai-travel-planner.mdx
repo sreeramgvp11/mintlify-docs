@@ -55,9 +55,9 @@ Start by uploading comprehensive hotel and accommodation data using HydraDB's kn
 
 
 ```javascript
-import { HydraDBClient } from "@hydra_db/node";
+import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY });
 
 const uploadHotelData = async (hotels, tenantId, subTenantId) => {
   const hotelSources = hotels.map(hotel => ({
@@ -65,7 +65,7 @@ const uploadHotelData = async (hotels, tenantId, subTenantId) => {
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
     title: hotel.name,
-    source: "accommodation",
+    type: "accommodation",
     description: hotel.description,
     timestamp: new Date().toISOString(),
     content: {
@@ -84,7 +84,12 @@ const uploadHotelData = async (hotels, tenantId, subTenantId) => {
     }
   }));
 
-  await client.upload.knowledge({ app_knowledge: hotelSources });
+  await client.upload.knowledge({
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
+    app_knowledge: hotelSources,
+    upsert: true,
+  });
 };
 ```
 
@@ -101,7 +106,7 @@ const uploadFlightData = async (flights, tenantId, subTenantId) => {
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
     title: `${flight.airline} ${flight.flightNumber}`,
-    source: "transportation",
+    type: "transportation",
     description: `Flight from ${flight.origin} to ${flight.destination}`,
     timestamp: new Date().toISOString(),
     content: {
@@ -121,7 +126,12 @@ const uploadFlightData = async (flights, tenantId, subTenantId) => {
     }
   }));
 
-  await client.upload.knowledge({ app_knowledge: flightSources });
+  await client.upload.knowledge({
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
+    app_knowledge: flightSources,
+    upsert: true,
+  });
 };
 ```
 
@@ -138,7 +148,7 @@ const uploadRestaurantData = async (restaurants, tenantId, subTenantId) => {
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
     title: restaurant.name,
-    source: "dining",
+    type: "dining",
     description: restaurant.description,
     timestamp: new Date().toISOString(),
     content: {
@@ -158,7 +168,12 @@ const uploadRestaurantData = async (restaurants, tenantId, subTenantId) => {
     }
   }));
 
-  await client.upload.knowledge({ app_knowledge: restaurantSources });
+  await client.upload.knowledge({
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
+    app_knowledge: restaurantSources,
+    upsert: true,
+  });
 };
 ```
 
@@ -175,7 +190,7 @@ const uploadActivityData = async (activities, tenantId, subTenantId) => {
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
     title: activity.name,
-    source: "activity",
+    type: "activity",
     description: activity.description,
     timestamp: new Date().toISOString(),
     content: {
@@ -195,7 +210,12 @@ const uploadActivityData = async (activities, tenantId, subTenantId) => {
     }
   }));
 
-  await client.upload.knowledge({ app_knowledge: activitySources });
+  await client.upload.knowledge({
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
+    app_knowledge: activitySources,
+    upsert: true,
+  });
 };
 ```
 
@@ -252,10 +272,12 @@ class PersonalizationEngine {
 
   async generateUserMemory(userInteraction) {
     // Generate memories based on user's travel preferences and booking patterns
-    await this.client.userMemory.add({
+    await client.upload.addMemory({
       tenant_id: userInteraction.tenantId,
       sub_tenant_id: userInteraction.userId,
+      upsert: true,
       memories: [{
+        source_id: `user_${userInteraction.userId}`,
         text: `User searched for: ${userInteraction.query}.
                    They showed interest in: ${userInteraction.clickedItems.join(', ')}.
                    They booked: ${userInteraction.bookedItems.join(', ')}.`,
@@ -460,10 +482,12 @@ const analyzeBookingPatterns = async (tenantId, subTenantId, bookingData) => {
   const analysisText = `User has booked: ${bookingData.map(b => b.description).join(', ')}. What patterns can we identify about their travel preferences?`;
 
   // Generate memory for future personalization
-  await client.userMemory.add({
+  await client.upload.addMemory({
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
+    upsert: true,
     memories: [{
+      source_id: `booking_${tenantId}`,
       text: analysisText,
       infer: true,
       user_name: bookingData[0].userName
@@ -523,10 +547,12 @@ const monitorPriceChanges = async (travelPlan) => {
   const priceText = `Monitor price changes for: ${travelPlan.description}. Alert if prices drop by 10% or more.`;
 
   // Set up monitoring using HydraDB memories
-  await client.userMemory.add({
+  await client.upload.addMemory({
     tenant_id: travelPlan.tenantId,
     sub_tenant_id: travelPlan.userId,
+    upsert: true,
     memories: [{
+      source_id: `price_${travelPlan.userId}`,
       text: priceText,
       infer: true
     }]

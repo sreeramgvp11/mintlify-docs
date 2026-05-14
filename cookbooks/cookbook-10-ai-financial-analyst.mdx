@@ -68,7 +68,7 @@ One tenant for the whole financial corpus. Sub-tenants isolate by company, fund,
 # setup.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "financial-analyst"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
@@ -107,7 +107,7 @@ Earnings PDFs are the primary source. Tag each with structured metadata - `ticke
 import json, time, os
 from hydra_db import HydraDB
 
-client    = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client    = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 TENANT_ID = "financial-analyst"
 
 def ingest_earnings_pdf(
@@ -145,13 +145,12 @@ def ingest_earnings_pdf(
     }])
 
     with open(file_path, "rb") as f:
-        # FIX: SDK parameter is 'files' (a list), NOT 'file' (a single handle).
-        # Passing file=f raises a TypeError; passing files=[f] is correct.
+        # FIX: SDK expects a tuple of (filename, file_obj, mime_type), not a raw file handle.
         result = client.upload.knowledge(
             tenant_id=TENANT_ID,
             sub_tenant_id=sub_tenant_id,
             app_knowledge=app_knowledge,
-            files=[f],          # <-- was: file=f  (wrong - causes TypeError)
+            files=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
     file_id = getattr(result, "file_id", None) or getattr(result, "id", None) or str(result)
@@ -236,7 +235,7 @@ import json, time, requests, os
 BASE_URL  = "https://api.hydradb.com"
 TENANT_ID = "financial-analyst"
 HEADERS   = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 
@@ -394,7 +393,7 @@ Board memos contain the strategic narrative behind the numbers - the reasoning t
 import json, time, os
 from hydra_db import HydraDB
 
-client    = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client    = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 TENANT_ID = "financial-analyst"
 
 def ingest_board_memo(
@@ -422,12 +421,12 @@ def ingest_board_memo(
     }])
 
     with open(file_path, "rb") as f:
-        # FIX: SDK parameter is 'files' (list), not 'file'.
+        # FIX: SDK expects a tuple of (filename, file_obj, mime_type), not a raw file handle.
         result = client.upload.knowledge(
             tenant_id=TENANT_ID,
             sub_tenant_id=sub_tenant_id,
             app_knowledge=app_knowledge,
-            files=[f],          # <-- was: file=f  (wrong)
+            files=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
     file_id = getattr(result, "file_id", None) or getattr(result, "id", None) or str(result)
@@ -445,7 +444,7 @@ import requests, time, os
 
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID = "financial-analyst"
@@ -508,7 +507,7 @@ import requests, os
 
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID = "financial-analyst"
@@ -589,7 +588,7 @@ import requests, os
 
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID = "financial-analyst"
@@ -657,7 +656,7 @@ from openai import OpenAI
 
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID     = "financial-analyst"
@@ -804,7 +803,7 @@ from openai import OpenAI
 
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID     = "financial-analyst"
@@ -937,7 +936,7 @@ from openai import OpenAI
 
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID     = "financial-analyst"
@@ -1051,7 +1050,7 @@ from typing import Optional   # Python 3.9 compatible
 
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID = "financial-analyst"
@@ -1189,7 +1188,7 @@ from query.cross_source import cross_source_reconciliation
 
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {
-    "Authorization": f"Bearer {os.environ['HYDRADB_API_KEY']}",
+    "Authorization": f"Bearer {os.environ['HYDRA_DB_API_KEY']}",
     "Content-Type": "application/json",
 }
 TENANT_ID     = "financial-analyst"
@@ -1355,7 +1354,7 @@ Usage in Slack: /ask-analyst How did ACME's gross margin trend in 2023?
 
 Requires:
   - SLACK_SIGNING_SECRET env var for request verification
-  - HYDRADB_API_KEY env var
+  - HYDRA_DB_API_KEY env var
   - Flask: pip install flask
 """
 from flask import Flask, request, jsonify
@@ -1477,7 +1476,7 @@ Content-Type: multipart/form-data
 
 ```bash
 curl -X POST 'https://api.hydradb.com/ingestion/upload_knowledge' \
-  -H "Authorization: Bearer $HYDRADB_API_KEY" \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -F "file=@ACME_Q2_2023_transcript.pdf" \
   -F "tenant_id=financial-analyst" \
   -F "sub_tenant_id=earnings-acme"

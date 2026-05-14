@@ -89,7 +89,7 @@ Install the Python packages used by the examples and set both API keys:
 
 ```bash
 pip install requests openai
-export HYDRADB_API_KEY="your_hydradb_key"
+export HYDRA_DB_API_KEY="your_hydradb_key"
 export OPENAI_API_KEY="your_openai_key"
 ```
 
@@ -98,7 +98,7 @@ HydraDB handles retrieval and memory. The OpenAI SDK is used only in the app lay
 ```python title="setup.py"
 import requests, os
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "chief-of-staff"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {

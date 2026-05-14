@@ -62,7 +62,7 @@ Create a project folder and set your API key:
 
 ```bash
 mkdir onboarding-agent && cd onboarding-agent
-echo "HYDRADB_API_KEY=your_key_here" > .env
+echo "HYDRA_DB_API_KEY=your_key_here" > .env
 ```
 
 Create `config.py` in the project root - used by every script in this guide:
@@ -74,7 +74,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = os.environ.get("HYDRADB_TENANT_ID", "onboarding")
 ```
 
@@ -173,7 +173,7 @@ def upload_doc(filepath: str, doc_id: str, doc_type: str, team: str):
     with open(filepath, "rb") as f:
         result = client.upload.knowledge(
             tenant_id=TENANT_ID,
-            files=[f],
+            files=[("report.pdf", f, "application/pdf")],
             file_metadata=json.dumps([
                 {
                     "file_id": doc_id,

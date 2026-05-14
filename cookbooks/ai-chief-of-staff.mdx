@@ -133,23 +133,23 @@ Use the `/ingestion/upload_knowledge` endpoint with `app_knowledge` to register 
 
 
 ```ts
-import { HydraDBClient } from “@hydra_db/node”;
+import { HydraDBClient } from “@hydradb/sdk”;
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY });
 
 await client.upload.knowledge({
-  app_knowledge: [
+  tenant_id: "your_tenant_id",
+  sub_tenant_id: "your_sub_tenant_id",
+  app_knowledge: JSON.stringify([
     {
-      id: “send_slack_message”,
-      tenant_id: “your_tenant_id”,
-      sub_tenant_id: “your_sub_tenant_id”,
-      title: “Send a Slack message”,
-      source: “slack”,
+      id: "send_slack_message",
+      title: "Send a Slack message",
+      type: "slack",
       timestamp: new Date().toISOString(),
       content: { text: JSON.stringify(schema) },
-      additional_metadata: { permissions: [“workspace_admins”], tags: [“automation”, “slack”] }
+      additional_metadata: { permissions: ["workspace_admins"], tags: ["automation", "slack"] }
     }
-  ]
+  ])
 });
 ```
 
@@ -168,7 +168,7 @@ The orchestrator bridges HydraDB ↔ real APIs.
 
 
 ```ts
-import { HydraDBClient } from "@hydra_db/node";
+import { HydraDBClient } from "@hydradb/sdk";
 
 class Orchestrator {
   private client: HydraDBClient;
@@ -182,11 +182,11 @@ class Orchestrator {
   async handleTask(task: string, userContext: { tenantId: string; subTenantId: string }) {
     // 1️⃣ Ask HydraDB which function best matches the task
     const result = await this.client.recall.fullRecall({
-      tenantId: userContext.tenantId,
-      subTenantId: userContext.subTenantId,
+      tenant_id: userContext.tenantId,
+      sub_tenant_id: userContext.subTenantId,
       query: task,
       mode: "thinking",
-      maxResults: 5
+      max_results: 5
     });
 
     if (!result.chunks || result.chunks.length === 0) return { status: "noop" };
@@ -199,11 +199,13 @@ class Orchestrator {
     const execResult = await exec(topChunk);
 
     // 3️⃣ Optional: feed result back to HydraDB as a user memory
-    await this.client.userMemory.add({
+    await this.client.upload.addMemory({
       tenant_id: userContext.tenantId,
       sub_tenant_id: userContext.subTenantId,
+      upsert: true,
       memories: [
         {
+          source_id: `exec_${functionId}_${Date.now()}`,
           text: `Executed function "${functionId}" for task: "${task}". Result: ${summarize(execResult)}`,
           infer: true
         }
@@ -375,11 +377,13 @@ Auto-tune by feeding metrics back to HydraDB's memory:
 
 
 ```ts
-await client.userMemory.add({
+await client.upload.addMemory({
   tenant_id: "your_tenant_id",
   sub_tenant_id: "your_sub_tenant_id",
+  upsert: true,
   memories: [
     {
+      source_id: "metrics_calendar_event",
       text: 'Function "create_calendar_event" had slow_response signal with p95 of 2500ms.',
       infer: true
     }

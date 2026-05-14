@@ -57,7 +57,7 @@ curl -X POST 'https://api.hydradb.com/tenants/create' \
 // setup.ts
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
 await client.tenant.create({ tenant_id: TENANT_ID });
@@ -67,7 +67,7 @@ await client.tenant.create({ tenant_id: TENANT_ID });
 # setup.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
@@ -118,10 +118,10 @@ Combine each thread (parent message + all replies) into one document. HydraDB's 
 ```typescript TypeScript SDK
 // connectors/slack.ts
 import { HydraDBClient } from "@hydradb/sdk";
-import { createReadStream, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { WebClient } from "@slack/web-api";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 
@@ -167,7 +167,7 @@ async function ingestSlackChannel(
       const result = await client.upload.knowledge({
         tenant_id: TENANT_ID,
         sub_tenant_id: "slack",
-        files: [createReadStream(filename)],
+        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.source_id) allIds.push(results[0].source_id);
@@ -188,7 +188,7 @@ import os, time, requests
 from slack_sdk  import WebClient
 from datetime   import datetime, timezone
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 slack     = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
@@ -273,9 +273,9 @@ Email threads contain decisions that never make it to Confluence. Filter to RFC,
 ```typescript TypeScript SDK
 // connectors/gmail.ts
 import { HydraDBClient } from "@hydradb/sdk";
-import { createReadStream, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
 async function ingestGmailThreads(
@@ -334,7 +334,7 @@ async function ingestGmailThreads(
     const result = await client.upload.knowledge({
       tenant_id: TENANT_ID,
       sub_tenant_id: "email",
-      files: [createReadStream(filename)],
+      files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
     });
     const results = (result as any).results ?? [];
     if (results[0]?.source_id) allIds.push(results[0].source_id);
@@ -351,7 +351,7 @@ import os, time, base64, requests
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery  import build
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -427,10 +427,10 @@ Confluence pages are the most structured knowledge source. Upload each page as a
 ```typescript TypeScript SDK
 // connectors/confluence.ts
 import { HydraDBClient } from "@hydradb/sdk";
-import { createReadStream, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import axios from "axios";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 const CONFLUENCE_URL = process.env.CONFLUENCE_BASE_URL!;
 const CONFLUENCE_AUTH = {
@@ -467,7 +467,7 @@ async function ingestConfluenceSpace(spaceKey: string): Promise<string[]> {
       const result = await client.upload.knowledge({
         tenant_id: TENANT_ID,
         sub_tenant_id: "docs",
-        files: [createReadStream(filename)],
+        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.source_id) allIds.push(results[0].source_id);
@@ -489,7 +489,7 @@ async function ingestConfluenceSpace(spaceKey: string): Promise<string[]> {
 # connectors/confluence.py
 import os, time, requests as req
 
-API_KEY        = os.environ["HYDRADB_API_KEY"]
+API_KEY        = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID      = "company-knowledge"
 BASE_URL       = "https://api.hydradb.com"
 CONFLUENCE_URL = os.environ["CONFLUENCE_BASE_URL"]   # e.g. "https://mycompany.atlassian.net"
@@ -560,10 +560,10 @@ GitHub issues contain the full discussion trail around engineering decisions - r
 ```typescript TypeScript SDK
 // connectors/github.ts
 import { HydraDBClient } from "@hydradb/sdk";
-import { createReadStream, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { Octokit } from "@octokit/rest";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
@@ -608,7 +608,7 @@ async function ingestGithubIssues(
       const result = await client.upload.knowledge({
         tenant_id: TENANT_ID,
         sub_tenant_id: "github",
-        files: [createReadStream(filename)],
+        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.source_id) allIds.push(results[0].source_id);
@@ -626,7 +626,7 @@ async function ingestGithubIssues(
 import os, time, requests
 from github import Github   # pip install PyGithub
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 gh        = Github(os.environ["GITHUB_TOKEN"])
@@ -715,11 +715,12 @@ curl -X POST \
 // ingest/verify.ts
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
 async function waitUntilIndexed(
   sourceId: string,
+  subTenant: string,
   maxTries: number = 20,
   intervalMs: number = 3000
 ): Promise<void> {
@@ -727,6 +728,7 @@ async function waitUntilIndexed(
     await new Promise((r) => setTimeout(r, intervalMs));
     const result = await client.upload.verifyProcessing({
       tenant_id: TENANT_ID,
+      sub_tenant_id: subTenant,
       file_ids: [sourceId],
     });
     const statuses = (result as any).statuses ?? [];
@@ -749,7 +751,7 @@ async function waitUntilIndexed(
 # ingest/verify.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -824,7 +826,7 @@ curl -X POST 'https://api.hydradb.com/memories/add_memory' \
 // memory/profiles.ts
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
 async function storeUserProfile(
@@ -883,7 +885,7 @@ await storeUserProfile(
 # memory/profiles.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
@@ -959,7 +961,7 @@ Use balanced `recency_bias: 0.5` for factual questions where both old and recent
 // search/qa.ts
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
 async function search(
@@ -1012,7 +1014,7 @@ printResults(result);
 # search/qa.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "company-knowledge"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
@@ -1077,7 +1079,7 @@ For provenance questions, use `graph_context: true` and read `graph_context.chun
 import { HydraDBClient } from "@hydradb/sdk";
 import OpenAI from "openai";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 const openai = new OpenAI();
 
@@ -1170,7 +1172,7 @@ console.log(answer);
 import os, requests
 from openai import OpenAI
 
-API_KEY       = os.environ["HYDRADB_API_KEY"]
+API_KEY       = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID     = "company-knowledge"
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}

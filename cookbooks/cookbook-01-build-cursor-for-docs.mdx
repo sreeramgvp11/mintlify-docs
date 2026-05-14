@@ -31,7 +31,7 @@ You need three things before writing any code:
 
 ```bash
 mkdir cursor-for-docs && cd cursor-for-docs
-echo "HYDRADB_API_KEY=hdb_your_key_here" > .env
+echo "HYDRA_DB_API_KEY=hdb_your_key_here" > .env
 ```
 
 Create `config.py` in the project root. This is the canonical configuration used by every script in this guide:
@@ -43,12 +43,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # HydraDB
-HYDRA_API_KEY = os.environ["HYDRADB_API_KEY"]
+HYDRA_DB_API_KEY = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID     = os.environ.get("HYDRADB_TENANT_ID", "engineering-docs")
 BASE_URL      = "https://api.hydradb.com"
 
 HEADERS = {
-    "Authorization": f"Bearer {HYDRA_API_KEY}",  # format is strict - Bearer + space + key
+    "Authorization": f"Bearer {HYDRA_DB_API_KEY}",  # format is strict - Bearer + space + key
     "Content-Type":  "application/json",
 }
 
@@ -119,7 +119,7 @@ Polling for readiness...
 ✓ Tenant ready.
 ```
 
-**If it fails:** `401` - API key wrong or missing `Bearer ` prefix. Confirm `.env` has `HYDRADB_API_KEY=hdb_abc123` with no surrounding quotes.
+**If it fails:** `401` - API key wrong or missing `Bearer ` prefix. Confirm `.env` has `HYDRA_DB_API_KEY=hdb_abc123` with no surrounding quotes.
 
 ---
 
@@ -392,12 +392,12 @@ The response also includes a `sources` array - a deduplicated list of the origin
 
 ### P1 · Step 1 - Batch Upload with Explicit IDs (JSON Ingestion)
 
-**What:** Switches to **JSON body ingestion** via `/upload/upload_app_sources` - the advanced ingestion path. This gives you full control over IDs, timestamps, collections, metadata, and (in Phase 2) explicit graph `relations`. The `{repo_name}/{relative_path}` ID convention is required for Phase 2 graph linking.
+**What:** Switches to **JSON body ingestion** via `/ingestion/upload_knowledge` with `app_knowledge` field - the advanced ingestion path. This gives you full control over IDs, timestamps, collections, metadata, and (in Phase 2) explicit graph `relations`. The `{repo_name}/{relative_path}` ID convention is required for Phase 2 graph linking.
 
 > ⚠️ **Advanced path - stricter validation.** JSON ingestion requires well-formed payloads with `id`, `type`, and `content.text` on every item. Malformed requests are rejected outright. Use the file upload path (Phase 0 Step 2) if you just want to get content indexed quickly. Use JSON ingestion when you need stable IDs and graph relations.
 
 ```python
-import sys, os, time, subprocess, pathlib, requests
+import sys, os, json, time, subprocess, pathlib, requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import BASE_URL, TENANT_ID, HEADERS
 from phase0.verify import verify_file
@@ -415,9 +415,10 @@ def git_timestamp(repo_path: str, rel_path: str) -> str:
 
 def upload_batch(batch: list) -> list:
     resp = requests.post(
-        f"{BASE_URL}/upload/upload_app_sources",
-        headers=HEADERS, params={"tenant_id": TENANT_ID},
-        json=batch, timeout=30,
+        f"{BASE_URL}/ingestion/upload_knowledge",
+        headers=HEADERS,
+        json={"app_knowledge": json.dumps(batch), "tenant_id": TENANT_ID},
+        timeout=30,
     )
     resp.raise_for_status()
     ids = resp.json().get("ids", [])
@@ -851,7 +852,7 @@ The flow through the backend is:
 ```
 backend/
 ├── __init__.py       - makes backend a package so imports work
-├── config.py         - env vars, HYDRA_API_KEY, HEADERS, OpenAI keys, recall defaults
+├── config.py         - env vars, HYDRA_DB_API_KEY, HEADERS, OpenAI keys, recall defaults
 ├── hydra_client.py   - full_recall() wrapper for HydraDB retrieval
 ├── recall.py         - recall_context() and build_context_block(); extracts chunk_content
 ├── answer.py         - prompt formatter, GPT-4o streaming call, anti-hallucination rules
@@ -860,7 +861,7 @@ backend/
 
 **Architecture summary:**
 
-- **`config.py`** - Loads `.env`, exposes `HYDRA_API_KEY`, `TENANT_ID`, `HEADERS`, `OPENAI_API_KEY`, and recall defaults. Every other file imports from here only.
+- **`config.py`** - Loads `.env`, exposes `HYDRA_DB_API_KEY`, `TENANT_ID`, `HEADERS`, `OPENAI_API_KEY`, and recall defaults. Every other file imports from here only.
 - **`hydra_client.py`** - `full_recall()` is the HydraDB retrieval path. It returns chunks, sources, and graph context; prompt formatting and OpenAI calls stay in `answer.py`. Imported by → `recall.py`, `app.py`.
 - **`recall.py`** - `recall_context()` calls `full_recall()` and returns the raw payload. `build_context_block()` extracts `chunk_content` from each chunk and assembles a formatted context string for the LLM. Imported by → `app.py`.
 - **`answer.py`** - Takes the context block from `recall.py`, formats the system + user prompt, and calls the OpenAI streaming API. Contains all anti-hallucination rules. Never calls HydraDB. Imported by → `app.py`.
@@ -888,7 +889,7 @@ mkdir -p backend && touch backend/__init__.py
 
 ### backend/config.py
 
-Centralises all credentials. Use `HYDRA_API_KEY` as the variable name for your HydraDB key. All other backend files import from here.
+Centralises all credentials. Use `HYDRA_DB_API_KEY` as the variable name for your HydraDB key. All other backend files import from here.
 
 ```python
 import os
@@ -897,11 +898,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # HydraDB
-HYDRA_API_KEY = os.environ["HYDRADB_API_KEY"]
+HYDRA_DB_API_KEY = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID     = os.environ.get("HYDRADB_TENANT_ID", "engineering-docs")
 BASE_URL      = "https://api.hydradb.com"
 HEADERS       = {
-    "Authorization": f"Bearer {HYDRA_API_KEY}",
+    "Authorization": f"Bearer {HYDRA_DB_API_KEY}",
     "Content-Type":  "application/json",
 }
 
@@ -1306,7 +1307,7 @@ A good progression: Phase 0 recall in the terminal → FastAPI `/ask` in Postman
 
 **Cause:** The Authorization header is missing or malformed. Most common: the `Bearer ` prefix is absent, quotes surround the key in `.env`, or there is a leading/trailing space in the key value.
 
-**Fix:** Run `python3 -c "from config import HYDRA_API_KEY; print(repr(HYDRA_API_KEY))"`. The output should be `'hdb_abc123'` - no surrounding spaces. Your header must be exactly `Authorization: Bearer hdb_abc123`.
+**Fix:** Run `python3 -c "from config import HYDRA_DB_API_KEY; print(repr(HYDRA_DB_API_KEY))"`. The output should be `'hdb_abc123'` - no surrounding spaces. Your header must be exactly `Authorization: Bearer hdb_abc123`.
 
 ### 404 - Tenant Does Not Exist
 
@@ -1318,7 +1319,7 @@ A good progression: Phase 0 recall in the terminal → FastAPI `/ask` in Postman
 
 **Cause:** The endpoint path has a typo, extra slash, or missing segment. Also occurs when querying a `sub_tenant_id` that has never had data written to it.
 
-**Fix:** Correct paths: `/ingestion/upload_knowledge` (file upload), `/upload/upload_app_sources` (JSON batch), `/recall/full_recall`, `/ingestion/verify_processing`. If using `sub_tenant_id`, confirm at least one batch was successfully uploaded to that sub-tenant first.
+**Fix:** Correct paths: `/ingestion/upload_knowledge` (file upload or JSON batch with `app_knowledge`), `/recall/full_recall`, `/ingestion/verify_processing`. If using `sub_tenant_id`, confirm at least one batch was successfully uploaded to that sub-tenant first.
 
 ### 400 - Provide at least one of: files or app_knowledge
 
@@ -1414,21 +1415,30 @@ requests.post(
 
 ### Upload Sources - JSON Body (Advanced)
 
-**POST** `/upload/upload_app_sources` - Max 20 items · tenant_id via query param · supports relations
+**POST** `/ingestion/upload_knowledge` - Max 20 items · body field `app_knowledge` (JSON string) · supports relations
 
-```json
-[{
-  "id":          "myrepo/auth/middleware.py",
-  "title":       "auth/middleware.py",
-  "type":        "document",
-  "timestamp":   "2025-11-14T10:22:00Z",
-  "content":     { "text": "full content here" },
-  "collections": ["codebase", "myrepo"],
-  "relations":   { "hydradb_source_ids": ["pr-42"] },
-  "meta":        { "doc_type": "source_file", "repo": "myrepo" }
-}]
+```python
+import json, requests
 
-// Response: { "ids": ["myrepo/auth/middleware.py"] }
+requests.post(
+    f"{BASE_URL}/ingestion/upload_knowledge",
+    headers=HEADERS,
+    json={
+        "app_knowledge": json.dumps([{
+            "id":          "myrepo/auth/middleware.py",
+            "title":       "auth/middleware.py",
+            "type":        "document",
+            "timestamp":   "2025-11-14T10:22:00Z",
+            "content":     {"text": "full content here"},
+            "collections": ["codebase", "myrepo"],
+            "relations":   {"hydradb_source_ids": ["pr-42"]},
+            "meta":        {"doc_type": "source_file", "repo": "myrepo"},
+        }]),
+        "tenant_id": "engineering-docs",
+    },
+)
+
+# Response: { "ids": ["myrepo/auth/middleware.py"] }
 ```
 
 ### Verify Indexing

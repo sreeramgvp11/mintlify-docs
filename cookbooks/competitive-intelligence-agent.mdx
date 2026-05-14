@@ -60,7 +60,7 @@ curl -X POST 'https://api.hydradb.com/tenants/create' \
 # setup.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
@@ -118,7 +118,7 @@ Press releases are the most explicit signal. Prepend signal metadata to the cont
 # connectors/press.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -154,7 +154,7 @@ Job postings are one of the strongest competitive signals - they reveal exactly 
 # connectors/jobs.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -197,7 +197,7 @@ Customer reviews are the most honest signal - they surface real objections, real
 # connectors/reviews.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -249,7 +249,7 @@ For public competitors, earnings calls contain the most explicit strategic signa
 # connectors/earnings.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -318,7 +318,7 @@ curl -X POST \
 # ingest/verify.py
 import os, time, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 
@@ -379,7 +379,7 @@ curl -X POST 'https://api.hydradb.com/recall/full_recall' \
 # query/recall.py
 import os, requests
 
-API_KEY   = os.environ["HYDRADB_API_KEY"]
+API_KEY   = os.environ["HYDRA_DB_API_KEY"]
 TENANT_ID = "competitive-intel"
 BASE_URL  = "https://api.hydradb.com"
 HEADERS   = {
@@ -535,7 +535,7 @@ Push a proactive Monday-morning briefing to each analyst's Slack channel. Each a
 # briefing/weekly.py
 import os, requests
 
-API_KEY       = os.environ["HYDRADB_API_KEY"]
+API_KEY       = os.environ["HYDRA_DB_API_KEY"]
 SLACK_TOKEN   = os.environ["SLACK_BOT_TOKEN"]
 TENANT_ID     = "competitive-intel"
 BASE_URL      = "https://api.hydradb.com"

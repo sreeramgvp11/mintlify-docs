@@ -195,7 +195,7 @@ Use HydraDB's batch upload capabilities for efficient data ingestion:
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 
 // Upload a batch of knowledge sources
 const uploadBatch = async (sources: any[], tenantId: string, subTenantId?: string) => {
@@ -237,7 +237,7 @@ import os
 import json
 from hydra_db import HydraDB
 
-client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 # Upload a batch of knowledge sources
 def upload_batch(sources: list, tenant_id: str, sub_tenant_id: str = None):
@@ -283,7 +283,7 @@ Create a search interface that queries across all data sources:
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 
 interface SearchOptions {
   sub_tenant_id?: string;
@@ -327,7 +327,7 @@ const searchBySourceTitle = (query: string, tenantId: string, sourceTitle: strin
 import os
 from hydra_db import HydraDB
 
-client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 def search(query: str, tenant_id: str, sub_tenant_id: str = None,
            max_results: int = 10, mode: str = "fast",
@@ -371,7 +371,7 @@ Implement advanced search capabilities:
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 
 // Search with optional source type / title metadata filters
 const searchWithFilters = async (
@@ -427,7 +427,7 @@ import os
 import json
 from hydra_db import HydraDB
 
-client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 # Search with optional source type / title metadata filters
 def search_with_filters(query: str, tenant_id: str, source_types: str = None, source_titles: str = None):
@@ -494,7 +494,7 @@ HydraDB's AI memories are dynamic, user-specific profiles that evolve over time.
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 
 // In-memory profile store — replace with your own database in production
 const userProfiles = new Map<string, any>();
@@ -578,7 +578,7 @@ import os
 from datetime import datetime
 from hydra_db import HydraDB
 
-client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 # In-memory profile store — replace with your own database in production
 user_profiles: dict = {}
@@ -1144,7 +1144,7 @@ class DataSyncManager {
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
-const client = new HydraDBClient({ token: process.env.HYDRADB_API_KEY! });
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 
 // Express.js webhook handler
 app.post("/webhooks/slack", async (req, res) => {
@@ -1183,7 +1183,7 @@ from hydra_db import HydraDB
 from flask import Flask, request
 
 app = Flask(__name__)
-client = HydraDB(token=os.environ["HYDRADB_API_KEY"])
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 @app.post("/webhooks/slack")
 def slack_webhook():
