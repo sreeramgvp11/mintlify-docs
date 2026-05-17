@@ -589,7 +589,7 @@ def recall_for_question(question: str, competitor: str, recency_bias: float) -> 
         recency_bias=recency_bias,
         graph_context=True,
     )
-    chunks = results.get("chunks", [])
+    chunks = results.chunks or []
     if not chunks:
         return "No signals found for this question."
     return "\n".join(c["chunk_content"][:300] for c in chunks[:3])

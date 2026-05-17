@@ -807,7 +807,7 @@ def cross_source_reconciliation(
                 "doc_type":       doc_type_filter,
             },
         )
-        return resp.get("chunks", [])
+        return resp.chunks or []
 
     transcript_chunks = recall(f"earnings-{ticker.lower()}", "earnings_transcript")
     metrics_chunks    = recall("internal-metrics",            "internal_metrics")
@@ -1175,7 +1175,7 @@ def generate_quarterly_briefing(
             "fiscal_quarter": fiscal_quarter,
         },
     )
-    current_chunks = current_q.get("chunks", [])
+    current_chunks = current_q.chunks or []
 
     # ── 2. Prior quarters for trend context ──────────────────────────────
     print("[2/4] Recalling trend data...")
