@@ -47,7 +47,7 @@ where `N` is the number of commits to update.
 
 **Commits without a valid `Signed-off-by` line will be rejected by CI and cannot be merged.**
 
-For the full text of the DCO, see: https://developercertificate.org/
+For the full text of the DCO, see: [https://developercertificate.org/](https://developercertificate.org/)
 
 ---
 
@@ -63,7 +63,7 @@ git clone https://github.com/<your-username>/mintlify-docs.git
 cd mintlify-docs
 ```
 
-3. Add the upstream remote:
+1. Add the upstream remote:
 
 ```bash
 git remote add upstream https://github.com/usecortex/mintlify-docs.git
@@ -112,13 +112,15 @@ type(scope): description
 
 ### Types
 
-| Type       | Purpose                                  |
-|------------|------------------------------------------|
-| `docs`     | Documentation content changes            |
-| `fix`      | Fixes to formatting, links, or errors    |
-| `feat`     | New documentation pages or sections      |
-| `chore`    | Maintenance, CI, or tooling changes      |
-| `refactor` | Restructuring without content change     |
+
+| Type       | Purpose                               |
+| ---------- | ------------------------------------- |
+| `docs`     | Documentation content changes         |
+| `fix`      | Fixes to formatting, links, or errors |
+| `feat`     | New documentation pages or sections   |
+| `chore`    | Maintenance, CI, or tooling changes   |
+| `refactor` | Restructuring without content change  |
+
 
 ### Examples
 
