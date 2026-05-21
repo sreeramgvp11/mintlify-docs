@@ -15,11 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Requires a PAT with Contents:read on usecortex/mintlify-hygiene stored
-      # as the MINTLIFY_HYGIENE_TOKEN repository secret.
       - name: Download latest mintlify-hygiene binary
         env:
-          GH_TOKEN: ${{ secrets.MINTLIFY_HYGIENE_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release download \
             --repo usecortex/mintlify-hygiene \
