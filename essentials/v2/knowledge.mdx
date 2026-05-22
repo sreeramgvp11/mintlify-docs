@@ -186,14 +186,24 @@ Both paths are available. We *recommend* storing the content as a markdown file 
 ```json
 {
   "success": true,
-  "message": "Knowledge uploaded successfully",
-  "results": [
-    { "source_id": "policy_v2", "filename": "policy.pdf", "status": "queued", "error": null }
-  ],
-  "success_count": 1,
-  "failed_count": 0
+  "data": {
+    "success": true,
+    "message": "Knowledge uploaded successfully",
+    "results": [
+      { "source_id": "policy_v2", "filename": "policy.pdf", "status": "queued", "error": null }
+    ],
+    "success_count": 1,
+    "failed_count": 0
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
 }
 ```
+
+All v2 endpoints return this envelope shape. Access the payload via `response.data` (e.g. `response.data.results`), not at the top level.
 
 ---
 

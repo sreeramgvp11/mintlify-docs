@@ -325,15 +325,25 @@ result = client.source.ingest(
 
 </CodeGroup>
 
-You'll get back a `source_id` for each memory and an initial `status` of `queued`:
+You'll get back a `source_id` for each memory and an initial `status` of `queued`. The payload is wrapped in the standard v2 envelope, so the fields live under `data` (`response.data.results`):
 
 ```json
 {
-  "results": [
-    { "source_id": "mem_abc123", "status": "queued", "infer": true }
-  ],
-  "success_count": 1,
-  "failed_count": 0
+  "success": true,
+  "data": {
+    "success": true,
+    "message": "Memories queued for ingestion successfully",
+    "results": [
+      { "source_id": "mem_abc123", "status": "queued", "infer": true }
+    ],
+    "success_count": 1,
+    "failed_count": 0
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
 }
 ```
 

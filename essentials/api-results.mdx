@@ -316,21 +316,18 @@ def _format_path_chain(path: Any) -> str:
     Each triplet becomes: [src] -> predicate -> [tgt]: context [Time: ...]
     Multiple triplets are joined with ↳ to show traversal direction.
     """
-    if not isinstance(path, dict):
-        return str(path)
-
-    triplets = path.get("triplets") or []
+    triplets = getattr(path, "triplets", None) or []
     parts = []
     for t in triplets:
-        src  = (t.get("source") or {}).get("name", "")
-        tgt  = (t.get("target") or {}).get("name", "")
-        rel  = t.get("relation") or {}
-        pred = rel.get("canonical_predicate", "")
+        src  = t.source.name if t.source else ""
+        tgt  = t.target.name if t.target else ""
+        rel  = t.relation
+        pred = rel.canonical_predicate if rel else ""
         line = f"[{src}] -> {pred} -> [{tgt}]"
-        ctx  = rel.get("context")
+        ctx  = rel.context if rel else None
         if ctx:
             line += f": {ctx}"
-        temporal = rel.get("temporal_details")
+        temporal = rel.temporal_details if rel else None
         if temporal:
             line += f" [Time: {temporal}]"
         parts.append(line)
