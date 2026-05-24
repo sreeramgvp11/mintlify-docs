@@ -105,7 +105,7 @@ User-scoped context -- preferences, conversation history, inferred traits. Each 
 Shared, tenant-wide context from documents and app sources.
 
 - **Files:** PDF, DOCX, PPTX, Markdown, CSV, TXT, HTML via `files` on `upload_knowledge`
-- **App sources:** Slack, Gmail, Jira, Notion, Linear, CRM, etc. via `app_knowledge` — see [App Sources](/essentials/app-sources)
+- **App sources:** Slack, Gmail, Jira, Notion, Linear, CRM, etc. via `app_knowledge` - see [App Sources](/essentials/app-sources)
 - **Processing:** Parsed → Chunked → Embedded → Graph-linked at write time
 - **Mutability:** Versioned -- replaced or deleted explicitly
 - **Recall endpoint:** `POST /recall/full_recall` (set `search_apps: true` when querying ingested app data)
@@ -154,7 +154,7 @@ Pre-parsed records from business apps. One `app_knowledge` item = one HydraDB so
 |---|---|---|
 | Envelope | `id`, `tenant_id`, `sub_tenant_id` | Required on every item |
 | Identity | `kind`, `provider`, `external_id` | `email`, `message`, `ticket`, `knowledge_base`, `custom` |
-| Content | `fields` | Searchable body/title/status/thread IDs — match `fields.kind` to top-level `kind` |
+| Content | `fields` | Searchable body/title/status/thread IDs - match `fields.kind` to top-level `kind` |
 | Scope | `metadata` | Channel, project, space, pipeline (`container_type`, `container_id`, …) |
 | Structure | `relations`, `comments`, `attachments` | Cross-source links, discussion, extracted file text |
 
@@ -1314,7 +1314,7 @@ for r in boolean_results["results"] + semantic_results["results"]:
 
 ### 9.1 Unified Enterprise Search ("Glean clone")
 
-Ingest Slack, Notion, Gmail, Linear, GitHub into one tenant; recall with `search_apps: true`, `alpha=0.9`, and citations. Map each connector to a `kind` — see [App Sources](/essentials/app-sources).
+Ingest Slack, Notion, Gmail, Linear, GitHub into one tenant; recall with `search_apps: true`, `alpha=0.9`, and citations. Map each connector to a `kind` - see [App Sources](/essentials/app-sources).
 
 ```python
 KIND_BY_PROVIDER = {
@@ -1557,7 +1557,7 @@ results = client.embeddings.search(
 
 ### 12.2 Custom Chunking
 
-Prefer **file upload** when you have a document file — HydraDB chunks internally. If you must pre-chunk, ingest **one app source per chunk** (each needs its own `id` / `external_id`; link with `fields.parent_id`):
+Prefer **file upload** when you have a document file - HydraDB chunks internally. If you must pre-chunk, ingest **one app source per chunk** (each needs its own `id` / `external_id`; link with `fields.parent_id`):
 
 ```python
 chunks = custom_chunk(document)   # [{"text": "...", "metadata": {...}}, ...]
