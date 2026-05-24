@@ -52,6 +52,12 @@
               "plugins/cli",
               "plugins/openclaw"
             ]
+          },
+          {
+            "group": "For Agents",
+            "pages": [
+              "md"
+            ]
           }
         ]
       },
