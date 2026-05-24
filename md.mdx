@@ -177,7 +177,7 @@ PyPI package name is `hydradb-sdk`; the importable module is `hydra_db` (with an
 
 ```python
 import os
-from hydra_db import HydraDB
+from hydra_db import HydraDB  # PyPI package: hydradb-sdk; importable module: hydra_db
 
 client = HydraDB(
     token=os.environ["HYDRA_DB_API_KEY"],
@@ -1797,10 +1797,15 @@ console.log(results);
 # 1) Login
 hydradb login
 
-# 2) Create + wait
+# 2) Create + wait (bounded at 5 min)
 hydradb tenant create --tenant-id demo_tenant
+deadline=$(( $(date +%s) + 300 ))
 until hydradb tenant monitor --tenant-id demo_tenant --output json \
       | jq -e '.infra_status == "ready"' >/dev/null 2>&1; do
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    echo "Tenant infra not ready after 5 min" >&2
+    exit 1
+  fi
   sleep 5
 done
 
