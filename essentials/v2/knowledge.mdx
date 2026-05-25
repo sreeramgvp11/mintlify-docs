@@ -262,8 +262,8 @@ Poll every few seconds. Most documents complete in 1–5 minutes. Items in `grap
 | Field | Type | Description |
 |---|---|---|
 | `file_id` | string | Optional stable identifier. Used as upsert key when `upsert: true`. |
-| `metadata` | object | Filterable fields. Keys must match the tenant metadata schema. |
-| `additional_metadata` | object | Free-form fields for display and bookkeeping. Not filterable. |
+| `tenant_metadata` | object | Filterable fields. Keys must match the tenant metadata schema. Also accepted as `metadata`. |
+| `document_metadata` | object | Free-form fields for display and bookkeeping. Filterable only when nested under `document_metadata` in `metadata_filters`. Also accepted as `additional_metadata`. |
 
 ### App source model (`app_knowledge` array items)
 
@@ -276,8 +276,8 @@ Poll every few seconds. Most documents complete in 1–5 minutes. Items in `grap
 | `url` | string | Canonical URL or reference link. |
 | `timestamp` | string | ISO-8601 timestamp (creation or last-updated). |
 | `content` | object | Content payload. Use `{"text": "..."}` for plain text. |
-| `metadata` | object | Filterable fields matching the tenant schema. |
-| `additional_metadata` | object | Free-form fields. Not filterable at recall time. |
+| `tenant_metadata` | object | Filterable fields matching the tenant schema. Also accepted as `metadata`. |
+| `document_metadata` | object | Free-form fields. Filterable only when nested under `document_metadata` in `metadata_filters`. Also accepted as `additional_metadata`. |
 | `attachments` | array | Optional related attachments. |
 | `relations` | object | Forcefully connect this source to others. |
 
@@ -366,11 +366,11 @@ At recall, linked sources are returned in the `additional_context` field. Set `s
 
 ## 8. Metadata on knowledge
 
-Attach `metadata` at ingestion to enable deterministic filtering at recall time:
+Attach `tenant_metadata` at ingestion to enable deterministic filtering at recall time:
 
 ```json
 {
-  "metadata": { "document_type": "runbook", "environment": "production" }
+  "tenant_metadata": { "document_type": "runbook", "environment": "production" }
 }
 ```
 
@@ -383,7 +383,7 @@ Then at recall time:
 }
 ```
 
-`metadata` keys must be defined in the tenant metadata schema with `enable_match: true` to be filterable. `additional_metadata` is stored but cannot be used in `metadata_filters`.
+`tenant_metadata` keys must be defined in the tenant metadata schema with `enable_match: true` to be filterable. `document_metadata` is stored alongside the source for display and bookkeeping; to filter on it, nest the keys under `document_metadata` in `metadata_filters` (e.g. `{"metadata_filters": {"document_metadata": {"author": "Alice"}}}`).
 
 See [Essentials → Metadata](/essentials/v2/metadata) for schema design and filtering patterns.
 

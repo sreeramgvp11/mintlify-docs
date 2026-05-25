@@ -1,0 +1,82 @@
+---
+title: "Delete Tenant"
+description: "Permanently remove a tenant and all of its data."
+openapi: "DELETE /tenants"
+---
+
+## When to use it
+
+Tearing down a workspace — for customer offboarding, end-of-life environments, or cleanup after testing. Deletes the tenant **and all of its ingested data, memories, metadata schema, vector indices, graph, and infrastructure**.
+
+This action is irreversible. There is no soft-delete and no recovery window.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Calling on an already-deleted tenant returns `404 TENANT_NOT_FOUND`
+- **Async:** Yes — the response acknowledges the deletion; cleanup of vector indices, the graph, and storage objects runs in the background.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE 'https://api.hydradb.com/tenants?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+```typescript TypeScript SDK
+const response = await client.tenants.delete({
+  tenant_id: "my_first_tenant",
+});
+```
+```python Python SDK
+response = client.tenants.delete(tenant_id="my_first_tenant")
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Identifier of the tenant to delete. |
+
+## Response
+
+```json
+{
+  "tenant_id": "my_first_tenant",
+  "status": "deletion_scheduled",
+  "message": "Tenant deregistered. Background cleanup is in progress."
+}
+```
+
+| Field | Description |
+|---|---|
+| `tenant_id` | The tenant that was deregistered. |
+| `status` | Always `deletion_scheduled` on success. Background workers continue removing data. |
+| `message` | Human-readable hint. |
+
+## Behavior notes
+
+<Warning>
+**Irreversible.** Ingested documents, memories, embeddings, graph nodes, metadata schema, and storage objects are removed. There is no recovery window — make sure you have a backup if the content matters.
+</Warning>
+
+<Info>
+**Async cleanup.** The endpoint returns immediately after deregistering the tenant. Vector indices, MongoDB documents, the knowledge graph, and S3/MinIO objects are removed by background workers and may take a few minutes to fully disappear from infrastructure.
+</Info>
+
+<Info>
+**`tenant_id` reuse.** After deletion succeeds, the `tenant_id` is free to be re-used by a subsequent `POST /tenants` call.
+</Info>
+
+## Related endpoints
+
+- **Before this:** [List Tenants](/api-reference/v2/endpoint/list-tenants) — find the tenant ID
+- **Alternative:** [Delete Source](/api-reference/v2/endpoint/delete-source) — remove specific knowledge or memories without deleting the whole tenant
+
+## Errors
+
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)

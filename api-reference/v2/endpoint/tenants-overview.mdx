@@ -38,12 +38,12 @@ flowchart LR
 
 | Endpoint | Method | SDK method | Purpose | Async? |
 |---|---|---|---|---|
-| `/tenants` | `POST` | `tenants.create` | Create a new isolated workspace | Yes |
-| `/tenants` | `GET` | `tenants.list` | List all tenants for the organization | No |
-| `/tenants` | `DELETE` | `tenants.delete` | Permanently remove a tenant | Yes |
-| `/tenants/status` | `GET` | `tenants.status` | Check provisioning readiness | No |
-| `/tenants/sub-tenants` | `GET` | `tenants.sub_tenants` | List active sub-tenants | No |
-| `/tenants/stats` | `GET` | `tenants.stats` | Get object counts and vector dimensions | No |
+| [`/tenants`](/api-reference/v2/endpoint/create-tenant) | `POST` | `tenants.create` | Create a new isolated workspace | Yes |
+| [`/tenants`](/api-reference/v2/endpoint/list-tenants) | `GET` | `tenants.list` | List all tenants for the organization | No |
+| [`/tenants`](/api-reference/v2/endpoint/delete-tenant) | `DELETE` | `tenants.delete` | Permanently remove a tenant | Yes |
+| [`/tenants/status`](/api-reference/v2/endpoint/tenant-status) | `GET` | `tenants.status` | Check provisioning readiness | No |
+| [`/tenants/sub-tenants`](/api-reference/v2/endpoint/list-sub-tenants) | `GET` | `tenants.sub_tenants` | List active sub-tenants | No |
+| [`/tenants/stats`](/api-reference/v2/endpoint/tenant-stats) | `GET` | `tenants.stats` | Get object counts and vector dimensions | No |
 
 ## Typical call sequence
 

@@ -92,19 +92,19 @@ SDK methods mirror the API: `client.<group>.<method>()` maps to the correspondin
 
 | Endpoint | Method | SDK method | Purpose | Use when |
 |---|---|---|---|---|
-| `/tenants` | `POST` | `tenants.create` | Create a tenant | You are setting up a new isolated workspace and optional metadata schema. |
-| `/tenants` | `GET` | `tenants.list` | List tenants | You need to discover tenant IDs available to the current API key. |
-| `/tenants` | `DELETE` | `tenants.delete` | Delete a tenant | You need to permanently remove a workspace and its data. |
-| `/tenants/status` | `GET` | `tenants.status` | Check provisioning readiness | You just created a tenant and need to wait before ingesting data. |
-| `/tenants/sub-tenants` | `GET` | `tenants.sub_tenants` | List active sub-tenants | You partition data by user, team, customer, or account and need to inspect those partitions. |
-| `/tenants/stats` | `GET` | `tenants.stats` | Get usage statistics | You want to monitor object counts and vector dimensions for a tenant. |
-| `/source/ingest` | `POST` | `source.ingest` | Ingest knowledge or memories | You are uploading files, app-generated sources, or user memories. |
-| `/source/status` | `GET` | `source.status` | Check processing status | You have source IDs from ingestion and need to know when they are searchable. |
-| `/source/fetch` | `GET` | `source.fetch` | Retrieve original source content or presigned URL | You need to display or inspect the original ingested content. |
-| `/source/list` | `POST` | `source.list` | Browse knowledge or memories | You need pagination, filters, field projection, or a specific subset by `source_ids`. |
-| `/source` | `DELETE` | `source.delete` | Delete sources or memories | You need to remove one or more knowledge sources or memories by ID. |
-| `/source/relations` | `GET` | `source.relations` | Inspect entity relationships | You need graph relations for a source or sub-tenant. |
-| `/search` | `POST` | `search.query` | Unified search over knowledge, memories, or both | You need retrieval with `hybrid`, `text`, or `vector` search across `sources`, `memories`, or `all`. |
+| [`/tenants`](/api-reference/v2/endpoint/create-tenant) | `POST` | `tenants.create` | Create a tenant | You are setting up a new isolated workspace and optional metadata schema. |
+| [`/tenants`](/api-reference/v2/endpoint/list-tenants) | `GET` | `tenants.list` | List tenants | You need to discover tenant IDs available to the current API key. |
+| [`/tenants`](/api-reference/v2/endpoint/delete-tenant) | `DELETE` | `tenants.delete` | Delete a tenant | You need to permanently remove a workspace and its data. |
+| [`/tenants/status`](/api-reference/v2/endpoint/tenant-status) | `GET` | `tenants.status` | Check provisioning readiness | You just created a tenant and need to wait before ingesting data. |
+| [`/tenants/sub-tenants`](/api-reference/v2/endpoint/list-sub-tenants) | `GET` | `tenants.sub_tenants` | List active sub-tenants | You partition data by user, team, customer, or account and need to inspect those partitions. |
+| [`/tenants/stats`](/api-reference/v2/endpoint/tenant-stats) | `GET` | `tenants.stats` | Get usage statistics | You want to monitor object counts and vector dimensions for a tenant. |
+| [`/source/ingest`](/api-reference/v2/endpoint/ingest-content) | `POST` | `source.ingest` | Ingest knowledge or memories | You are uploading files, app-generated sources, or user memories. |
+| [`/source/status`](/api-reference/v2/endpoint/source-status) | `GET` | `source.status` | Check processing status | You have source IDs from ingestion and need to know when they are searchable. |
+| [`/source/fetch`](/api-reference/v2/endpoint/fetch-content) | `GET` | `source.fetch` | Retrieve original source content or presigned URL | You need to display or inspect the original ingested content. |
+| [`/source/list`](/api-reference/v2/endpoint/list-documents) | `POST` | `source.list` | Browse knowledge or memories | You need pagination, filters, field projection, or a specific subset by `source_ids`. |
+| [`/source`](/api-reference/v2/endpoint/delete-source) | `DELETE` | `source.delete` | Delete sources or memories | You need to remove one or more knowledge sources or memories by ID. |
+| [`/source/relations`](/api-reference/v2/endpoint/source-relations) | `GET` | `source.relations` | Inspect entity relationships | You need graph relations for a source or sub-tenant. |
+| [`/search`](/api-reference/v2/endpoint/search) | `POST` | `search.query` | Unified search over knowledge, memories, or both | You need retrieval with `hybrid`, `text`, or `vector` search across `sources`, `memories`, or `all`. |
 
 ## Conventions
 

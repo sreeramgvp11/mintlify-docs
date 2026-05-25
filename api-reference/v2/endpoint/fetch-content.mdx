@@ -1,0 +1,123 @@
+---
+title: "Fetch Content"
+description: "Retrieve the original content of an ingested source."
+openapi: "GET /source/fetch"
+---
+
+## When to use it
+
+Pull back the original ingested content for display in your UI, audit trails, or to feed a different downstream model. Common patterns:
+
+- **UI rendering** — show the original document next to LLM-generated answers.
+- **Audit views** — let admins inspect what was actually ingested for a `source_id` returned by search.
+- **Re-processing** — fetch the raw text to run your own analyzer or summarizer.
+- **Long-lived links** — get a presigned URL valid up to 7 days for downstream services to access the file directly.
+
+Works for both knowledge sources and memories — pass the `source_id` from the ingest response or from a search hit.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+- **Presigned URL lifetime:** `expiry_seconds` is clamped to `60 ≤ x ≤ 604800` (7 days).
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -G 'https://api.hydradb.com/source/fetch' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  --data-urlencode "source_id=policy_v2" \
+  --data-urlencode "tenant_id=acme_corp" \
+  --data-urlencode "mode=both" \
+  --data-urlencode "expiry_seconds=3600"
+```
+```typescript TypeScript SDK
+const file = await client.source.fetch({
+  source_id: "policy_v2",
+  tenant_id: "acme_corp",
+  mode: "both",
+  expiry_seconds: 3600,
+});
+```
+```python Python SDK
+file = client.source.fetch(
+    source_id="policy_v2",
+    tenant_id="acme_corp",
+    mode="both",
+    expiry_seconds=3600,
+)
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `source_id` | string | Yes | – | ID of the source to fetch. |
+| `tenant_id` | string | Yes | – | Owning tenant. |
+| `sub_tenant_id` | string \| null | No | `null` | Sub-tenant scope. If omitted, the default sub-tenant is used. |
+| `mode` | `"content" \| "url" \| "both"` | No | `"content"` | What to return. See [Fetch modes](#fetch-modes). |
+| `expiry_seconds` | integer | No | `3600` | TTL of the presigned URL (when `mode` includes `url`). Range `60 ≤ x ≤ 604800` (7 days). |
+
+## Fetch modes
+
+| Mode | Returns | Use when |
+|---|---|---|
+| `content` *(default)* | Parsed text (`content` field) or base64 for binary files (`content_base64`). | You want to render the parsed text in-app or feed it to another model. |
+| `url` | Presigned URL (`presigned_url`) valid for `expiry_seconds`. | You want a client or a service to download the original file directly without proxying through your backend. |
+| `both` | Text **and** presigned URL. | UI flows that show parsed text inline plus a "Download original" link. |
+
+## Response
+
+```json
+{
+  "success": true,
+  "source_id": "policy_v2",
+  "content": "Section 1. Authentication policies...",
+  "content_base64": null,
+  "presigned_url": "https://storage.hydradb.com/.../policy_v2.pdf?X-Amz-...",
+  "content_type": "application/pdf",
+  "size_bytes": 1_842_233,
+  "message": "File fetched successfully"
+}
+```
+
+| Field | Description |
+|---|---|
+| `success` | Boolean — always `true` on a 200 response. |
+| `source_id` | The source you asked for (string). |
+| `content` | Parsed text content (string, or `null`). Present when `mode` is `content` or `both` and the file is text-parseable. |
+| `content_base64` | Base64-encoded raw file content (string, or `null`). Present when the source is binary and `mode` includes content. |
+| `presigned_url` | Direct download URL (string, or `null`). Present when `mode` is `url` or `both`. |
+| `content_type` | MIME type when known (string, or `null`). |
+| `size_bytes` | Source file size in bytes when known (integer, or `null`). |
+| `message` | Human-readable status (string). |
+
+## Behavior notes
+
+<Info>
+**Text vs binary.** When the source is text-parseable (PDF, DOCX, MD, TXT), `content` is the parsed text. For non-text files HydraDB returns `content_base64` instead. Check both when handling unknown content types.
+</Info>
+
+<Info>
+**Presigned URL TTL.** The URL is valid only for `expiry_seconds`. Anyone with the URL can download the file during that window — treat it as a short-lived secret.
+</Info>
+
+<Info>
+**Memory items.** Fetching a memory's `source_id` returns its raw text content (and the inferred preference, when applicable). There is no presigned URL for memory items — `mode=url` and `mode=both` return `presigned_url: null`.
+</Info>
+
+## Related endpoints
+
+- **Discover IDs:** [List Documents](/api-reference/v2/endpoint/list-documents) · [Search](/api-reference/v2/endpoint/search)
+- **Status check:** [Source Status](/api-reference/v2/endpoint/source-status)
+- **Cleanup:** [Delete Source](/api-reference/v2/endpoint/delete-source)
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Sources — Overview](/api-reference/v2/endpoint/sources-overview)

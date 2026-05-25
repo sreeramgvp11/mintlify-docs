@@ -1,0 +1,335 @@
+---
+title: "Create Tenant"
+description: "Create an isolated workspace for your data."
+openapi: "POST /tenants"
+---
+
+## When to use it
+
+Creating a new tenant is the first step before any ingestion or recall. A tenant is a fully isolated workspace – no tenant can read another tenant's data.
+
+In most cases, you create one tenant per organization. For per-user isolation (B2C), you use sub-tenants inside a single tenant.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Re-sending with the same `tenant_id` returns `409 CONFLICT`
+- **Async:** Yes – returns `status: accepted`. Poll [`tenants.status`](/api-reference/v2/endpoint/tenant-status) before ingestion or search.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "my_first_tenant",
+    "tenant_metadata_schema": [
+      {
+        "name": "category",
+        "data_type": "VARCHAR",
+        "max_length": 256,
+        "enable_match": true
+      },
+      {
+        "name": "product_description",
+        "data_type": "VARCHAR",
+        "max_length": 4096,
+        "enable_dense_embedding": true,
+        "enable_sparse_embedding": true
+      }
+    ]
+  }'
+```
+```typescript TypeScript SDK
+const response = await client.tenants.create({
+  tenant_id: "my_first_tenant",
+  tenant_metadata_schema: [
+    {
+      name: "category",
+      data_type: "VARCHAR",
+      max_length: 256,
+      enable_match: true,
+    },
+    {
+      name: "product_description",
+      data_type: "VARCHAR",
+      max_length: 4096,
+      enable_dense_embedding: true,
+      enable_sparse_embedding: true,
+    },
+  ],
+});
+```
+```python Python SDK
+response = client.tenants.create(
+    tenant_id="my_first_tenant",
+    tenant_metadata_schema=[
+        {
+            "name": "category",
+            "data_type": "VARCHAR",
+            "max_length": 256,
+            "enable_match": True,
+        },
+        {
+            "name": "product_description",
+            "data_type": "VARCHAR",
+            "max_length": 4096,
+            "enable_dense_embedding": True,
+            "enable_sparse_embedding": True,
+        },
+    ],
+)
+```
+</CodeGroup>
+
+## Request body
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Unique identifier for the tenant. Must be at least one character. |
+| `tenant_metadata_schema` | array | No | `null` | Defines tenant-level metadata fields. See [Metadata schema](#metadata-schema) below. |
+| `is_embeddings_tenant` | boolean | No | `false` | Set to `true` to create a pure embeddings tenant (raw vector storage rather than parsed sources). Most applications leave this `false`. |
+| `embeddings_dimension` | integer | No | `1536` | Dimensionality of the dense vector store. Only applies when `is_embeddings_tenant: true`. |
+
+## Response
+
+```json
+{
+  "status": "accepted",
+  "tenant_id": "my_first_tenant",
+  "message": "Tenant creation started in the background. Use GET /tenants/status?tenant_id=... to check progress."
+}
+```
+
+| Field | Description |
+|---|---|
+| `status` | Always `accepted`. Provisioning runs in the background. |
+| `tenant_id` | The tenant identifier provided in the request. |
+| `message` | Human-readable next-step hint. |
+
+## Metadata schema
+
+`tenant_metadata_schema` defines fields that all documents in the tenant inherit. Each entry has the following shape:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `name` | string | – | Field name. Required. Must start with a letter or underscore and contain only letters, numbers, and underscores (no spaces or special characters). Reserved system names are rejected. |
+| `data_type` | enum | `VARCHAR` | Field data type. Accepts friendly names (`string`, `integer`, `float`, `boolean`, `array`, `object`) or raw Milvus types (`VARCHAR`, `INT32`, etc.). See [Valid data types](#valid-data-types). |
+| `max_length` | integer | `1024` | Max length for `VARCHAR` fields. Increase for long text. |
+| `enable_analyzer` | boolean | `false` | Enable a text analyzer for full-text search capabilities on this field. |
+| `enable_match` | boolean | `false` | Enable exact-match filtering on this field via `metadata_filters`. |
+| `enable_dense_embedding` | boolean | `false` | Index a dense embedding for semantic similarity search. Only applicable to `VARCHAR` fields. |
+| `enable_sparse_embedding` | boolean | `false` | Index a sparse embedding (BM25) for keyword search. Only applicable to `VARCHAR` fields. |
+| `nullable` | boolean | `true` | Whether the field can be null at ingestion time. |
+
+### Valid data types
+
+`BOOL`, `INT8`, `INT16`, `INT32`, `INT64`, `FLOAT`, `DOUBLE`, `VARCHAR`, `JSON`, `ARRAY`, `FLOAT_VECTOR`, `SPARSE_FLOAT_VECTOR`.
+
+You can also pass the friendly names `"string"`, `"integer"`, `"float"`, `"boolean"`, `"array"`, `"object"` — they are coerced server-side.
+
+For text fields that should be semantically searchable, use `VARCHAR` with `enable_dense_embedding: true`. For keyword (BM25) searchability, add `enable_sparse_embedding: true`. For fields filterable via `metadata_filters`, use `enable_match: true`. These flags are independent and can be combined.
+
+### Shorthand flags
+
+For convenience, the schema accepts two top-level shorthand flags on each field that expand to the underlying boolean flags:
+
+| Shorthand | Equivalent to |
+|---|---|
+| `searchable: true` | `enable_dense_embedding: true` + `enable_sparse_embedding: true` |
+| `filterable: true` | `enable_match: true` |
+
+```json
+{
+  "name": "product_description",
+  "data_type": "VARCHAR",
+  "max_length": 4096,
+  "searchable": true
+}
+```
+
+is equivalent to:
+
+```json
+{
+  "name": "product_description",
+  "data_type": "VARCHAR",
+  "max_length": 4096,
+  "enable_dense_embedding": true,
+  "enable_sparse_embedding": true
+}
+```
+
+<Warning>
+Schema field names are **immutable** after tenant creation. You can add per-document `document_metadata` fields at ingestion time, but tenant-level fields cannot be renamed, removed, or have their flags changed. Plan the schema carefully before creating the tenant.
+</Warning>
+
+### Schema examples
+
+Each example below shows only the schema entries — wrap them in a full `POST /tenants` request like the [Example](#example) above.
+
+#### Single exact-match filter field
+
+The minimum useful schema field for deterministic filtering with `metadata_filters` is a `VARCHAR` field with `enable_match: true`.
+
+```json
+{
+  "tenant_metadata_schema": [
+    {
+      "name": "environment",
+      "data_type": "VARCHAR",
+      "enable_match": true
+    }
+  ]
+}
+```
+
+Values written under `tenant_metadata.environment` at ingestion time can then be filtered exactly during search:
+
+```json
+{
+  "metadata_filters": {
+    "environment": "production"
+  }
+}
+```
+
+#### Multiple `enable_match` fields
+
+Applications commonly define several stable fields they expect to filter on via `metadata_filters`. Use `INT32`, `INT64`, `BOOL`, `FLOAT`, or other typed fields when the value is not a string. Every field that must be filterable needs `enable_match: true`.
+
+```json
+{
+  "tenant_metadata_schema": [
+    {
+      "name": "environment",
+      "data_type": "VARCHAR",
+      "enable_match": true
+    },
+    {
+      "name": "document_type",
+      "data_type": "VARCHAR",
+      "enable_match": true
+    },
+    {
+      "name": "version",
+      "data_type": "INT32",
+      "enable_match": true
+    },
+    {
+      "name": "is_published",
+      "data_type": "BOOL",
+      "enable_match": true
+    }
+  ]
+}
+```
+
+When multiple keys are passed in `metadata_filters`, they combine as structured exact-match constraints — a chunk must satisfy every key to remain a candidate.
+
+#### Long `VARCHAR` field
+
+`VARCHAR` defaults to a `max_length` of 1024 characters. For longer structured string values — compound identifiers, full label strings, or composite tags — set `max_length` explicitly.
+
+```json
+{
+  "name": "compliance_label",
+  "data_type": "VARCHAR",
+  "max_length": 4096,
+  "enable_match": true
+}
+```
+
+#### `enable_match` vs no flag
+
+Only fields declared with `enable_match: true` are usable in `metadata_filters` for deterministic filtering. A field without `enable_match: true` is stored in the schema but cannot be filtered on — `metadata_filters` keys for those fields are silently ignored.
+
+```json
+{
+  "tenant_metadata_schema": [
+    {
+      "name": "region",
+      "data_type": "VARCHAR",
+      "enable_match": true
+    },
+    {
+      "name": "internal_notes",
+      "data_type": "VARCHAR"
+    }
+  ]
+}
+```
+
+- `region` has `enable_match: true` and works in `metadata_filters`.
+- `internal_notes` has no `enable_match`, so it cannot narrow `metadata_filters`. It is stored but not filterable.
+- For free-form display or bookkeeping fields that don't need filtering, prefer `document_metadata` at ingestion time rather than adding them to the tenant schema.
+
+#### Searchable text fields (`enable_dense_embedding` + `enable_sparse_embedding`)
+
+Use `enable_dense_embedding` to make a `VARCHAR` field semantically searchable (dense vector) and `enable_sparse_embedding` to make it keyword-searchable (BM25). Pick these when the field itself is a body of text that should be retrieved alongside the document — for example, a `product_description` that should be matched during search.
+
+```json
+{
+  "name": "product_description",
+  "data_type": "VARCHAR",
+  "max_length": 4096,
+  "enable_dense_embedding": true,
+  "enable_sparse_embedding": true
+}
+```
+
+Equivalently with the shorthand:
+
+```json
+{
+  "name": "product_description",
+  "data_type": "VARCHAR",
+  "max_length": 4096,
+  "searchable": true
+}
+```
+
+- Use `enable_match: true` for fields you intend to filter on exactly via `metadata_filters`.
+- Use `enable_dense_embedding` / `enable_sparse_embedding` for `VARCHAR` fields that should be searchable as text.
+- These flags are independent: an embedding-enabled field is **not** automatically usable as a `metadata_filters` key.
+
+#### Embedding-only tenant
+
+For raw vector use cases — bring-your-own-embeddings — flip `is_embeddings_tenant` and set `embeddings_dimension`. No metadata schema is needed.
+
+```json
+{
+  "tenant_id": "raw_vectors",
+  "is_embeddings_tenant": true,
+  "embeddings_dimension": 1536
+}
+```
+
+## Behavior notes
+
+<Info>
+**Tenant creation is asynchronous.** Always poll [`GET /tenants/status?tenant_id=...`](/api-reference/v2/endpoint/tenant-status) before your first ingestion call. Both values in `vectorstore_status` and `graph_status` must be `true` before the tenant is ready.
+</Info>
+
+<Info>
+**Default sub-tenant.** A default sub-tenant is auto-created with your tenant. Any API call that omits `sub_tenant_id` targets this default. See [Essentials → Multi-Tenant](/essentials/v2/multi-tenant) for details.
+</Info>
+
+<Info>
+**Reserved field names.** Some names are reserved by the indexing layer (e.g., system fields used to track ingestion and graph state). `name` values are validated server-side; reserved names return a `422 VALIDATION_ERROR`. Use prefixes like `app_` if you're worried about collisions.
+</Info>
+
+## Related endpoints
+
+- **Next:** [Tenant Status](/api-reference/v2/endpoint/tenant-status) — poll until provisioning completes
+- **Next:** [Ingest Content](/api-reference/v2/endpoint/ingest-content) — start ingesting data once status is ready
+- **Related:** [Delete Tenant](/api-reference/v2/endpoint/delete-tenant) — teardown
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `409 TENANT_ALREADY_EXISTS`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant) · [Essentials → Metadata](/essentials/v2/metadata)

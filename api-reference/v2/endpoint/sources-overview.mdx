@@ -42,25 +42,25 @@ flowchart LR
 
 | Endpoint | Method | SDK method | Purpose | Async? |
 |---|---|---|---|---|
-| `/source/ingest` | `POST` | `source.ingest` | Ingest files, app sources, or memories | Yes |
-| `/source/status` | `GET` | `source.status` | Check processing status | No |
-| `/source/fetch` | `GET` | `source.fetch` | Retrieve original file content or presigned URL | No |
-| `/source/list` | `POST` | `source.list` | Browse knowledge or memories | No |
-| `/source` | `DELETE` | `source.delete` | Delete sources or memories | Yes |
-| `/source/relations` | `GET` | `source.relations` | Inspect graph relationships | No |
+| [`/source/ingest`](/api-reference/v2/endpoint/ingest-content) | `POST` | `source.ingest` | Ingest files, app sources, or memories | Yes |
+| [`/source/status`](/api-reference/v2/endpoint/source-status) | `GET` | `source.status` | Check processing status | No |
+| [`/source/fetch`](/api-reference/v2/endpoint/fetch-content) | `GET` | `source.fetch` | Retrieve original file content or presigned URL | No |
+| [`/source/list`](/api-reference/v2/endpoint/list-documents) | `POST` | `source.list` | Browse knowledge or memories | No |
+| [`/source`](/api-reference/v2/endpoint/delete-source) | `DELETE` | `source.delete` | Delete sources or memories | Yes |
+| [`/source/relations`](/api-reference/v2/endpoint/source-relations) | `GET` | `source.relations` | Inspect graph relationships | No |
 
 ## Which endpoint should I use?
 
 | Task | Endpoint |
 |---|---|
-| Upload PDFs, DOCX, CSVs, and other files HydraDB should parse | `/source/ingest` with `type=knowledge` and `files` |
-| Upload Slack messages, Notion pages, Gmail threads, or webpages with pre-extracted text | `/source/ingest` with `type=knowledge` and `app_knowledge` |
-| Upload user preferences, conversation history, or inline notes | `/source/ingest` with `type=memory` and `memories` |
-| Poll indexing progress | `/source/status` |
-| Browse stored sources or memories | `/source/list` |
-| Retrieve original source content | `/source/fetch` |
-| Delete sources or memories | `DELETE /source` |
-| Inspect graph relations | `/source/relations` |
+| Upload PDFs, DOCX, CSVs, and other files HydraDB should parse | [`/source/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=knowledge` and `files` |
+| Upload Slack messages, Notion pages, Gmail threads, or webpages with pre-extracted text | [`/source/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=knowledge` and `app_knowledge` |
+| Upload user preferences, conversation history, or inline notes | [`/source/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=memory` and `memories` |
+| Poll indexing progress | [`/source/status`](/api-reference/v2/endpoint/source-status) |
+| Browse stored sources or memories | [`/source/list`](/api-reference/v2/endpoint/list-documents) |
+| Retrieve original source content | [`/source/fetch`](/api-reference/v2/endpoint/fetch-content) |
+| Delete sources or memories | [`DELETE /source`](/api-reference/v2/endpoint/delete-source) |
+| Inspect graph relations | [`/source/relations`](/api-reference/v2/endpoint/source-relations) |
 
 <Note>
 **Why both `type=knowledge` and `app_knowledge`?** They aren't redundant  -  they answer two different questions.

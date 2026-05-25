@@ -82,7 +82,6 @@
           },
           {
             "tab": "API Reference",
-            "openapi": "api-reference/v2/openapi.json",
             "groups": [
               {
                 "group": "API Documentation",
@@ -95,31 +94,31 @@
                 "group": "Tenants",
                 "pages": [
                   "api-reference/v2/endpoint/tenants-overview",
-                  "POST /tenants",
-                  "GET /tenants",
-                  "DELETE /tenants",
-                  "GET /tenants/status",
-                  "GET /tenants/sub-tenants",
-                  "GET /tenants/stats"
+                  "api-reference/v2/endpoint/create-tenant",
+                  "api-reference/v2/endpoint/list-tenants",
+                  "api-reference/v2/endpoint/delete-tenant",
+                  "api-reference/v2/endpoint/tenant-status",
+                  "api-reference/v2/endpoint/list-sub-tenants",
+                  "api-reference/v2/endpoint/tenant-stats"
                 ]
               },
               {
                 "group": "Sources",
                 "pages": [
                   "api-reference/v2/endpoint/sources-overview",
-                  "POST /source/ingest",
-                  "GET /source/status",
-                  "GET /source/fetch",
-                  "POST /source/list",
-                  "DELETE /source",
-                  "GET /source/relations"
+                  "api-reference/v2/endpoint/ingest-content",
+                  "api-reference/v2/endpoint/source-status",
+                  "api-reference/v2/endpoint/fetch-content",
+                  "api-reference/v2/endpoint/list-documents",
+                  "api-reference/v2/endpoint/delete-source",
+                  "api-reference/v2/endpoint/source-relations"
                 ]
               },
               {
                 "group": "Search",
                 "pages": [
                   "api-reference/v2/endpoint/search-overview",
-                  "POST /search"
+                  "api-reference/v2/endpoint/search"
                 ]
               }
             ]

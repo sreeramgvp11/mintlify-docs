@@ -1,0 +1,276 @@
+---
+title: "Ingest Content"
+description: "Unified ingestion endpoint for knowledge (files, app sources) and user memories."
+openapi: "POST /source/ingest"
+---
+
+## When to use it
+
+The single ingestion endpoint for everything that flows into HydraDB. Pick `type` to choose the bucket, then pass the matching content fields:
+
+- **`type=knowledge`** — shared content. Use `files` for binary uploads HydraDB should parse (PDF, DOCX, CSV, MD, TXT), or `app_knowledge` for pre-extracted JSON content (Slack threads, Notion pages, web pages). Both can be sent in a single request.
+- **`type=memory`** — per-user content. Scope with `sub_tenant_id`. Use `infer: true` to let HydraDB extract preferences from raw signal automatically; `infer: false` stores the text verbatim.
+
+Sends `multipart/form-data`. Nested JSON fields (`file_metadata`, `app_knowledge`, `memories`) must be sent as **JSON-stringified** form values.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Controlled by `upsert` — `true` (default) replaces an existing source with the same ID; `false` errors on conflict.
+- **Async:** Yes — returns `202 Accepted` with the new `source_id`s. Poll [Source Status](/api-reference/v2/endpoint/source-status) until each item reports `completed`.
+- **Content-Type:** `multipart/form-data` (not JSON).
+
+## Examples
+
+### Knowledge — files
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F "files=@/path/to/policy.pdf" \
+  -F "files=@/path/to/runbook.pdf" \
+  -F 'file_metadata=[
+    { "file_id": "policy_v2", "tenant_metadata": { "department": "legal" } },
+    { "file_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
+  ]'
+```
+```typescript TypeScript SDK
+const result = await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  files: [
+    { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
+    { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
+  ],
+  file_metadata: JSON.stringify([
+    { file_id: "policy_v2", tenant_metadata: { department: "legal" } },
+    { file_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
+  ]),
+});
+```
+```python Python SDK
+import json
+
+with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb") as f2:
+    result = client.source.ingest(
+        type="knowledge",
+        tenant_id="acme_corp",
+        files=[
+            ("policy.pdf", f1, "application/pdf"),
+            ("runbook.pdf", f2, "application/pdf"),
+        ],
+        file_metadata=json.dumps([
+            {"file_id": "policy_v2", "tenant_metadata": {"department": "legal"}},
+            {"file_id": "runbook_deploy", "tenant_metadata": {"department": "ops"}},
+        ]),
+    )
+```
+</CodeGroup>
+
+### Knowledge — pre-extracted app sources
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F 'app_knowledge=[
+    {
+      "id": "slack_thread_001",
+      "title": "Pricing discussion",
+      "type": "slack",
+      "content": { "text": "We agreed on three tiers..." },
+      "tenant_metadata": { "channel": "product" }
+    }
+  ]'
+```
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  app_knowledge: JSON.stringify([
+    {
+      id: "slack_thread_001",
+      title: "Pricing discussion",
+      type: "slack",
+      content: { text: "We agreed on three tiers..." },
+      tenant_metadata: { channel: "product" },
+    },
+  ]),
+});
+```
+```python Python SDK
+import json
+
+client.source.ingest(
+    type="knowledge",
+    tenant_id="acme_corp",
+    app_knowledge=json.dumps([
+        {
+            "id": "slack_thread_001",
+            "title": "Pricing discussion",
+            "type": "slack",
+            "content": {"text": "We agreed on three tiers..."},
+            "tenant_metadata": {"channel": "product"},
+        }
+    ]),
+)
+```
+</CodeGroup>
+
+### Memory — per-user
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_alex" \
+  -F 'memories=[
+    { "text": "Prefers dark mode and short answers.", "infer": true, "user_name": "Alex" }
+  ]'
+```
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "memory",
+  tenant_id: "acme_corp",
+  sub_tenant_id: "user_alex",
+  memories: JSON.stringify([
+    { text: "Prefers dark mode and short answers.", infer: true, user_name: "Alex" },
+  ]),
+});
+```
+```python Python SDK
+import json
+
+client.source.ingest(
+    type="memory",
+    tenant_id="acme_corp",
+    sub_tenant_id="user_alex",
+    memories=json.dumps([
+        {"text": "Prefers dark mode and short answers.", "infer": True, "user_name": "Alex"}
+    ]),
+)
+```
+</CodeGroup>
+
+## Form fields
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `type` | `"knowledge" \| "memory"` | No | `"knowledge"` | Bucket selector. |
+| `tenant_id` | string | Yes | – | Target tenant. |
+| `sub_tenant_id` | string | No | `""` (default sub-tenant) | Logical partition inside the tenant. |
+| `upsert` | boolean | No | `true` | Replace existing sources with the same ID. Set to `false` to error on conflict. |
+| `files` | file[] | Conditional | `[]` | Binary uploads, **knowledge only**. Omit when ingesting memories. |
+| `file_metadata` | string (JSON array) | No | – | One entry per file in `files`, same order. See [`file_metadata` item shape](#file_metadata-item-shape). |
+| `app_knowledge` | string (JSON object or array) | No | – | Pre-extracted source objects (Slack, Notion, web pages, etc.), **knowledge only**. See [`app_knowledge` item shape](#app_knowledge-item-shape). |
+| `memories` | string (JSON array) | Conditional | – | Memory items, **memory only**. Required when `type=memory`. See [`memories` item shape](#memories-item-shape). |
+
+### `file_metadata` item shape
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `file_id` | string | – | Optional source ID. If set, becomes the `source_id` for this file (use your app's document ID for parity). |
+| `tenant_metadata` | object | `{}` | Tenant-schema fields for filtering and search. Keys must be declared in `tenant_metadata_schema`. |
+| `document_metadata` | object | `{}` | Free-form per-document fields for display or bookkeeping. To filter on these at search time, nest under `metadata_filters.document_metadata`. |
+| `title` | string | filename | Override the source title shown in search results. |
+| `type` | string | inferred | Override the source type shown in search results. |
+| `url` | string | – | Override the canonical URL. |
+| `timestamp` | string | upload time | ISO-8601 timestamp override. |
+| `relations` | object | – | Declare forceful relations to other sources. Shape: `{ "cortex_source_ids": ["...", "..."] }`. Surfaced via `additional_context` in `mode: "thinking"` search. |
+
+### `app_knowledge` item shape
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `id` | string | auto-generated | Source ID. Treated as the upsert key. |
+| `title` | string | – | Short title or subject shown in search results. |
+| `type` | string | – | Source category (`slack`, `notion`, `gmail`, `webpage`, etc.). Used for filtering and display. |
+| `description` | string | – | Optional long-form description. |
+| `url` | string | – | Canonical URL or reference link. |
+| `timestamp` | string | – | ISO-8601 timestamp (creation or last-updated). |
+| `content` | object | – | Content payload. Use `{ "text": "..." }` for plain text. |
+| `tenant_metadata` | object | `{}` | Tenant-schema fields. |
+| `document_metadata` | object | `{}` | Free-form per-document fields. |
+| `attachments` | array | `[]` | Optional related attachments. |
+| `relations` | object | – | Forceful relations, same shape as on `file_metadata`. |
+
+### `memories` item shape
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `source_id` | string | auto-generated | Optional unique ID. Acts as the upsert key. |
+| `title` | string | truncated `text` | Short label for display in `/source/list` and search hits as `source.title`. |
+| `text` | string | – | Raw text or markdown content. Use this **or** `user_assistant_pairs`. |
+| `user_assistant_pairs` | array | – | Conversation pairs `{ user, assistant }`. Use this **or** `text`. |
+| `is_markdown` | boolean | `false` | Treat `text` as markdown for chunking. |
+| `infer` | boolean | `false` | When `true`, HydraDB extracts the underlying preference from raw signal. |
+| `custom_instructions` | string | – | Guides extraction when `infer: true`. Ignored when `infer: false`. |
+| `user_name` | string | `"User"` | The user's name. Feeds inference. |
+| `expiry_time` | integer | – | TTL in seconds. Memory stops surfacing after expiry. |
+| `tenant_metadata` | object | `{}` | Tenant-schema fields. |
+| `document_metadata` | object | `{}` | Free-form per-document fields. |
+| `relations` | object | – | Forceful relations within the Memories store. Shape: `{ "cortex_source_ids": ["...", "..."] }`. |
+
+## Response
+
+```json
+{
+  "success": true,
+  "message": "Knowledge uploaded successfully",
+  "results": [
+    { "source_id": "policy_v2", "filename": "policy.pdf", "status": "queued", "error": null },
+    { "source_id": "runbook_deploy", "filename": "runbook.pdf", "status": "queued", "error": null }
+  ],
+  "success_count": 2,
+  "failed_count": 0
+}
+```
+
+| Field | Description |
+|---|---|
+| `success` | Overall ingest acceptance — `true` if at least one item was queued. |
+| `results[]` | One entry per queued item with its `source_id` and initial `status` of `queued`. |
+| `results[].source_id` | Use this for status polling, fetch, list, delete, and graph relations. |
+| `results[].error` | Non-null only if HydraDB rejected the item before queueing (e.g., schema validation). |
+| `success_count` / `failed_count` | Tallies. |
+
+## Behavior notes
+
+<Info>
+**Async indexing.** `202 Accepted` only means HydraDB **queued** the work. Content is not retrievable until `indexing_status` reaches `graph_creation` (partial) or `completed` (full). Always poll [Source Status](/api-reference/v2/endpoint/source-status) before searching.
+</Info>
+
+<Info>
+**`type=knowledge` + `app_knowledge` and `files` mix.** You can send both in the same request. HydraDB processes each item independently and returns one `result` per source.
+</Info>
+
+<Info>
+**Multipart, not JSON.** This is one of the few endpoints that uses `multipart/form-data`. Stringify the JSON arrays (`file_metadata`, `app_knowledge`, `memories`) before sending them in the form field.
+</Info>
+
+<Warning>
+**`tenant_metadata` keys must be declared.** Keys not in the tenant's `tenant_metadata_schema` are silently ignored at search time when used in `metadata_filters`. Plan schema fields up front via [Create Tenant](/api-reference/v2/endpoint/create-tenant).
+</Warning>
+
+## Related endpoints
+
+- **Next:** [Source Status](/api-reference/v2/endpoint/source-status) — poll until `completed`
+- **Then:** [Search](/api-reference/v2/endpoint/search) — retrieve indexed content
+- **Inspect:** [List Documents](/api-reference/v2/endpoint/list-documents) · [Fetch Content](/api-reference/v2/endpoint/fetch-content)
+- **Cleanup:** [Delete Source](/api-reference/v2/endpoint/delete-source)
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Knowledge](/essentials/v2/knowledge) · [Essentials → Memories](/essentials/v2/memories) · [Sources — Overview](/api-reference/v2/endpoint/sources-overview)

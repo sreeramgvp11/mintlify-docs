@@ -1,0 +1,147 @@
+---
+title: "Source Relations"
+description: "Inspect the knowledge graph relationships for a source or sub-tenant."
+openapi: "GET /source/relations"
+---
+
+## When to use it
+
+Inspect the entity-and-relationship graph HydraDB built during ingestion. Common uses:
+
+- **Graph visualizations** — render a knowledge graph for a specific document or for the whole sub-tenant.
+- **Debug graph context** — see why a `mode: "thinking"` search returned a specific entity in `additional_context`.
+- **Downstream reasoning** — extract a relationship slice (e.g., "all `DEPENDS_ON` edges out of service X") and feed it to a planner or an LLM.
+- **Audit** — confirm that key entities were extracted from your ingested content.
+
+Pass `source_id` to scope to a single ingested item, or omit it to return all relations in the sub-tenant. Set `is_memory=true` to inspect a memory's relations instead of a knowledge source's. Cursor-based pagination handles large result sets.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+- **Pagination:** Cursor-based. `limit` clamped to `1 ≤ x ≤ 10000`; default `5000`. Pass the response's `next_cursor` to fetch the next page.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -G 'https://api.hydradb.com/source/relations' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  --data-urlencode "tenant_id=acme_corp" \
+  --data-urlencode "source_id=billing_runbook_v3" \
+  --data-urlencode "limit=500"
+```
+```typescript TypeScript SDK
+const relations = await client.source.relations({
+  tenant_id: "acme_corp",
+  source_id: "billing_runbook_v3",
+  limit: 500,
+});
+```
+```python Python SDK
+relations = client.source.relations(
+    tenant_id="acme_corp",
+    source_id="billing_runbook_v3",
+    limit=500,
+)
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Owning tenant. |
+| `source_id` | string \| null | No | `null` | When provided, returns relations for that specific source. When omitted, returns all relations across the sub-tenant. |
+| `is_memory` | boolean | No | `false` | Set `true` to fetch relations for a memory item instead of a knowledge source. |
+| `sub_tenant_id` | string \| null | No | `null` | Sub-tenant scope. If omitted, the default sub-tenant is used. |
+| `limit` | integer | No | `5000` | Maximum relation groups to return. Range `1–10000`. |
+| `cursor` | number \| null | No | `null` | Opaque pagination cursor from a previous response's `next_cursor`. |
+
+## Response
+
+```json
+{
+  "relations": [
+    {
+      "triplets": [
+        {
+          "source": { "name": "PaymentsWorker", "type": "Service" },
+          "relation": {
+            "canonical_predicate": "DEPENDS_ON",
+            "context": "fetches transactions during sync",
+            "temporal_details": "2026-02"
+          },
+          "target": { "name": "OrdersDB", "type": "Database" }
+        }
+      ],
+      "relevancy_score": 0.93,
+      "group_id": "p_42"
+    }
+  ],
+  "is_truncated": false,
+  "next_cursor": null,
+  "success": true,
+  "message": "Relations retrieved successfully"
+}
+```
+
+| Field | Description |
+|---|---|
+| `relations[]` | Array — each entry is a `ScoredPathResponse` containing `triplets`, `relevancy_score`, and `group_id`. |
+| `relations[].triplets` | Array — source → relation → target hops. |
+| `relations[].triplets[].source` / `.target` | Entity object: `{ name, type, namespace, entity_id, identifier }`. |
+| `relations[].triplets[].relation` | Relation object: `{ canonical_predicate, raw_predicate, context, confidence, temporal_details, ... }`. |
+| `is_truncated` | Boolean — `true` when more results exist beyond `limit`. |
+| `next_cursor` | Opaque pagination cursor (number, or `null`). Pass to the next call's `cursor`. `null` when there are no more results. |
+
+## Pagination pattern
+
+```python
+all_relations = []
+cursor = None
+
+while True:
+    page = client.source.relations(
+        tenant_id="acme_corp",
+        source_id="billing_runbook_v3",
+        limit=1000,
+        cursor=cursor,
+    )
+    all_relations.extend(page.relations)
+    if page.next_cursor is None:
+        break
+    cursor = page.next_cursor
+```
+
+## Behavior notes
+
+<Info>
+**Cursor opacity.** `next_cursor` is opaque (currently a numeric score). Don't construct it client-side or assume meaning — pass back exactly what the server returned.
+</Info>
+
+<Info>
+**Sub-tenant-wide queries.** Omitting `source_id` returns relations across the whole sub-tenant. Useful for full-graph exports; pair with a small `limit` and paginate.
+</Info>
+
+<Info>
+**Knowledge vs memory.** `is_memory=true` looks up the relations in the Memories graph rather than the Knowledge graph. The two graphs are separate.
+</Info>
+
+<Info>
+**Graph completeness.** Source relations only fully populate once the source's `indexing_status` reaches `completed`. Items in `graph_creation` are searchable but their relations may still be in flight.
+</Info>
+
+## Related endpoints
+
+- **Indexing status:** [Source Status](/api-reference/v2/endpoint/source-status) — confirm the graph is complete
+- **Search with graph context:** [Search](/api-reference/v2/endpoint/search) with `graph_context: true`
+- **Concepts:** [Essentials → Context Graphs](/essentials/v2/context-graphs)
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Context Graphs](/essentials/v2/context-graphs)

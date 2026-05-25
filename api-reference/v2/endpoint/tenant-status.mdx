@@ -1,0 +1,138 @@
+---
+title: "Tenant Status"
+description: "Check the provisioning readiness of a tenant's infrastructure."
+openapi: "GET /tenants/status"
+---
+
+## When to use it
+
+Tenant creation is asynchronous. Always poll this endpoint after `POST /tenants` and before your first ingestion or search call — the tenant is only ready when **all** of these are `true`:
+
+- Both entries in `infra.vectorstore_status` (the Knowledge and Memories collections)
+- `infra.graph_status` (the knowledge-graph layer)
+- `infra.scheduler_status` (the background indexing scheduler)
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants/status?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+```typescript TypeScript SDK
+const status = await client.tenants.status({
+  tenant_id: "my_first_tenant",
+});
+```
+```python Python SDK
+status = client.tenants.status(tenant_id="my_first_tenant")
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Identifier of the tenant to inspect. |
+
+## Response
+
+```json
+{
+  "tenant_id": "my_first_tenant",
+  "org_id": "org_abc123",
+  "infra": {
+    "scheduler_status": true,
+    "graph_status": true,
+    "vectorstore_status": [true, true]
+  },
+  "message": "Deployed infrastructure status"
+}
+```
+
+| Field | Description |
+|---|---|
+| `tenant_id` | The tenant being inspected (string). |
+| `org_id` | Owning organization ID (string). |
+| `infra` | Nested infrastructure status object. See [Infra fields](#infra-fields). |
+| `message` | Human-readable status (string). |
+
+### `Infra` fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `scheduler_status` | boolean | – | Whether the background indexing scheduler is up. |
+| `graph_status` | boolean | – | Whether the knowledge-graph layer is provisioned. |
+| `vectorstore_status` | tuple of two booleans | – | Status of `[Memories collection, Knowledge collection]` (indices `0` and `1`). |
+
+<Info>
+`infra.vectorstore_status` is a **two-element tuple**: index `0` is the Memories collection, index `1` is the Knowledge collection. The tenant is fully ready only when both are `true`.
+</Info>
+
+## Polling pattern
+
+Poll every 1–2 seconds. Most tenants are ready in under 30 seconds.
+
+<CodeGroup>
+```typescript TypeScript
+while (true) {
+  const status = await client.tenants.status({ tenant_id: "acme" });
+  const { graph_status, vectorstore_status, scheduler_status } = status.infra;
+  if (graph_status && scheduler_status && vectorstore_status.every(Boolean)) {
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 2000));
+}
+```
+```python Python
+import time
+
+while True:
+    status = client.tenants.status(tenant_id="acme")
+    infra = status.infra
+    if (
+        infra.graph_status
+        and infra.scheduler_status
+        and all(infra.vectorstore_status)
+    ):
+        break
+    time.sleep(2)
+```
+```bash cURL polling loop
+TENANT="acme"
+until curl -s -X GET "https://api.hydradb.com/tenants/status?tenant_id=${TENANT}" \
+       -H "Authorization: Bearer ${HYDRA_DB_API_KEY}" \
+       -H "API-Version: 2" \
+     | jq -e '.data.infra | .graph_status and .scheduler_status and (.vectorstore_status | all)' > /dev/null; do
+  sleep 2
+done
+```
+</CodeGroup>
+
+## Behavior notes
+
+<Info>
+**Eventual consistency.** A freshly created tenant may briefly return `false` on one or more flags. Keep polling — provisioning is the normal path.
+</Info>
+
+<Info>
+**Stale tenant IDs.** If `tenant_id` does not exist, the call returns `404 TENANT_NOT_FOUND`. Always check that the tenant was created successfully before polling.
+</Info>
+
+## Related endpoints
+
+- **Before this:** [Create Tenant](/api-reference/v2/endpoint/create-tenant) — kicks off provisioning
+- **After this:** [Ingest Content](/api-reference/v2/endpoint/ingest-content) — once status is ready
+
+## Errors
+
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)

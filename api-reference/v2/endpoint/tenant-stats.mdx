@@ -1,0 +1,98 @@
+---
+title: "Tenant Stats"
+description: "Retrieve usage statistics for a tenant."
+openapi: "GET /tenants/stats"
+---
+
+## When to use it
+
+Inspect storage growth, object counts, and vector dimensions for a tenant. Common use cases:
+
+- **Billing dashboards** — track row counts across the Knowledge and Memories collections.
+- **Capacity planning** — see how many vectors are in use and at what dimension.
+- **Post-ingest sanity check** — confirm that ingestion actually wrote rows to the expected collection.
+
+The response splits stats into two collections: `normal_collection` (Knowledge) and `memory_collection` (Memories), each with its own row count and embedding dimensionality.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants/stats?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+```typescript TypeScript SDK
+const stats = await client.tenants.stats({
+  tenant_id: "my_first_tenant",
+});
+```
+```python Python SDK
+stats = client.tenants.stats(tenant_id="my_first_tenant")
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Identifier of the tenant to report on. |
+
+## Response
+
+```json
+{
+  "tenant_id": "my_first_tenant",
+  "normal_collection": {
+    "row_count": 42_318,
+    "dimensions": 1536
+  },
+  "memory_collection": {
+    "row_count": 287,
+    "dimensions": 1536
+  },
+  "message": "Successfully retrieved tenant collection statistics"
+}
+```
+
+| Field | Description |
+|---|---|
+| `tenant_id` | The tenant being reported on (string). |
+| `normal_collection` | Stats for the Knowledge collection. See [CollectionStats fields](#collectionstats-fields). |
+| `memory_collection` | Stats for the Memories collection. See [CollectionStats fields](#collectionstats-fields). |
+| `message` | Human-readable status (string). |
+
+### `CollectionStats` fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `row_count` | integer | – | Number of indexed chunks in the collection. **Chunks, not sources** — one document typically becomes many chunks. |
+| `dimensions` | integer | – | Embedding dimensionality of the collection. |
+
+## Behavior notes
+
+<Info>
+**`row_count` is chunks, not sources.** One ingested document typically becomes many chunks. A 30-page PDF can produce 100+ rows. To count distinct sources, use [List Documents](/api-reference/v2/endpoint/list-documents) with `page_size=1` and read `total`.
+</Info>
+
+<Info>
+**Both collections always exist.** Even if you've only ingested knowledge (or only memories), both collections are provisioned. Empty collections report `row_count: 0` with the configured `dimensions`.
+</Info>
+
+## Related endpoints
+
+- **List sources/memories:** [List Documents](/api-reference/v2/endpoint/list-documents)
+- **List sub-tenants:** [List Sub-Tenants](/api-reference/v2/endpoint/list-sub-tenants)
+- **Check provisioning:** [Tenant Status](/api-reference/v2/endpoint/tenant-status)
+
+## Errors
+
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)

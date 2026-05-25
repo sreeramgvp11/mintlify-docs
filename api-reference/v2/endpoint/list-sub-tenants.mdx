@@ -1,0 +1,81 @@
+---
+title: "List Sub-Tenants"
+description: "List sub-tenant IDs that have indexed data inside a tenant."
+openapi: "GET /tenants/sub-tenants"
+---
+
+## When to use it
+
+Discover which sub-tenants exist inside a tenant — typically users (B2C), workspaces, teams, projects, or sessions. Useful for admin views, per-user dashboards, audit tooling, or before running a per-user search.
+
+Sub-tenants are created **implicitly** the first time a `sub_tenant_id` value appears in an ingestion or search call. There is no explicit "create sub-tenant" endpoint, and the returned list only includes sub-tenants that have at least one indexed source or memory.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants/sub-tenants?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+```typescript TypeScript SDK
+const response = await client.tenants.subTenants({
+  tenant_id: "my_first_tenant",
+});
+```
+```python Python SDK
+response = client.tenants.sub_tenants(tenant_id="my_first_tenant")
+```
+</CodeGroup>
+
+## Query parameters
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Identifier of the tenant whose sub-tenants you want to list. |
+
+## Response
+
+```json
+{
+  "sub_tenant_ids": ["user_alex", "user_johndoe", "workspace_42", "default"],
+  "message": "Successfully retrieved sub-tenant IDs"
+}
+```
+
+| Field | Description |
+|---|---|
+| `sub_tenant_ids` | Array of unique sub-tenant IDs that have indexed data in either collection (Knowledge or Memories). |
+| `message` | Human-readable status (string). |
+
+## Behavior notes
+
+<Info>
+**Implicit creation.** Sub-tenants are auto-created the first time a `sub_tenant_id` is referenced. The returned list grows organically as your application writes data under new values.
+</Info>
+
+<Info>
+**Default sub-tenant included.** Every tenant has a default sub-tenant that receives writes when `sub_tenant_id` is omitted. It will appear here once any data is written without an explicit `sub_tenant_id`.
+</Info>
+
+<Info>
+**Only sub-tenants with data are listed.** A sub-tenant that has been referenced in a search but never received an ingest will not show up here.
+</Info>
+
+## Related endpoints
+
+- **Inspect content:** [List Documents](/api-reference/v2/endpoint/list-documents) — scoped to a `sub_tenant_id`
+- **Inspect usage:** [Tenant Stats](/api-reference/v2/endpoint/tenant-stats)
+- **Concepts:** [Essentials → Multi-Tenant](/essentials/v2/multi-tenant)
+
+## Errors
+
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)

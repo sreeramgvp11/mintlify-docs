@@ -1,0 +1,138 @@
+---
+title: "Delete Source"
+description: "Delete knowledge sources or memories by their IDs."
+openapi: "DELETE /source"
+---
+
+## When to use it
+
+Remove indexed content — for data-retention policies, deleting a specific user's memories on request, pruning stale documents, or cleaning up after a botched ingest. Pick the bucket with `type`:
+
+- `type=knowledge` *(default)* — delete knowledge sources.
+- `type=memory` — delete memories.
+
+Pass one or more IDs in `request.ids`. The body wraps two fields together: `request` (the actual delete payload) and `type` (the bucket).
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Deleting an already-deleted ID is a no-op for that ID — the rest of the batch still proceeds. `success` reflects whether *any* ID was removed.
+- **Async:** Background workers may continue removing vector entries briefly after the response — but the source is immediately excluded from search.
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE 'https://api.hydradb.com/source' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request": {
+      "tenant_id": "acme_corp",
+      "sub_tenant_id": "default",
+      "ids": ["policy_v2", "runbook_deploy"]
+    },
+    "type": "knowledge"
+  }'
+```
+```typescript TypeScript SDK
+await client.source.delete({
+  type: "knowledge",
+  request: {
+    tenant_id: "acme_corp",
+    sub_tenant_id: "default",
+    ids: ["policy_v2", "runbook_deploy"],
+  },
+});
+```
+```python Python SDK
+client.source.delete(
+    type="knowledge",
+    request={
+        "tenant_id": "acme_corp",
+        "sub_tenant_id": "default",
+        "ids": ["policy_v2", "runbook_deploy"],
+    },
+)
+```
+</CodeGroup>
+
+## Request body
+
+The body wraps two fields together:
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `request.tenant_id` | string | Yes | – | Owning tenant. |
+| `request.sub_tenant_id` | string \| null | No | `null` | Sub-tenant scope. |
+| `request.ids` | string[] | Yes | – | One or more source IDs to delete. At least one is required. |
+| `type` | `"knowledge" \| "memory"` | No | `"knowledge"` | Bucket selector. |
+
+## Response
+
+### Knowledge (`type=knowledge`)
+
+```json
+{
+  "success": true,
+  "message": "Delete completed",
+  "results": [
+    { "id": "policy_v2", "deleted": true, "error": null },
+    { "id": "runbook_deploy", "deleted": true, "error": null }
+  ],
+  "deleted_count": 2
+}
+```
+
+| Field | Description |
+|---|---|
+| `success` | `true` if at least one ID was deleted. |
+| `results[].id` | The ID being reported on. |
+| `results[].deleted` | Whether deletion succeeded for this specific ID. |
+| `results[].error` | Error message if deletion failed (e.g., not found). |
+| `deleted_count` | Total IDs successfully deleted. |
+
+### Memory (`type=memory`)
+
+```json
+{
+  "success": true,
+  "user_memory_deleted": true
+}
+```
+
+| Field | Description |
+|---|---|
+| `success` | `true` if all listed memories were deleted. |
+| `user_memory_deleted` | `true` only when every listed memory was deleted. `false` if any deletion failed. |
+
+## Behavior notes
+
+<Warning>
+**Irreversible.** Chunks, embeddings, and graph nodes are removed. There is no soft-delete or undo. Keep a copy if you need to re-ingest.
+</Warning>
+
+<Info>
+**Partial-success semantics.** For `type=knowledge`, each ID is reported independently in `results[]`. A failure on one ID does not stop the rest. For `type=memory`, the response reports an aggregate `user_memory_deleted` reflecting *all* listed IDs.
+</Info>
+
+<Info>
+**Search drops the source immediately.** Even before background cleanup finishes, deleted IDs disappear from `/search` and `/source/list` responses.
+</Info>
+
+<Info>
+**Mixed deletes need two calls.** To delete both knowledge and memory items, send two requests — one with `type=knowledge`, one with `type=memory`. A single call cannot mix the two buckets.
+</Info>
+
+## Related endpoints
+
+- **Find IDs:** [List Documents](/api-reference/v2/endpoint/list-documents) · [Search](/api-reference/v2/endpoint/search)
+- **Re-add content:** [Ingest Content](/api-reference/v2/endpoint/ingest-content)
+- **Bigger hammer:** [Delete Tenant](/api-reference/v2/endpoint/delete-tenant) — removes the entire workspace
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Sources — Overview](/api-reference/v2/endpoint/sources-overview)

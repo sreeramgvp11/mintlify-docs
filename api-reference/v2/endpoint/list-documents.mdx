@@ -1,0 +1,177 @@
+---
+title: "List Documents"
+description: "Paginated browse over knowledge sources or memories with optional filters."
+openapi: "POST /source/list"
+---
+
+## When to use it
+
+Browse what's in a tenant or sub-tenant — for admin dashboards, audit views, populating a "select source" picker, or fetching a known subset of sources by ID. Pick the bucket with `kind`:
+
+- `kind=knowledge` *(default)* — knowledge sources (files, app sources).
+- `kind=memories` — user memories.
+
+Supports pagination (`page`, `page_size`), structured filters on tenant and document metadata, source-field filters (title, type, url, etc.), and field projection (`include_fields`) for slim payloads.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/list' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "acme_corp",
+    "kind": "knowledge",
+    "page": 1,
+    "page_size": 50,
+    "filters": {
+      "tenant_metadata": { "department": "legal" },
+      "source_fields": { "type": "slack" }
+    },
+    "include_fields": ["title", "type", "url", "timestamp"]
+  }'
+```
+```typescript TypeScript SDK
+const sources = await client.source.list({
+  tenant_id: "acme_corp",
+  kind: "knowledge",
+  page: 1,
+  page_size: 50,
+  filters: {
+    tenant_metadata: { department: "legal" },
+    source_fields: { type: "slack" },
+  },
+  include_fields: ["title", "type", "url", "timestamp"],
+});
+```
+```python Python SDK
+sources = client.source.list(
+    tenant_id="acme_corp",
+    kind="knowledge",
+    page=1,
+    page_size=50,
+    filters={
+        "tenant_metadata": {"department": "legal"},
+        "source_fields": {"type": "slack"},
+    },
+    include_fields=["title", "type", "url", "timestamp"],
+)
+```
+</CodeGroup>
+
+## Request body
+
+| Name | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `tenant_id` | string | Yes | – | Owning tenant. |
+| `sub_tenant_id` | string \| null | No | `null` | Sub-tenant scope. If omitted, the default sub-tenant is used. |
+| `kind` | `"knowledge" \| "memories"` | No | `"knowledge"` | Bucket to list. |
+| `source_ids` | string[] \| null | No | `null` | When provided and non-empty, only items with these IDs are returned (pagination + filters still apply). |
+| `page` | integer | No | `1` | Page number (1-indexed). |
+| `page_size` | integer | No | server default | Items per page. Clamped to a server-side maximum. |
+| `filters` | object | No | `null` | Structured filters. See [Filters](#filters). |
+| `include_fields` | string[] \| null | No | `null` (all fields) | Field projection. Only the listed fields plus `id`, `tenant_id`, `sub_tenant_id` are populated. Only applies to `kind=knowledge`. |
+
+### Filters
+
+`filters` is a structured object with three optional categories. **All provided pairs within and across categories combine with AND** — a document must satisfy every key to remain a candidate.
+
+```json
+{
+  "filters": {
+    "tenant_metadata": { "department": "Finance", "region": "US" },
+    "document_metadata": { "author": "Alice Smith" },
+    "source_fields": { "type": "slack", "title": "standup notes" }
+  }
+}
+```
+
+| Category | Matched against | Notes |
+|---|---|---|
+| `tenant_metadata` | Source's `tenant_metadata` payload | Keys must be declared in the tenant's `tenant_metadata_schema`. Undeclared keys are silently ignored. |
+| `document_metadata` | Source's `document_metadata` payload | Free-form per-document JSON. No schema declaration required. |
+| `source_fields` | Built-in source fields (`type`, `title`, `description`, `url`, `timestamp`) | Use for app-source categories or quick title lookups. |
+
+### `include_fields`
+
+When you don't need every field on every row, pass `include_fields` to keep response payloads small. Only the listed fields are populated; the rest are returned as defaults. `id`, `tenant_id`, and `sub_tenant_id` are always returned.
+
+Allowed values include `title`, `type`, `description`, `url`, `timestamp`, `tenant_metadata`, `document_metadata`, `chunk_count`, and other built-in source fields. Omit or pass `null` to return everything.
+
+`include_fields` only applies to `kind=knowledge`. It is ignored for `kind=memories`.
+
+## Response
+
+```json
+{
+  "success": true,
+  "message": "Sources retrieved successfully",
+  "sources": [
+    {
+      "id": "policy_v2",
+      "tenant_id": "acme_corp",
+      "sub_tenant_id": "default",
+      "title": "Compliance Policy v2",
+      "type": "pdf",
+      "url": null,
+      "timestamp": "2026-05-12T08:14:00Z"
+    }
+  ],
+  "total": 318,
+  "pagination": {
+    "page": 1,
+    "page_size": 50,
+    "total": 318,
+    "total_pages": 7,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `sources[]` | One entry per source (or memory when `kind=memories`). Shape matches `SourceModel`. |
+| `total` | Total matching items across all pages. |
+| `pagination` | Standard `PaginationMeta` with `page`, `page_size`, `total`, `total_pages`, `has_next`, `has_previous`. |
+
+When `kind=memories`, the response shape is `ListUserMemoriesResponse` instead — same idea but with a `user_memories[]` array of memory items.
+
+## Behavior notes
+
+<Info>
+**Pagination is mandatory in spirit.** Even without filters, `total` may be large. Always prefer `page` / `page_size` over fetching everything in one call.
+</Info>
+
+<Info>
+**Filters AND.** All filter pairs combine with logical AND. To express OR semantics, run multiple calls and union client-side.
+</Info>
+
+<Info>
+**`source_ids` + filters.** When `source_ids` is non-empty, only those IDs are considered, but `filters` still applies on top — useful for "show me items 1, 2, 3 that also belong to department=legal".
+</Info>
+
+<Warning>
+**Undeclared filter keys are silent.** Keys in `filters.tenant_metadata` that aren't declared in `tenant_metadata_schema` are silently ignored. If a filter doesn't narrow results as expected, verify the schema field exists and has `enable_match: true`.
+</Warning>
+
+## Related endpoints
+
+- **Ingest:** [Ingest Content](/api-reference/v2/endpoint/ingest-content)
+- **Fetch content:** [Fetch Content](/api-reference/v2/endpoint/fetch-content)
+- **Relevance retrieval:** [Search](/api-reference/v2/endpoint/search)
+- **Delete:** [Delete Source](/api-reference/v2/endpoint/delete-source)
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Metadata](/essentials/v2/metadata) · [Sources — Overview](/api-reference/v2/endpoint/sources-overview)

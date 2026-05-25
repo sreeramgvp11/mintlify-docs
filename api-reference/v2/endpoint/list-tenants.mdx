@@ -1,0 +1,67 @@
+---
+title: "List Tenants"
+description: "List all tenant IDs registered for your organization."
+openapi: "GET /tenants"
+---
+
+## When to use it
+
+Discover the tenants your API key has access to — useful for admin tooling, debug dashboards, populating a tenant picker in a UI, or selecting a target tenant before ingestion or search.
+
+The response separates **active/provisioning** tenants (in `tenant_ids`) from tenants whose provisioning **failed** (in `failed_tenant_ids`). Re-create a failed tenant to retry provisioning.
+
+## Endpoint
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+## Example
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+```typescript TypeScript SDK
+const response = await client.tenants.list();
+```
+```python Python SDK
+response = client.tenants.list()
+```
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "tenant_ids": ["acme_corp", "my_first_tenant"],
+  "failed_tenant_ids": null,
+  "message": "Successfully retrieved tenant IDs"
+}
+```
+
+| Field | Description |
+|---|---|
+| `tenant_ids` | Array of string IDs of active or provisioning tenants. |
+| `failed_tenant_ids` | Array of `{ tenant_id, error }` entries, or `null` when no failures. Re-create the tenant to retry provisioning. |
+| `message` | Human-readable status string. |
+
+## Behavior notes
+
+<Info>
+**Includes provisioning tenants.** Tenants returned in `tenant_ids` may still be provisioning. Use [Tenant Status](/api-reference/v2/endpoint/tenant-status) to confirm readiness before ingestion.
+</Info>
+
+## Related endpoints
+
+- **Create:** [Create Tenant](/api-reference/v2/endpoint/create-tenant)
+- **Inspect:** [Tenant Status](/api-reference/v2/endpoint/tenant-status) · [Tenant Stats](/api-reference/v2/endpoint/tenant-stats)
+- **Delete:** [Delete Tenant](/api-reference/v2/endpoint/delete-tenant)
+
+## Errors
+
+Common codes: `401 UNAUTHORIZED`, `500 INTERNAL_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+
+Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)
