@@ -279,6 +279,7 @@ def ingest_metrics_series(metrics_by_period: list[dict]) -> list[str]:
         text_chunk = format_metrics_as_text(item["metrics"], item["period_label"])
 
         result = client.source.ingest(
+            type='memory',
             tenant_id=TENANT_ID,
             sub_tenant_id="internal-metrics",
             upsert=True,
@@ -515,6 +516,7 @@ def store_analyst_profile(user_id: str, profile_text: str) -> dict:
     infer: true   - HydraDB extracts signals + builds graph connections automatically
     """
     result = client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{user_id}",
         upsert=True,
@@ -701,6 +703,7 @@ def query_trend(
 
     # Retrieve analyst profile for answer personalization
     analyst_prefs = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{user_id}",
         mode="thinking",
@@ -1206,6 +1209,7 @@ def generate_quarterly_briefing(
 
     # Recall analyst profile
     analyst_prefs = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{analyst_user_id}",
         mode="thinking",
@@ -1249,6 +1253,7 @@ def generate_quarterly_briefing(
 
     # ── 5. Store briefing back to HydraDB ────────────────────────────────
     store_resp = client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{analyst_user_id}",
         upsert=True,

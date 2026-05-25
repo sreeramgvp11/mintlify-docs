@@ -292,7 +292,8 @@ def add_user_memory(
     if sub_tenant_id:
         payload["sub_tenant_id"] = sub_tenant_id
 
-    return client.source.ingest(**payload)
+    return client.source.ingest(
+    type='memory',**payload)
 
 
 # Example usage

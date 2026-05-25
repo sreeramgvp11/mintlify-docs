@@ -392,6 +392,7 @@ async function storeConversationTurn(
     const text = `[Ticket: ${ticketId}]\nCustomer: ${customerMsg}\nAgent: ${agentReply}`;
 
     await client.source.ingest({
+        type: 'memory',
         tenant_id:     TENANT_ID,
         sub_tenant_id: `customer-${customerId}`,
         memories: [{
@@ -422,6 +423,7 @@ def store_conversation_turn(
         f"Agent: {agent_reply}"
     )
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=customer_sub_tenant(customer_id),
         upsert=True,
@@ -452,6 +454,7 @@ async function storeCustomerPreference(customerId: string, preference: string): 
      * graph connections to related context automatically.
      */
     await client.source.ingest({
+        type: 'memory',
         tenant_id:     TENANT_ID,
         sub_tenant_id: `customer-${customerId}`,
         memories: [{
@@ -487,6 +490,7 @@ def store_customer_preference(customer_id: str, preference: str):
     graph connections to related context automatically.
     """
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=customer_sub_tenant(customer_id),
         upsert=True,
@@ -559,6 +563,7 @@ async function recallCustomerContext(
 
     // Call 2: customer personal memory - preferences, history, account facts
     const memData = await client.search.query({
+        source: 'memories',
         tenant_id:     TENANT_ID,
         sub_tenant_id: `customer-${customerId}`,
         query:         customerMsg,
@@ -606,6 +611,7 @@ def recall_customer_context(
 
     # Call 2: customer personal memory - preferences, history, account facts
     mem_data = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=customer_sub_tenant(customer_id),
         query=customer_msg,
@@ -787,6 +793,7 @@ async function escalateToHuman(
      */
     // Recall full customer memory profile
     const customerProfile = await client.search.query({
+        source: 'memories',
         tenant_id:     TENANT_ID,
         sub_tenant_id: `customer-${customerId}`,
         query:         "customer account history preferences past issues plan",
@@ -841,6 +848,7 @@ def escalate_to_human(
     """
     # Recall full customer memory profile
     customer_profile = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=customer_sub_tenant(customer_id),
         query="customer account history preferences past issues plan",

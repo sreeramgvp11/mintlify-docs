@@ -289,6 +289,7 @@ class PersonalizationEngine {
   async generateUserMemory(userInteraction) {
     // Generate memories based on user's travel preferences and booking patterns
     await client.source.ingest({
+      type: 'memory',
       tenant_id: userInteraction.tenantId,
       sub_tenant_id: userInteraction.userId,
       upsert: true,
@@ -306,6 +307,7 @@ class PersonalizationEngine {
   async getPersonalizedRecommendations(tenantId, subTenantId, destination) {
     // Retrieve user memories to provide personalized recommendations
     const memories = await this.client.search.query({
+      source: 'memories',
       tenant_id: tenantId,
       sub_tenant_id: subTenantId,
       query: `travel preferences for ${destination}`,
@@ -498,6 +500,7 @@ const analyzeBookingPatterns = async (tenantId, subTenantId, bookingData) => {
 
   // Generate memory for future personalization
   await client.source.ingest({
+    type: 'memory',
     tenant_id: tenantId,
     sub_tenant_id: subTenantId,
     upsert: true,
@@ -563,6 +566,7 @@ const monitorPriceChanges = async (travelPlan) => {
 
   // Set up monitoring using HydraDB memories
   await client.source.ingest({
+    type: 'memory',
     tenant_id: travelPlan.tenantId,
     sub_tenant_id: travelPlan.userId,
     upsert: true,

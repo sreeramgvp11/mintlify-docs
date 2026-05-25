@@ -516,6 +516,7 @@ class ChiefOfStaffOrchestrator:
         success = result.get("success", True)
         outcome = "success" if success else "failure"
         client.source.ingest(
+            type='memory',
             tenant_id=TENANT_ID,
             sub_tenant_id=f"user-{user_id}",
             upsert=True,
@@ -534,6 +535,7 @@ class ChiefOfStaffOrchestrator:
     def _log_blocked(self, user_id, task, function_id):
         """Log a blocked attempt for audit trail."""
         client.source.ingest(
+            type='memory',
             tenant_id=TENANT_ID,
             upsert=True,
             memories=[{
@@ -654,6 +656,7 @@ def log_function_feedback(
         text += f"Details: {details}"
 
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         upsert=True,
@@ -711,6 +714,7 @@ def store_user_preferences(user_id: str, profile: str):
     Use the same user_id consistently across all memory writes for this user.
     """
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         upsert=True,
@@ -789,6 +793,7 @@ def log_execution_outcome(
 
     # Write 1: exact record
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id="execution-log",
         upsert=True,
@@ -818,6 +823,7 @@ def log_execution_outcome(
             summary += f"User manually overrode this suggestion for user_id={user_id}."
 
         client.source.ingest(
+            type='memory',
             tenant_id=TENANT_ID,
             sub_tenant_id=f"user-{user_id}",
             upsert=True,
@@ -892,6 +898,7 @@ def generate_execution_plan(
 
     # Recall user preferences to personalise the plan
     user_prefs = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         query="channel preferences urgency communication style",
@@ -1371,6 +1378,7 @@ def request_approval(
 
     # Store the pending action in HydraDB so it can be resumed after approval
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id="approvals",
         upsert=True,
@@ -1458,6 +1466,7 @@ def report_function_performance(
         f"Observed: {datetime.now(timezone.utc).isoformat()}"
     )
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id="function-performance",
         upsert=True,

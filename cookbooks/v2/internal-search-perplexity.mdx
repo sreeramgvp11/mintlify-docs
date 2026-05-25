@@ -844,6 +844,7 @@ async function storeUserProfile(
    * Returns:     source_id of the stored memory.
    */
   const result = await client.source.ingest({
+    type: 'memory',
     tenant_id: TENANT_ID,
     sub_tenant_id: `user-${userId}`,
     upsert: true,
@@ -902,6 +903,7 @@ def store_user_profile(user_id: str, profile_text: str) -> str:
     Returns:      source_id of the stored memory.
     """
     result = client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         upsert=True,
@@ -1054,6 +1056,7 @@ const openai = new OpenAI();
 async function getUserProfile(userId: string): Promise<string> {
   /** Retrieve a user's stored memory profile via recallPreferences. */
   const resp = await client.search.query({
+    source: 'memories',
     tenant_id: TENANT_ID,
     sub_tenant_id: `user-${userId}`,
     query: "expertise background role preferences",
@@ -1149,6 +1152,7 @@ openai_client = OpenAI()
 def get_user_profile(user_id: str) -> str:
     """Retrieve a user's stored memory profile via /search with source: "memories"."""
     result = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         query="expertise background role preferences",

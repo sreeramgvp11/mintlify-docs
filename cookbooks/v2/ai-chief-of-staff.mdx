@@ -215,6 +215,7 @@ class Orchestrator {
 
     // 3️⃣ Optional: feed result back to HydraDB as a user memory
     await this.client.source.ingest({
+      type: 'memory',
       tenant_id: userContext.tenantId,
       sub_tenant_id: userContext.subTenantId,
       upsert: true,
@@ -393,6 +394,7 @@ Auto-tune by feeding metrics back to HydraDB's memory:
 
 ```ts
 await client.source.ingest({
+  type: 'memory',
   tenant_id: "your_tenant_id",
   sub_tenant_id: "your_sub_tenant_id",
   upsert: true,

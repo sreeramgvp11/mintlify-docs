@@ -634,6 +634,7 @@ def store_milestone(hire_id: str, milestone: str):
     """
     ts = datetime.now(timezone.utc).isoformat()[:10]
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=hire_sub(hire_id),
         memories=[{
@@ -654,6 +655,7 @@ def log_question(hire_id: str, question: str, topic: str = ""):
     if topic:
         text += f" [topic: {topic}]"
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=hire_sub(hire_id),
         memories=[{
@@ -668,6 +670,7 @@ def store_relationship(hire_id: str, person: str, context: str):
     infer=True: HydraDB links this person to the systems they own.
     """
     client.source.ingest(
+        type='memory',
         tenant_id=TENANT_ID,
         sub_tenant_id=hire_sub(hire_id),
         memories=[{
@@ -723,6 +726,7 @@ def ask_onboarding(hire_id: str, question: str, topic: str = "") -> str:
         graph_context=True,
     )
     hire_context = client.search.query(
+        source='memories',
         tenant_id=TENANT_ID,
         sub_tenant_id=hire_sub(hire_id),
         query=question,
@@ -773,6 +777,7 @@ def generate_progress_report(hire_id: str) -> dict:
     report = {}
     for key, query in queries.items():
         result = client.search.query(
+            source='memories',
             tenant_id=TENANT_ID,
             sub_tenant_id=hire_sub(hire_id),
             query=query,
@@ -827,9 +832,11 @@ All SDK methods used in this cookbook.
 | `client.tenants.create(tenant_id=...)` | Create the onboarding tenant |
 | `client.tenants.status(tenant_id=...)` | Check tenant is ready |
 | `client.source.ingest(tenant_id=..., files=..., file_metadata=...)` | Upload company knowledge documents |
-| `client.source.ingest(tenant_id=..., sub_tenant_id=..., memories=[...])` | Store per-hire memory |
+| `client.source.ingest(
+    type='memory',tenant_id=..., sub_tenant_id=..., memories=[...])` | Store per-hire memory |
 | `client.search.query(tenant_id=..., query=..., max_results=..., mode=...)` | Retrieve company context for a hire question |
-| `client.search.query(tenant_id=..., sub_tenant_id=..., query=...)` | Recall hire memory for manager dashboard |
+| `client.search.query(
+    source='memories',tenant_id=..., sub_tenant_id=..., query=...)` | Recall hire memory for manager dashboard |
 
 ### client.source.ingest - key parameters
 
