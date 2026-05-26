@@ -262,7 +262,7 @@ Required fields are marked with `*`.
 | <Field name="results[]" /> | One entry per queued item with its `source_id` and initial `status` of `queued`. |
 | <Field name="results[].source_id" /> | Use this for status polling, fetch, list, delete, and graph relations. |
 | <Field name="results[].error" /> | Non-null only if HydraDB rejected the item before queueing (e.g., schema validation). |
-| `success_count` / `failed_count` | Tallies. |
+| <Field name="success_count / failed_count" /> | Tallies. |
 
 ## Behavior notes
 

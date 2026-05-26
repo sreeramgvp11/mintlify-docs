@@ -100,7 +100,7 @@ Required fields are marked with `*`.
 |---|---|
 | <Field name="relations[]" /> | Array  -  each entry is a `ScoredPathResponse` containing `triplets`, `relevancy_score`, and `group_id`. |
 | <Field name="relations[].triplets" /> | Array  -  source → relation → target hops. |
-| `relations[].triplets[].source` / `.target` | Entity object: `{ name, type, namespace, entity_id, identifier }`. |
+| <Field name="relations[].triplets[].source / .target" /> | Entity object: `{ name, type, namespace, entity_id, identifier }`. |
 | <Field name="relations[].triplets[].relation" /> | Relation object: `{ canonical_predicate, raw_predicate, context, confidence, temporal_details, ... }`. |
 | <Field name="is_truncated" /> | Boolean  -  `true` when more results exist beyond `limit`. |
 | <Field name="next_cursor" /> | Opaque pagination cursor (number, or `null`). Pass to the next call's `cursor`. `null` when there are no more results. |
