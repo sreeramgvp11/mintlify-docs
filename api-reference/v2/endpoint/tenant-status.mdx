@@ -6,19 +6,15 @@ openapi: "GET /tenants/status"
 
 import { Field } from "/snippets/field.jsx";
 
-## When to use it
-
 Tenant creation is asynchronous. Always poll this endpoint after `POST /tenants` and before your first ingestion or search call  -  the tenant is only ready when **all** of these are `true`:
 
 - Both `infra.vectorstore_status.knowledge` and `infra.vectorstore_status.memories` are `true`
 - `infra.graph_status` (the knowledge-graph layer)
 - `infra.scheduler_status` (the background indexing scheduler)
 
-## Endpoint
-
-- **Auth:** Bearer token + `API-Version: 2`
-- **Idempotency:** Read-only
-- **Async:** No
+<Note>
+Provisioning typically takes 1–2 minutes on Free and Ship plans, and 4–5 minutes on Enterprise plans, which get complete physical isolation.
+</Note>
 
 <RequestExample>
 ```bash cURL
@@ -36,9 +32,17 @@ status = client.tenants.status(tenant_id="my_first_tenant")
 ```
 </RequestExample>
 
+<Accordion title="HTTP request details">
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+</Accordion>
+
 ## Query parameters
 
-Required fields are marked with `*`.
+
 
 | Name | Type | Description |
 |---|---|---|
@@ -94,7 +98,14 @@ The tenant is fully ready only when both `vectorstore_status.knowledge` and `vec
 
 ## Polling pattern
 
-Poll every 1–2 seconds. Most tenants are ready in under 30 seconds.
+Poll every 10–20 seconds. Stop and surface a provisioning issue if the tenant is not ready after the expected window for your plan.
+
+A tenant is ready when:
+
+- `infra.scheduler_status === true`
+- `infra.graph_status === true`
+- `infra.vectorstore_status[0] === true`
+- `infra.vectorstore_status[1] === true`
 
 <CodeGroup>
 ```typescript TypeScript
@@ -104,7 +115,7 @@ while (true) {
   if (graph_status && scheduler_status && vectorstore_status.knowledge && vectorstore_status.memories) {
     break;
   }
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 15000));
 }
 ```
 ```python Python
@@ -120,7 +131,7 @@ while True:
         and infra.vectorstore_status.memories
     ):
         break
-    time.sleep(2)
+    time.sleep(15)
 ```
 ```bash cURL polling loop
 TENANT="acme"
@@ -150,6 +161,6 @@ done
 
 ## Errors
 
-Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)

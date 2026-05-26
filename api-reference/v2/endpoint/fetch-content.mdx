@@ -6,9 +6,7 @@ openapi: "GET /source/fetch"
 
 import { Field } from "/snippets/field.jsx";
 
-## When to use it
-
-Pull back the original ingested content for display in your UI, audit trails, or to feed a different downstream model. Common patterns:
+Pull back ingested content for display in your UI, audit trails, or to feed a different downstream model. `content` is parsed text extracted by HydraDB; `presigned_url` downloads the original file when one exists. Common patterns:
 
 - **UI rendering**  -  show the original document next to LLM-generated answers.
 - **Audit views**  -  let admins inspect what was actually ingested for a `source_id` returned by search.
@@ -17,20 +15,13 @@ Pull back the original ingested content for display in your UI, audit trails, or
 
 Works for both knowledge sources and memories  -  pass the `source_id` from the ingest response or from a search hit.
 
-## Endpoint
-
-- **Auth:** Bearer token + `API-Version: 2`
-- **Idempotency:** Read-only
-- **Async:** No
-- **Presigned URL lifetime:** `expiry_seconds` is clamped to `60 ≤ x ≤ 604800` (7 days).
-
 <RequestExample>
 
 ```bash cURL
 curl -G 'https://api.hydradb.com/source/fetch' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
-  --data-urlencode "source_id=policy_v2" \
+  --data-urlencode "source_id=policy_main" \
   --data-urlencode "tenant_id=acme_corp" \
   --data-urlencode "mode=both" \
   --data-urlencode "expiry_seconds=3600"
@@ -38,7 +29,7 @@ curl -G 'https://api.hydradb.com/source/fetch' \
 
 ```typescript TypeScript SDK
 const file = await client.source.fetch({
-  source_id: "policy_v2",
+  source_id: "policy_main",
   tenant_id: "acme_corp",
   mode: "both",
   expiry_seconds: 3600,
@@ -47,7 +38,7 @@ const file = await client.source.fetch({
 
 ```python Python SDK
 file = client.source.fetch(
-    source_id="policy_v2",
+    source_id="policy_main",
     tenant_id="acme_corp",
     mode="both",
     expiry_seconds=3600,
@@ -56,9 +47,18 @@ file = client.source.fetch(
 
 </RequestExample>
 
+<Accordion title="HTTP request details">
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+- **Presigned URL lifetime:** `expiry_seconds` is clamped to `60 ≤ x ≤ 604800` (7 days).
+
+</Accordion>
+
 ## Query parameters
 
-Required fields are marked with `*`.
+
 
 | Name | Type | Description |
 |---|---|---|
@@ -76,6 +76,64 @@ Required fields are marked with `*`.
 | `url` | Presigned URL (`presigned_url`) valid for `expiry_seconds`. | You want a client or a service to download the original file directly without proxying through your backend. |
 | `both` | Text **and** presigned URL. | UI flows that show parsed text inline plus a "Download original" link. |
 
+<Info>
+Use `mode=url` when you need the original file. Use `mode=content` when you only need extracted text for display, summarization, or prompting.
+</Info>
+
+### Mode examples
+
+```json mode=content
+{
+  "success": true,
+  "source_id": "policy_main",
+  "content": "Section 1. Authentication policies...",
+  "content_base64": null,
+  "presigned_url": null,
+  "content_type": "application/pdf",
+  "size_bytes": 1842233,
+  "message": "File fetched successfully"
+}
+```
+
+```json mode=url
+{
+  "success": true,
+  "source_id": "policy_main",
+  "content": null,
+  "content_base64": null,
+  "presigned_url": "https://storage.hydradb.com/.../policy_main.pdf?X-Amz-...",
+  "content_type": "application/pdf",
+  "size_bytes": 1842233,
+  "message": "File fetched successfully"
+}
+```
+
+```json mode=both for a binary file
+{
+  "success": true,
+  "source_id": "diagram_png",
+  "content": null,
+  "content_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "presigned_url": "https://storage.hydradb.com/.../diagram.png?X-Amz-...",
+  "content_type": "image/png",
+  "size_bytes": 92844,
+  "message": "File fetched successfully"
+}
+```
+
+```json Memory source
+{
+  "success": true,
+  "source_id": "mem_user_alex_tone",
+  "content": "Prefers concise answers and dark mode.",
+  "content_base64": null,
+  "presigned_url": null,
+  "content_type": "text/plain",
+  "size_bytes": null,
+  "message": "Memory fetched successfully"
+}
+```
+
 ## Response
 
 <ResponseExample>
@@ -83,12 +141,12 @@ Required fields are marked with `*`.
 ```json Response
 {
   "success": true,
-  "source_id": "policy_v2",
+  "source_id": "policy_main",
   "content": "Section 1. Authentication policies...",
   "content_base64": null,
-  "presigned_url": "https://storage.hydradb.com/.../policy_v2.pdf?X-Amz-...",
+  "presigned_url": "https://storage.hydradb.com/.../policy_main.pdf?X-Amz-...",
   "content_type": "application/pdf",
-  "size_bytes": 1_842_233,
+  "size_bytes": 1842233,
   "message": "File fetched successfully"
 }
 ```
@@ -113,6 +171,10 @@ Required fields are marked with `*`.
 </Info>
 
 <Info>
+**Recently ingested sources.** If you fetch immediately after ingestion, the source record may exist before parsed text is ready. For reliable reads, poll [Source Status](/api-reference/v2/endpoint/source-status) for that `source_id`; use `mode=url` for the original file and `mode=content` after processing when you need extracted text.
+</Info>
+
+<Info>
 **Presigned URL TTL.** The URL is valid only for `expiry_seconds`. Anyone with the URL can download the file during that window  -  treat it as a short-lived secret.
 </Info>
 
@@ -128,6 +190,6 @@ Required fields are marked with `*`.
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Sources  -  Overview](/api-reference/v2/endpoint/sources-overview)

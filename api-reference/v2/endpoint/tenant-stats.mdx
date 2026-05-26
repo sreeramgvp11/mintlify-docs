@@ -6,21 +6,13 @@ openapi: "GET /tenants/stats"
 
 import { Field } from "/snippets/field.jsx";
 
-## When to use it
-
 Inspect storage growth, object counts, and vector dimensions for a tenant. Common use cases:
 
 - **Billing dashboards**  -  track row counts across the Knowledge and Memories collections.
 - **Capacity planning**  -  see how many vectors are in use and at what dimension.
 - **Post-ingest sanity check**  -  confirm that ingestion actually wrote rows to the expected collection.
 
-The response splits stats into two collections: `normal_collection` (Knowledge) and `memory_collection` (Memories), each with its own row count and embedding dimensionality.
-
-## Endpoint
-
-- **Auth:** Bearer token + `API-Version: 2`
-- **Idempotency:** Read-only
-- **Async:** No
+The response splits stats into two tenant-wide collections: `normal_collection` (Knowledge) and `memory_collection` (Memories), each with its own row count and embedding dimensionality. There is no `sub_tenant_id` parameter; counts aggregate across all sub-tenants in the tenant.
 
 <RequestExample>
 ```bash cURL
@@ -38,9 +30,17 @@ stats = client.tenants.stats(tenant_id="my_first_tenant")
 ```
 </RequestExample>
 
+<Accordion title="HTTP request details">
+
+- **Auth:** Bearer token + `API-Version: 2`
+- **Idempotency:** Read-only
+- **Async:** No
+
+</Accordion>
+
 ## Query parameters
 
-Required fields are marked with `*`.
+
 
 | Name | Type | Description |
 |---|---|---|
@@ -67,6 +67,17 @@ Required fields are marked with `*`.
 
 </ResponseExample>
 
+For a new or empty tenant, both collections are present and report zero rows:
+
+```json Empty tenant
+{
+  "tenant_id": "my_first_tenant",
+  "normal_collection": { "row_count": 0, "dimensions": 1536 },
+  "memory_collection": { "row_count": 0, "dimensions": 1536 },
+  "message": "Successfully retrieved tenant collection statistics"
+}
+```
+
 | Field | Description |
 |---|---|
 | <Field name="tenant_id" /> | The tenant being reported on (string). |
@@ -91,6 +102,10 @@ Required fields are marked with `*`.
 **Both collections always exist.** Even if you've only ingested knowledge (or only memories), both collections are provisioned. Empty collections report `row_count: 0` with the configured `dimensions`.
 </Info>
 
+<Info>
+**Stats are eventually consistent.** Immediately after ingestion or deletion, counts may lag until background processing completes. Check [Source Status](/api-reference/v2/endpoint/source-status) for recently ingested source IDs before treating counts as final.
+</Info>
+
 ## Related endpoints
 
 - **List sources/memories:** [List Documents](/api-reference/v2/endpoint/list-documents)
@@ -99,6 +114,6 @@ Required fields are marked with `*`.
 
 ## Errors
 
-Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `404 TENANT_NOT_FOUND`, `401 UNAUTHORIZED`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Essentials → Multi-Tenant Support](/essentials/v2/multi-tenant)
