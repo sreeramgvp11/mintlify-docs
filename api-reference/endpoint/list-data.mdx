@@ -85,10 +85,10 @@ Filters narrow results using **AND logic** – every key-value pair must match.
 |---|---|---|---|
 | Tenant-level metadata | `tenant_metadata` | `metadata` | Fields defined in `tenant_metadata_schema` |
 | Document-level metadata | `additional_metadata` | `document_metadata` | Fields you sent as `additional_metadata` at ingestion |
-| Source-level fields | `source_fields` | — | Top-level source fields |
+| Source-level fields | `source_fields` | - | Top-level source fields |
 
 <Note>
-Canonical filter keys match the ingestion field names. `metadata` / `document_metadata` are accepted as legacy aliases (back-compat with earlier API versions) — both names route to the same filter.
+Canonical filter keys match the ingestion field names. `metadata` / `document_metadata` are accepted as legacy aliases (back-compat with earlier API versions) - both names route to the same filter.
 </Note>
 
 **Allowed `source_fields` keys:** `description`, `timestamp`, `title`, `type`, `url`.
