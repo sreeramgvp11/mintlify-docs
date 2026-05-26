@@ -29,21 +29,21 @@ curl -G 'https://api.hydradb.com/source/status' \
   -H "API-Version: 2" \
   --data-urlencode "tenant_id=acme_corp" \
   --data-urlencode "sub_tenant_id=default" \
-  --data-urlencode "file_ids=policy_v2" \
+  --data-urlencode "file_ids=policy_main" \
   --data-urlencode "file_ids=runbook_deploy"
 ```
 ```typescript TypeScript SDK
 const status = await client.source.status({
   tenant_id: "acme_corp",
   sub_tenant_id: "default",
-  file_ids: ["policy_v2", "runbook_deploy"],
+  file_ids: ["policy_main", "runbook_deploy"],
 });
 ```
 ```python Python SDK
 status = client.source.status(
     tenant_id="acme_corp",
     sub_tenant_id="default",
-    file_ids=["policy_v2", "runbook_deploy"],
+    file_ids=["policy_main", "runbook_deploy"],
 )
 ```
 </RequestExample>
@@ -71,7 +71,7 @@ The query parameter is named `file_ids` for legacy reasons. It accepts the `sour
 {
   "statuses": [
     {
-      "file_id": "policy_v2",
+      "file_id": "policy_main",
       "indexing_status": "completed",
       "error_code": "",
       "success": true,
@@ -142,7 +142,7 @@ flowchart LR
 ```python
 import time
 
-source_ids = ["policy_v2", "runbook_deploy"]
+source_ids = ["policy_main", "runbook_deploy"]
 
 while True:
     response = client.source.status(
@@ -184,6 +184,6 @@ Typical processing time:
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Essentials → Knowledge](/essentials/v2/knowledge) · [Essentials → Memories](/essentials/v2/memories)

@@ -30,7 +30,7 @@ Works for both knowledge sources and memories  -  pass the `source_id` from the 
 curl -G 'https://api.hydradb.com/source/fetch' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
-  --data-urlencode "source_id=policy_v2" \
+  --data-urlencode "source_id=policy_main" \
   --data-urlencode "tenant_id=acme_corp" \
   --data-urlencode "mode=both" \
   --data-urlencode "expiry_seconds=3600"
@@ -38,7 +38,7 @@ curl -G 'https://api.hydradb.com/source/fetch' \
 
 ```typescript TypeScript SDK
 const file = await client.source.fetch({
-  source_id: "policy_v2",
+  source_id: "policy_main",
   tenant_id: "acme_corp",
   mode: "both",
   expiry_seconds: 3600,
@@ -47,7 +47,7 @@ const file = await client.source.fetch({
 
 ```python Python SDK
 file = client.source.fetch(
-    source_id="policy_v2",
+    source_id="policy_main",
     tenant_id="acme_corp",
     mode="both",
     expiry_seconds=3600,
@@ -83,10 +83,10 @@ Required fields are marked with `*`.
 ```json Response
 {
   "success": true,
-  "source_id": "policy_v2",
+  "source_id": "policy_main",
   "content": "Section 1. Authentication policies...",
   "content_base64": null,
-  "presigned_url": "https://storage.hydradb.com/.../policy_v2.pdf?X-Amz-...",
+  "presigned_url": "https://storage.hydradb.com/.../policy_main.pdf?X-Amz-...",
   "content_type": "application/pdf",
   "size_bytes": 1_842_233,
   "message": "File fetched successfully"
@@ -128,6 +128,6 @@ Required fields are marked with `*`.
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Sources  -  Overview](/api-reference/v2/endpoint/sources-overview)

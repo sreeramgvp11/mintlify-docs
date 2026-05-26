@@ -258,7 +258,7 @@ Required fields are marked with `*`.
 | <Field name="tenant_id" required /> | string | Owning tenant. |
 | <Field name="sub_tenant_id" /> | string \| null | Sub-tenant scope. Required for per-user memory searches. (default=default sub-tenant) |
 | <Field name="query" required /> | string | Search terms or natural-language question. Cannot be empty. |
-| <Field name="source" /> | `"sources" \| "memories" \| "all"` | What collection to search. `"all"` runs `sources` and `memories` in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
+| <Field name="source" /> | `"knowledge" \| "memories" \| "all"` | What collection to search. `"all"` runs knowledge and memories in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
 | <Field name="search_by" /> | `"hybrid" \| "text" \| "vector"` | Retrieval method. See [Search methods](#search-methods). (default=`"hybrid"`) |
 | <Field name="operator" /> | `"or" \| "and" \| "phrase"` | BM25 operator for `search_by: "text"`. Ignored for `hybrid` and `vector`. (default=`"or"`) |
 | <Field name="mode" /> | `"fast" \| "thinking"` | Retrieval pipeline. Applies to `hybrid` and `vector` only; ignored for `text`. (default=`"fast"`) |
@@ -275,7 +275,7 @@ Required fields are marked with `*`.
 | Value | Searches | Best for |
 |---|---|---|
 | `"knowledge"` *(default)* | Knowledge documents, files, and app sources | Document Q&A, RAG context. |
-| `"memory"` | User memories | Personalization and user preferences. |
+| `"memories"` | User memories | Personalization and user preferences. |
 | `"all"` | Both, merged in one ranked result set | Personalized answers grounded in both shared and user-specific context. |
 
 ### Search methods
@@ -325,9 +325,9 @@ For `search_by: "hybrid"` and `"vector"`:
 {
   "chunks": [
     {
-      "chunk_uuid": "policy_v2_chunk_3",
-      "source_title": "Compliance Policy v2",
-      "source_id": "policy_v2",
+      "chunk_uuid": "policy_main_chunk_3",
+      "source_title": "Compliance Policy",
+      "source_id": "policy_main",
       "chunk_content": "Refunds are issued within 30 days...",
       "relevancy_score": 0.91,
       "extra_context_ids": ["pref-tone"],
@@ -335,7 +335,7 @@ For `search_by: "hybrid"` and `"vector"`:
     }
   ],
   "sources": [
-    { "id": "policy_v2", "title": "Compliance Policy v2", "type": "pdf" }
+    { "id": "policy_main", "title": "Compliance Policy", "type": "pdf" }
   ],
   "graph_context": {
     "query_paths": [],
@@ -413,6 +413,6 @@ For formatting `RetrievalResult` into an LLM prompt, see [How to Use API Results
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS` (empty `query`), `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`, `500 INTERNAL_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS` (empty `query`), `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`, `500 INTERNAL_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Search  -  Overview](/api-reference/v2/endpoint/search-overview)

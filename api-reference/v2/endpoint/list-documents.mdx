@@ -78,7 +78,7 @@ Required fields are marked with `*`.
 | <Field name="kind" /> | `"knowledge" \| "memories"` | Bucket to list. (default=`"knowledge"`) |
 | <Field name="source_ids" /> | string[] \| null | When provided and non-empty, only items with these IDs are returned (pagination + filters still apply). (default=`null`) |
 | <Field name="page" /> | integer | Page number (1-indexed). (default=`1`) |
-| <Field name="page_size" /> | integer | Items per page. Clamped to a server-side maximum. (default=server default) |
+| <Field name="page_size" /> | integer | Items per page, from `1` to `100`. (default=`50`) |
 | <Field name="filters" /> | object | Structured filters. See [Filters](#filters). (default=`null`) |
 | <Field name="include_fields" /> | string[] \| null | Field projection. Only the listed fields plus `id`, `tenant_id`, `sub_tenant_id` are populated. Only applies to `kind=knowledge`. (default=`null`  -  all fields) |
 
@@ -120,10 +120,10 @@ Allowed values include `title`, `type`, `description`, `url`, `timestamp`, `tena
   "message": "Sources retrieved successfully",
   "sources": [
     {
-      "id": "policy_v2",
+      "id": "policy_main",
       "tenant_id": "acme_corp",
       "sub_tenant_id": "default",
-      "title": "Compliance Policy v2",
+      "title": "Compliance Policy",
       "type": "pdf",
       "url": null,
       "timestamp": "2026-05-12T08:14:00Z"
@@ -178,6 +178,6 @@ When `kind=memories`, the response shape is `ListUserMemoriesResponse` instead  
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Essentials → Metadata](/essentials/v2/metadata) · [Sources  -  Overview](/api-reference/v2/endpoint/sources-overview)

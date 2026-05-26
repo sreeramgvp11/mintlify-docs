@@ -77,7 +77,7 @@ Required fields are marked with `*`.
 | <Field name="tenant_id" required /> | string | Tenant to search. |
 | <Field name="sub_tenant_id" /> | string | Optional sub-tenant scope. (default=default sub-tenant) |
 | <Field name="query" required /> | string | Search terms or natural-language question. Cannot be empty. |
-| <Field name="source" /> | `"knowledge"` \| `"memories"` \| `"all"` | What collection to search over. `"all"` runs `sources` and `memories` in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
+| <Field name="source" /> | `"knowledge"` \| `"memories"` \| `"all"` | What collection to search over. `"all"` runs knowledge and memories in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
 | <Field name="search_by" /> | `"hybrid"` \| `"text"` \| `"vector"` | Retrieval method. `hybrid` = dense vectors + BM25, `text` = BM25 only, `vector` = dense only. (default=`"hybrid"`) |
 | <Field name="operator" /> | `"or"` \| `"and"` \| `"phrase"` | BM25 matching when `search_by: "text"`. `or` = any term, `and` = all terms, `phrase` = exact phrase. Ignored for `hybrid` and `vector`. (default=`"or"`) |
 | <Field name="mode" /> | `"fast"` \| `"thinking"` | Retrieval quality vs latency. `fast` = single query pass. `thinking` = multi-query expansion + reranking + forceful-relation context. Applies to `hybrid` and `vector` only. (default=`"fast"`) |
@@ -161,4 +161,4 @@ Top-level keys (`department`, `region`) are matched against tenant-schema fields
 
 - [Essentials - Search](/essentials/v2/search) - conceptual overview, the multi-stage pipeline
 - [Essentials - Context Graphs](/essentials/v2/context-graphs) - how graph context is built and used
-- [API Reference v2 - Sources](/api-reference/v2/endpoint/sources-overview) - ingest content before search
+- [Sources](/api-reference/v2/endpoint/sources-overview) - ingest content before search

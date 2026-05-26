@@ -35,7 +35,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "files=@/path/to/policy.pdf" \
   -F 'file_metadata=[
     {
-      "file_id": "policy_v2",
+      "file_id": "policy_main",
       "tenant_metadata": { "department": "legal" },
       "document_metadata": { "source": "policy" }
     }
@@ -98,7 +98,7 @@ const knowledgeResult = await client.source.ingest({
   ],
   file_metadata: JSON.stringify([
     {
-      file_id: "policy_v2",
+      file_id: "policy_main",
       tenant_metadata: { department: "legal" },
       document_metadata: { source: "policy" },
     },
@@ -163,7 +163,7 @@ with open("/path/to/policy.pdf", "rb") as policy:
         files=[("policy.pdf", policy, "application/pdf")],
         file_metadata=json.dumps([
             {
-                "file_id": "policy_v2",
+                "file_id": "policy_main",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"source": "policy"},
             }
@@ -230,7 +230,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "files=@/path/to/policy.pdf" \
   -F "files=@/path/to/runbook.pdf" \
   -F 'file_metadata=[
-    { "file_id": "policy_v2", "tenant_metadata": { "department": "legal" } },
+    { "file_id": "policy_main", "tenant_metadata": { "department": "legal" } },
     { "file_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
   ]'
 ```
@@ -244,7 +244,7 @@ const result = await client.source.ingest({
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
   ],
   file_metadata: JSON.stringify([
-    { file_id: "policy_v2", tenant_metadata: { department: "legal" } },
+    { file_id: "policy_main", tenant_metadata: { department: "legal" } },
     { file_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
   ]),
 });
@@ -262,7 +262,7 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
             ("runbook.pdf", f2, "application/pdf"),
         ],
         file_metadata=json.dumps([
-            {"file_id": "policy_v2", "tenant_metadata": {"department": "legal"}},
+            {"file_id": "policy_main", "tenant_metadata": {"department": "legal"}},
             {"file_id": "runbook_deploy", "tenant_metadata": {"department": "ops"}},
         ]),
     )
@@ -455,9 +455,9 @@ Required fields are marked with `*`.
 | <Field name="sub_tenant_id" /> | string | Logical partition inside the tenant. (default=`""`  -  default sub-tenant) |
 | <Field name="upsert" /> | boolean | Replace existing sources with the same ID. Set to `false` to error on conflict. (default=`true`) |
 | <Field name="files" /> | file[] | Binary uploads, **knowledge only**. Required when `type=knowledge` and you have files to upload. Omit when ingesting memories. (default=`[]`) |
-| <Field name="file_metadata" /> | string (JSON array) | One entry per file in `files`, same order. See [`file_metadata` item shape](#file-metadata-item-shape). |
-| <Field name="app_knowledge" /> | string (JSON object or array) | Pre-extracted source objects (Slack, Notion, web pages, etc.), **knowledge only**. See [`app_knowledge` item shape](#app-knowledge-item-shape). |
-| <Field name="memory" /> | string (JSON array) | Memory items, **memory only**. Required when `type=memory`. See [`memories` item shape](#memories-item-shape). |
+| <Field name="file_metadata" /> | string (JSON array) | One entry per file in `files`, same order. See the `file_metadata` item shape below. |
+| <Field name="app_knowledge" /> | string (JSON object or array) | Pre-extracted source objects (Slack, Notion, web pages, etc.), **knowledge only**. See the `app_knowledge` item shape below. |
+| <Field name="memories" /> | string (JSON array) | Memory items, **memory only**. Required when `type=memory`. See the `memories` item shape below. |
 
 ### `file_metadata` item shape
 
@@ -514,7 +514,7 @@ Required fields are marked with `*`.
   "success": true,
   "message": "Knowledge uploaded successfully",
   "results": [
-    { "source_id": "policy_v2", "filename": "policy.pdf", "status": "queued", "error": null },
+    { "source_id": "policy_main", "filename": "policy.pdf", "status": "queued", "error": null },
     { "source_id": "runbook_deploy", "filename": "runbook.pdf", "status": "queued", "error": null }
   ],
   "success_count": 2,
@@ -559,6 +559,6 @@ Required fields are marked with `*`.
 
 ## Errors
 
-Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/error-responses) for the full list.
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
 
 Read more: [Essentials → Knowledge](/essentials/v2/knowledge) · [Essentials → Memories](/essentials/v2/memories) · [Sources  -  Overview](/api-reference/v2/endpoint/sources-overview)

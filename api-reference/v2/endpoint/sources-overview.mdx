@@ -82,6 +82,10 @@ So `type=knowledge` + `app_knowledge` means "this is knowledge, and I've already
 
 Use `knowledge` when the content is an external or shared source of truth. Use `memory` when the content describes a user or should shape the answer for that user.
 
+<Info>
+**Naming rule:** ingestion and deletion use singular `type: "memory"` because you are writing to one bucket. Listing and search use plural `"memories"` for `kind` or `source` because you are querying a collection.
+</Info>
+
 ## File metadata
 
 `file_metadata` is a JSON string that lets you attach metadata to each uploaded file. Use it when you want HydraDB to preserve source IDs, titles, metadata, or relationships instead of treating files as anonymous uploads.
@@ -188,4 +192,4 @@ Use a `source_id` to poll status (`/source/status`), fetch content (`/source/fet
 - [Essentials - Memories](/essentials/v2/memories) - memories vs knowledge, when to use which
 - [Essentials - Metadata](/essentials/v2/metadata) - tenant-level vs document-level metadata
 - [Essentials - Forceful Relations](/essentials/v2/knowledge) - linking sources at ingestion (see §7)
-- [API Reference v2 - Search](/api-reference/v2/endpoint/search-overview) - retrieve ingested content
+- [Search](/api-reference/v2/endpoint/search-overview) - retrieve ingested content
