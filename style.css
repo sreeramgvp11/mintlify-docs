@@ -24,6 +24,21 @@
     overflow: hidden !important;
 }
 
+/* Field reference colored requirement indicators */
+.field-req-green { color: #22c55e; font-size: 0.6em; vertical-align: middle; }
+.field-req-amber { color: #eab308; font-size: 0.6em; vertical-align: middle; }
+.field-req-gray { color: #6b7280; font-size: 0.6em; vertical-align: middle; }
+.field-req-orange { color: #f97316; font-size: 0.6em; vertical-align: middle; }
+.field-req-blue { color: #3b82f6; font-size: 0.6em; vertical-align: middle; }
+
+.field-req-legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    padding: 0.75rem 0;
+}
+
 @media (min-width: 1280px) {
     #content-container {
         overflow-x: clip;
