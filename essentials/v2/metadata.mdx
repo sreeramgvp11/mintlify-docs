@@ -156,7 +156,7 @@ If a field needs to be filterable at recall time, put it in `metadata` and plan 
 
 ### `tenant_metadata` vs `document_metadata`
 
-In the v2 API, the two metadata buckets on every source are exposed under the names `tenant_metadata` and `document_metadata`:
+The two metadata buckets on every source are exposed under the names `tenant_metadata` and `document_metadata`:
 
 - **`tenant_metadata`**  -  matches the schema you defined at tenant creation (`tenant_metadata_schema`). Fields are indexed and filterable tenant-wide. Use for stable, reusable attributes that apply across many documents: `department`, `region`, `customer_tier`, `compliance_framework`.
 - **`document_metadata`**  -  free-form per-document JSON. Flexible, but to filter on it you must opt in by nesting under a `document_metadata` key in `metadata_filters`:

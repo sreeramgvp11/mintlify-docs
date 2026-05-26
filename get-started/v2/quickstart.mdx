@@ -40,7 +40,7 @@ Steps 1 and 3 are **asynchronous**(runs in background)  -  HydraDB provisions in
 |---|---|
 | **Base URL** | `https://api.hydradb.com` |
 | **Auth header** | `Authorization: Bearer <your_api_key>` |
-| **Version header** | `API-Version: 2` (auto-set by the v2 SDKs) |
+| **Version header** | `API-Version: 2` (auto-set by the SDKs) |
 
 ### Install the SDK (optional)
 
@@ -48,7 +48,7 @@ Steps 1 and 3 are **asynchronous**(runs in background)  -  HydraDB provisions in
 ```bash cURL
 # No install needed — smoke-test the connection directly.
 # Lists tenants visible to this key. A 200 response confirms
-# auth + the v2 header are both wired up.
+# auth + the version header are both wired up.
 export HYDRA_DB_API_KEY="your_api_key"
 
 curl 'https://api.hydradb.com/tenants' \
@@ -574,7 +574,7 @@ That's the full HydraDB v2 loop: [create a tenant](/api-reference/v2/endpoint/cr
 | Design a filterable metadata schema | [Metadata](/essentials/v2/metadata) |
 | Scope data per user or workspace | [Multi-Tenant](/essentials/v2/multi-tenant) |
 | Format the LLM prompt from `RetrievalResult` | [How to Use API Results](/essentials/v2/api-results) |
-| See the full endpoint reference | [API Reference v2](/api-reference/v2) |
+| See the full endpoint reference | [API Reference](/api-reference/v2) |
 | Pick from real-world recipes | [Cookbooks](/cookbooks/index) |
 
 Stuck? Reach out at [founders@hydradb.com](mailto:founders@hydradb.com).

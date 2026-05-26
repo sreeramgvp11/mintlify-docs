@@ -1,6 +1,6 @@
 ---
-title: "API Reference v2"
-description: "Complete reference for every HydraDB v2 endpoint, organized by group."
+title: "API Reference"
+description: "Complete reference for every HydraDB endpoint, organized by group."
 ---
 
 ## Quick links
@@ -86,7 +86,7 @@ const client = new HydraDBClient({
 
 </CodeGroup>
 
-SDK methods mirror the API: `client.<group>.<method>()` maps to the corresponding endpoint. v2 operations include Fern SDK fields in [`api-reference/v2/openapi.json`](/api-reference/v2/openapi.json), and the `ts-sdk-v2`, `python-sdk-v2`, and `go-sdk-v2` generators filter to audience `v2` and set `API-Version: 2` automatically.
+SDK methods mirror the API: `client.<group>.<method>()` maps to the corresponding endpoint. Operations include Fern SDK fields in [`api-reference/v2/openapi.json`](/api-reference/v2/openapi.json), and the `ts-sdk-v2`, `python-sdk-v2`, and `go-sdk-v2` generators filter to audience `v2` and set `API-Version: 2` automatically.
 
 ## Full endpoint inventory
 
@@ -110,7 +110,7 @@ SDK methods mirror the API: `client.<group>.<method>()` maps to the correspondin
 
 **Authentication.** Every endpoint requires `Authorization: Bearer <your_api_key>` in the request header. Get your key at [app.hydradb.com](https://app.hydradb.com).
 
-**Versioning.** Send `API-Version: 2` with every v2 request.
+**Versioning.** Send `API-Version: 2` with every request.
 
 ```bash
 curl -X POST 'https://api.hydradb.com/search' \
@@ -125,7 +125,7 @@ curl -X POST 'https://api.hydradb.com/search' \
   }'
 ```
 
-**Response envelope.** JSON responses from v2 routes are wrapped in a consistent envelope:
+**Response envelope.** JSON responses are wrapped in a consistent envelope:
 
 ```json
 {

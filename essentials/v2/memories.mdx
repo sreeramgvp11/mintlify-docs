@@ -329,7 +329,7 @@ result = client.source.ingest(
 
 </CodeGroup>
 
-You'll get back a `source_id` for each memory and an initial `status` of `queued`. The payload is wrapped in the standard v2 envelope, so the fields live under `data` (`response.data.results`):
+You'll get back a `source_id` for each memory and an initial `status` of `queued`. The payload is wrapped in the standard envelope, so the fields live under `data` (`response.data.results`):
 
 ```json
 {

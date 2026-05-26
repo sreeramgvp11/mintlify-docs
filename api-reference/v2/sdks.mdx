@@ -1,13 +1,13 @@
 ---
-title: "SDKs – Node and Python (v2)"
-description: "Official TypeScript/Node.js and Python SDKs for the HydraDB v2 API."
+title: "SDKs – Node and Python"
+description: "Official TypeScript/Node.js and Python SDKs for the HydraDB API."
 ---
 
-The v2 SDKs wrap every endpoint in [API Reference v2](/api-reference/v2) with typed methods and IDE autocomplete. They automatically set the `API-Version: 2` header on every request  -  you do not need to send it manually.
+The SDKs wrap every endpoint in the [API Reference](/api-reference/v2) with typed methods and IDE autocomplete. They automatically set the `API-Version: 2` header on every request  -  you do not need to send it manually.
 
 ## Installation
 
-The v2 SDKs ship as major-version bumps of the same packages used for v1. Pin to `>=2.0.0` to use the v2 method surface.
+The SDKs ship as major-version bumps of the same packages used for v1. Pin to `>=2.0.0` to use the latest method surface.
 
 <CodeGroup>
 ```bash TypeScript / Node.js
@@ -48,7 +48,7 @@ async_client = AsyncHydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 ## Versioning
 
-v2 SDKs automatically include `API-Version: 2` on every outbound request. Server-side routing resolves to v2 routes; the response includes an `X-API-Version: 2` header echoing the resolved version.
+The SDKs automatically include `API-Version: 2` on every outbound request. Server-side routing resolves to the matching routes; the response includes an `X-API-Version: 2` header echoing the resolved version.
 
 You can verify which version your client is using by inspecting the response headers in any SDK call.
 
@@ -70,7 +70,7 @@ The TypeScript SDK transparently maps any camelCase parameters you write to snak
 
 ## SDK method structure
 
-v2 SDK methods are grouped under three top-level namespaces  -  one per `/api-reference/v2` group:
+SDK methods are grouped under three top-level namespaces  -  one per `/api-reference/v2` group:
 
 | URL prefix | SDK group | Purpose |
 |---|---|---|
@@ -78,7 +78,7 @@ v2 SDK methods are grouped under three top-level namespaces  -  one per `/api-re
 | `/search` | `client.search` | Unified retrieval over knowledge, memories, or both |
 | `/tenants/*` and `/tenants` | `client.tenants` | Create, list, delete, status, sub-tenants, stats |
 
-Compared to v1, the v2 surface is intentionally smaller  -  three groups instead of seven, one search endpoint instead of three, one ingestion endpoint instead of two.
+Compared to v1, the surface is intentionally smaller  -  three groups instead of seven, one search endpoint instead of three, one ingestion endpoint instead of two.
 
 ## Method reference
 
@@ -454,7 +454,7 @@ client.source.delete(
 
 ## Response envelope
 
-All v2 responses are wrapped in a consistent envelope:
+All responses are wrapped in a consistent envelope:
 
 ```json
 {
@@ -491,7 +491,7 @@ The SDKs provide exact type parity with the API specification:
 
 ## Error handling
 
-Both SDKs throw exceptions for non-2xx responses. Error objects expose the v2 envelope's `error` payload:
+Both SDKs throw exceptions for non-2xx responses. Error objects expose the envelope's `error` payload:
 
 <CodeGroup>
 ```typescript TypeScript SDK
@@ -557,7 +557,7 @@ This works because the SDKs are fully typed with comprehensive parameter docs so
 
 ## Related sections
 
-- [API Reference v2](/api-reference/v2)  -  complete endpoint documentation
+- [API Reference](/api-reference/v2)  -  complete endpoint documentation
 - [Error Responses](/api-reference/error-responses)  -  HTTP codes, error codes, retry patterns
 - [Quickstart](/quickstart)  -  build your first integration in five minutes
 - [Recall](/essentials/v2/recall)  -  conceptual overview of `POST /search`
