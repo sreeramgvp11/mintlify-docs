@@ -53,14 +53,14 @@ relations = client.source.relations(
 
 
 
-| Name | Type | Description |
-|---|---|---|
-| <Field name="tenant_id" required /> | string | Owning tenant. |
-| <Field name="source_id" /> | string \| null | When provided, returns relations for that specific source. When omitted, returns all relations across the sub-tenant. (default=`null`) |
-| <Field name="is_memory" /> | boolean | Set `true` when `source_id` belongs to a memory item. The default searches the Knowledge graph. (default=`false`) |
-| <Field name="sub_tenant_id" /> | string \| null | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
-| <Field name="limit" /> | integer | Maximum relation groups to return. Range `1–10000`. (default=`5000`) |
-| <Field name="cursor" /> | number \| null | Opaque pagination cursor from a previous response's `next_cursor`. (default=`null`) |
+| Name | Description |
+| --- | --- |
+| <Field name="tenant_id" type="string" required /> | Owning tenant. |
+| <Field name="source_id" type="string or null" /> | When provided, returns relations for that specific source. When omitted, returns all relations across the sub-tenant. (default=`null`) |
+| <Field name="is_memory" type="boolean" /> | Set `true` when `source_id` belongs to a memory item. The default searches the Knowledge graph. (default=`false`) |
+| <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
+| <Field name="limit" type="integer" /> | Maximum relation groups to return. Range `1–10000`. (default=`5000`) |
+| <Field name="cursor" type="number or null" /> | Opaque pagination cursor from a previous response's `next_cursor`. (default=`null`) |
 
 ## Response
 
@@ -96,14 +96,14 @@ relations = client.source.relations(
 
 | Field | Description |
 |---|---|
-| <Field name="relations[]" /> | Array  -  each entry is a `ScoredPathResponse` containing `triplets`, `relevancy_score`, and `group_id`. |
-| <Field name="relations[].triplets" /> | Array  -  source → relation → target hops. |
-| <Field name="relations[].triplets[].source / .target" /> | Entity object. Common fields: `name`, `type`, `namespace`, `entity_id`, `identifier`. `name` and `type` are the most useful display fields. |
-| <Field name="relations[].triplets[].relation" /> | Relation object. Common fields: `canonical_predicate`, `raw_predicate`, `context`, `confidence`, and `temporal_details`. |
-| <Field name="relations[].relevancy_score" /> | Relevance score for the relation group. Higher values are more relevant within the same response. |
-| <Field name="relations[].group_id" /> | Stable group identifier for the returned relation group. |
-| <Field name="is_truncated" /> | Boolean  -  `true` when more results exist beyond `limit`. |
-| <Field name="next_cursor" /> | Opaque pagination cursor (number, or `null`). Pass to the next call's `cursor`. `null` when there are no more results. |
+| <Field name="relations[]" type="ScoredPathResponse[]" /> | Array  -  each entry is a `ScoredPathResponse` containing `triplets`, `relevancy_score`, and `group_id`. |
+| <Field name="relations[].triplets" type="array" /> | Array  -  source → relation → target hops. |
+| <Field name="relations[].triplets[].source / .target" type="Entity" /> | Entity object. Common fields: `name`, `type`, `namespace`, `entity_id`, `identifier`. `name` and `type` are the most useful display fields. |
+| <Field name="relations[].triplets[].relation" type="Relation" /> | Relation object. Common fields: `canonical_predicate`, `raw_predicate`, `context`, `confidence`, and `temporal_details`. |
+| <Field name="relations[].relevancy_score" type="float" /> | Relevance score for the relation group. Higher values are more relevant within the same response. |
+| <Field name="relations[].group_id" type="string" /> | Stable group identifier for the returned relation group. |
+| <Field name="is_truncated" type="boolean" /> | Boolean  -  `true` when more results exist beyond `limit`. |
+| <Field name="next_cursor" type="number or null" /> | Opaque pagination cursor (number, or `null`). Pass to the next call's `cursor`. `null` when there are no more results. |
 
 ```json Truncated response
 {

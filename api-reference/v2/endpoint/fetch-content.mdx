@@ -60,13 +60,13 @@ file = client.source.fetch(
 
 
 
-| Name | Type | Description |
-|---|---|---|
-| <Field name="source_id" required /> | string | ID of the source to fetch. |
-| <Field name="tenant_id" required /> | string | Owning tenant. |
-| <Field name="sub_tenant_id" /> | string \| null | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
-| <Field name="mode" /> | `"content" \| "url" \| "both"` | What to return. See [Fetch modes](#fetch-modes). (default=`"content"`) |
-| <Field name="expiry_seconds" /> | integer | TTL of the presigned URL (when `mode` includes `url`). Range `60 ≤ x ≤ 604800` (7 days). (default=`3600`) |
+| Name | Description |
+| --- | --- |
+| <Field name="source_id" type="string" required /> | ID of the source to fetch. |
+| <Field name="tenant_id" type="string" required /> | Owning tenant. |
+| <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
+| <Field name="mode" type='"content" or "url" or "both"' /> | What to return. See [Fetch modes](#fetch-modes). (default=`"content"`) |
+| <Field name="expiry_seconds" type="integer" /> | TTL of the presigned URL (when `mode` includes `url`). Range `60 ≤ x ≤ 604800` (7 days). (default=`3600`) |
 
 ## Fetch modes
 
@@ -155,14 +155,14 @@ Use `mode=url` when you need the original file. Use `mode=content` when you only
 
 | Field | Description |
 |---|---|
-| <Field name="success" /> | Boolean  -  always `true` on a 200 response. |
-| <Field name="source_id" /> | The source you asked for (string). |
-| <Field name="content" /> | Parsed text content (string, or `null`). Present when `mode` is `content` or `both` and the file is text-parseable. |
-| <Field name="content_base64" /> | Base64-encoded raw file content (string, or `null`). Present when the source is binary and `mode` includes content. |
-| <Field name="presigned_url" /> | Direct download URL (string, or `null`). Present when `mode` is `url` or `both`. |
-| <Field name="content_type" /> | MIME type when known (string, or `null`). |
-| <Field name="size_bytes" /> | Source file size in bytes when known (integer, or `null`). |
-| <Field name="message" /> | Human-readable status (string). |
+| <Field name="success" type="boolean" /> | Boolean  -  always `true` on a 200 response. |
+| <Field name="source_id" type="string" /> | The source you asked for (string). |
+| <Field name="content" type="string or null" /> | Parsed text content (string, or `null`). Present when `mode` is `content` or `both` and the file is text-parseable. |
+| <Field name="content_base64" type="string or null" /> | Base64-encoded raw file content (string, or `null`). Present when the source is binary and `mode` includes content. |
+| <Field name="presigned_url" type="string or null" /> | Direct download URL (string, or `null`). Present when `mode` is `url` or `both`. |
+| <Field name="content_type" type="string or null" /> | MIME type when known (string, or `null`). |
+| <Field name="size_bytes" type="integer or null" /> | Source file size in bytes when known (integer, or `null`). |
+| <Field name="message" type="string" /> | Human-readable status (string). |
 
 ## Behavior notes
 

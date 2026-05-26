@@ -17,6 +17,19 @@
 .field-req { color: #ef4444; font-weight: bold; cursor: default; }
 .field-rec { color: #eab308; font-size: 0.6em; vertical-align: middle; cursor: default; }
 .field-wrap { display: inline-block; outline: none; }
+.field-name-row { display: inline-block; }
+.field-type {
+    display: inline-block;
+    margin-left: 0.35rem;
+    color: #cbd5e1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+.field-type::before { content: "("; }
+.field-type::after { content: ")"; }
 .field-tip {
     position: absolute;
     bottom: calc(100% + 4px);
@@ -38,3 +51,8 @@
 .has-field-tip:hover .field-tip,
 .has-field-tip:focus .field-tip,
 .has-field-tip:focus-within .field-tip { display: inline-block; }
+
+/* Mintlify content width override: treat max-w-8xl layout as max-w-10xl. */
+.peer.is-not-custom.is-not-center ~ [class~="peer-[.is-not-custom]:peer-[.is-not-center]:max-w-8xl"] {
+    max-width: 104rem !important;
+}

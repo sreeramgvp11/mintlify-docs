@@ -77,12 +77,12 @@ Use `type: "memory"` and pass memory `source_id`s in the same `request.ids` arra
 
 The body wraps two fields together. 
 
-| Name | Type | Description |
-|---|---|---|
-| <Field name="request.tenant_id" required /> | string | Owning tenant. |
-| <Field name="request.sub_tenant_id" /> | string \| null | Sub-tenant scope. Use the same value used at ingestion. If omitted, the default sub-tenant is used. (default=`null`) |
-| <Field name="request.ids" required /> | string[] | One or more source IDs to delete. At least one is required. |
-| <Field name="type" /> | `"knowledge" \| "memory"` | Bucket selector. (default=`"knowledge"`) |
+| Name | Description |
+| --- | --- |
+| <Field name="request.tenant_id" type="string" required /> | Owning tenant. |
+| <Field name="request.sub_tenant_id" type="string or null" /> | Sub-tenant scope. Use the same value used at ingestion. If omitted, the default sub-tenant is used. (default=`null`) |
+| <Field name="request.ids" type="string[]" required /> | One or more source IDs to delete. At least one is required. |
+| <Field name="type" type='"knowledge" or "memory"' /> | Bucket selector. (default=`"knowledge"`) |
 
 ## Response
 
@@ -106,11 +106,11 @@ The body wraps two fields together.
 
 | Field | Description |
 |---|---|
-| <Field name="success" /> | `true` if at least one ID was deleted. |
-| <Field name="results[].id" /> | The ID being reported on. |
-| <Field name="results[].deleted" /> | Whether deletion succeeded for this specific ID. |
-| <Field name="results[].error" /> | Error message if deletion failed (e.g., not found). |
-| <Field name="deleted_count" /> | Total IDs successfully deleted. |
+| <Field name="success" type="boolean" /> | `true` if at least one ID was deleted. |
+| <Field name="results[].id" type="string" /> | The ID being reported on. |
+| <Field name="results[].deleted" type="boolean" /> | Whether deletion succeeded for this specific ID. |
+| <Field name="results[].error" type="string or null" /> | Error message if deletion failed (e.g., not found). |
+| <Field name="deleted_count" type="integer" /> | Total IDs successfully deleted. |
 
 ### Memory (`type=memory`)
 
@@ -127,8 +127,8 @@ The body wraps two fields together.
 
 | Field | Description |
 |---|---|
-| <Field name="success" /> | `true` if all listed memories were deleted. |
-| <Field name="user_memory_deleted" /> | `true` only when every listed memory was deleted. `false` if any deletion failed. |
+| <Field name="success" type="boolean" /> | `true` if all listed memories were deleted. |
+| <Field name="user_memory_deleted" type="boolean" /> | `true` only when every listed memory was deleted. `false` if any deletion failed. |
 
 ## Behavior notes
 

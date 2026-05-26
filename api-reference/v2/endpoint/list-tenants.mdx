@@ -63,9 +63,9 @@ If provisioning failed for a tenant, `failed_tenant_ids` contains diagnostic ent
 
 | Field | Description |
 |---|---|
-| <Field name="tenant_ids" /> | Array of string IDs of active or provisioning tenants. |
-| <Field name="failed_tenant_ids" /> | Array of `{ tenant_id, error }` entries, or `null` when no failures. Re-create the tenant to retry provisioning. |
-| <Field name="message" /> | Human-readable status string. |
+| <Field name="tenant_ids" type="string[]" /> | Array of string IDs of active or provisioning tenants. |
+| <Field name="failed_tenant_ids" type="array or null" /> | Array of `{ tenant_id, error }` entries, or `null` when no failures. Re-create the tenant to retry provisioning. |
+| <Field name="message" type="string" /> | Human-readable status string. |
 
 ## Behavior notes
 

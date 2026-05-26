@@ -42,9 +42,9 @@ stats = client.tenants.stats(tenant_id="my_first_tenant")
 
 
 
-| Name | Type | Description |
-|---|---|---|
-| <Field name="tenant_id" required /> | string | Identifier of the tenant to report on. |
+| Name | Description |
+| --- | --- |
+| <Field name="tenant_id" type="string" required /> | Identifier of the tenant to report on. |
 
 ## Response
 
@@ -80,17 +80,17 @@ For a new or empty tenant, both collections are present and report zero rows:
 
 | Field | Description |
 |---|---|
-| <Field name="tenant_id" /> | The tenant being reported on (string). |
-| <Field name="normal_collection" /> | Stats for the Knowledge collection. See [CollectionStats fields](#collectionstats-fields). |
-| <Field name="memory_collection" /> | Stats for the Memories collection. See [CollectionStats fields](#collectionstats-fields). |
-| <Field name="message" /> | Human-readable status (string). |
+| <Field name="tenant_id" type="string" /> | The tenant being reported on (string). |
+| <Field name="normal_collection" type="CollectionStats" /> | Stats for the Knowledge collection. See [CollectionStats fields](#collectionstats-fields). |
+| <Field name="memory_collection" type="CollectionStats" /> | Stats for the Memories collection. See [CollectionStats fields](#collectionstats-fields). |
+| <Field name="message" type="string" /> | Human-readable status (string). |
 
 ### `CollectionStats` fields
 
-| Field | Type | Description |
-|---|---|---|
-| <Field name="row_count" /> | integer | Number of indexed chunks in the collection. **Chunks, not sources**  -  one document typically becomes many chunks. |
-| <Field name="dimensions" /> | integer | Embedding dimensionality of the collection. |
+| Field | Description |
+| --- | --- |
+| <Field name="row_count" type="integer" /> | Number of indexed chunks in the collection. **Chunks, not sources**  -  one document typically becomes many chunks. |
+| <Field name="dimensions" type="integer" /> | Embedding dimensionality of the collection. |
 
 ## Behavior notes
 
