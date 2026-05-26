@@ -331,7 +331,7 @@ Do not ingest content until `scheduler_status`, `graph_status`, and both `vector
 </Warning>
 
 <Info>
-**Tenant creation is asynchronous.** Always poll [`GET /tenants/status?tenant_id=...`](/api-reference/v2/endpoint/tenant-status) before your first ingestion call. A tenant is ready only when the background scheduler, graph layer, Memories vector store, and Knowledge vector store are all healthy.
+**Tenant creation is asynchronous.** Always poll [`GET /tenants/status?tenant_id=...`](/api-reference/v2/endpoint/tenant-status) before your first ingestion call. Both `vectorstore_status.knowledge` and `vectorstore_status.memories`, as well as `graph_status`, must be `true` before the tenant is ready.
 </Info>
 
 <Info>

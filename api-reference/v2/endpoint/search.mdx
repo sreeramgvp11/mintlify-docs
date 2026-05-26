@@ -262,7 +262,7 @@ result = client.search.query(
 | <Field name="max_results" /> | integer \| null | Maximum chunks to return. Default `10`; maximum `50`. Start with `10`, use `5` for tight prompts, and increase only when reranking downstream. |
 | <Field name="alpha" /> | float `0.0`–`1.0` \| `"auto"` | Hybrid weight (`1.0` = pure semantic, `0.0` = pure BM25). Applies to `search_by: "hybrid"` only. (default=`0.8`) |
 | <Field name="recency_bias" /> | float `0.0`–`1.0` | Boost newer content. (default=`0.0`) |
-| <Field name="graph_context" /> | boolean | When `true`, includes the entity/relation graph slice in the response under `graph_context`. (default=`false`) |
+| <Field name="graph_context" /> | boolean | When `true` (default), includes the entity/relation graph slice in the response under `graph_context`. Set to `false` to drop it. (default=`true`) |
 | <Field name="search_forceful_relations" /> | boolean | Pull author-declared related sources into `additional_context`. **Only takes effect when `mode: "thinking"`**  -  silently ignored in `fast` mode. (default=`true`) |
 | <Field name="additional_context" /> | string \| null | Request-time hint to guide retrieval (e.g., "user is on the billing page"). This is different from the response `additional_context` map. (default=`null`) |
 | <Field name="metadata_filters" /> | object \| null | Deterministic narrowing before ranking. See [Filters](#filters). (default=`null`) |
@@ -360,8 +360,8 @@ For `search_by: "hybrid"` and `"vector"`:
 | <Field name="chunks[].relevancy_score" /> | Relevance score (float). Higher is more relevant within the same response; do not treat scores as stable probabilities across unrelated queries. |
 | <Field name="chunks[].extra_context_ids" /> | Array of keys into `additional_context` for forceful-relation-linked content (`thinking` mode only). |
 | <Field name="sources[]" /> | Deduplicated source metadata corresponding to the returned chunks. |
-| <Field name="graph_context" /> | Graph slice object, populated when `graph_context: true`. See [GraphContext fields](#graphcontext-fields). |
-| <Field name="additional_context" /> | Response-time map of related content from forceful relations (`thinking` mode only). Keys match values in `chunks[].extra_context_ids`, not necessarily chunk UUIDs. |
+| <Field name="graph_context" /> | Graph slice object, included by default (`graph_context: true`). Set the request flag to `false` to omit. See [GraphContext fields](#graphcontext-fields). |
+| <Field name="additional_context" /> | Map keyed by chunk UUID containing related content from forceful relations (`thinking` mode only). |
 
 ### `GraphContext` fields
 
@@ -387,11 +387,7 @@ For formatting `RetrievalResult` into an LLM prompt, see [How to Use API Results
 ## Behavior notes
 
 <Info>
-**Prompt-building guidance.** Preserve the order of `chunks[]` when constructing prompts; the server has already ranked them. Cite sources by `source_id` / `source_title`, and dedupe repeated evidence by `chunk_uuid`.
-</Info>
-
-<Info>
-**`graph_context` is off by default.** Set it to `true` to receive graph data in the response.
+**`graph_context` is on by default.** Set it to `false` if you only need ranked chunks and want to drop the graph slice from the response.
 </Info>
 
 <Info>
