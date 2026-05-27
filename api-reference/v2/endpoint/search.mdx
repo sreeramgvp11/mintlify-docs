@@ -449,14 +449,14 @@ For formatting `RetrievalResult` into an LLM prompt, see [How to Use API Results
 - **Common mistakes.** Check [Source Status](/api-reference/v2/endpoint/source-status) for recently ingested documents before searching. If you omit `sub_tenant_id`, HydraDB searches the default sub-tenant; use [List Sub-Tenants](/api-reference/v2/endpoint/list-sub-tenants) to discover available IDs.
 </Warning>
 
-<Info>
+<Tip>
 **Tuning heuristics.**
 <ul>
   <li><strong><code>alpha</code></strong>: start at <code>0.8</code>. Lower toward <code>0.3–0.5</code> when the query contains literal tokens (error codes, SKUs, product names). Raise toward <code>0.9</code> for conceptual questions. Use <code>"auto"</code> when query shape varies.</li>
   <li><strong><code>recency_bias</code></strong>: leave at <code>0</code> for static reference material. Set <code>0.2–0.4</code> for mixed content, <code>0.6–0.8</code> for changelogs, news, or status updates.</li>
   <li><strong><code>max_results</code></strong>: start at <code>10</code>. Drop to <code>5</code> for tight context windows; raise to <code>20</code> if you rerank downstream.</li>
 </ul>
-</Info>
+</Tip>
 
 ## Related endpoints
 
