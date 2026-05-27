@@ -177,25 +177,14 @@ When `kind=memories`, the response shape is `ListUserMemoriesResponse` instead  
 
 ## Behavior notes
 
-<Info>
-**Pagination is mandatory in spirit.** Even without filters, `total` may be large. Always prefer `page` / `page_size` over fetching everything in one call.
-</Info>
-
-<Info>
-**Filters AND.** All filter pairs combine with logical AND. To express OR semantics, run multiple calls and union client-side.
-</Info>
-
-<Info>
-**`source_ids` + filters.** When `source_ids` is non-empty, only those IDs are considered, but `filters` still applies on top  -  useful for "show me items 1, 2, 3 that also belong to department=legal".
-</Info>
-
 <Warning>
-**Undeclared filter keys are silent.** Keys in `filters.tenant_metadata` that aren't declared in `tenant_metadata_schema` are silently ignored. If a filter doesn't narrow results as expected, verify the schema field exists and has `enable_match: true`.
+**Undeclared filter keys are silent.** Keys in `filters.tenant_metadata` that are not declared in `tenant_metadata_schema` are silently ignored. If a filter doesn't narrow results as expected, verify the schema field exists and has `enable_match: true`.
 </Warning>
 
-<Warning>
-**Common mistakes.** `row_count` from [Tenant Stats](/api-reference/v2/endpoint/tenant-stats) counts chunks, not documents. Use this endpoint's `total` when you need distinct source or memory counts.
-</Warning>
+- **Pagination is mandatory in spirit:** Even without filters, `total` may be large. Always prefer using `page` and `page_size` over fetching everything in a single call.
+- **Filters AND:** All filter pairs combine with a logical AND. To express OR semantics, run multiple calls and union them client-side.
+- **`source_ids` + filters:** When `source_ids` is non-empty, only those IDs are considered, but other `filters` still apply on top  -  useful for "show me items 1, 2, 3 that also belong to department=legal".
+- **Common mistakes:** `row_count` from [Tenant Stats](/api-reference/v2/endpoint/tenant-stats) counts individual chunks, not documents. Use this endpoint's `total` when you need distinct source or memory counts.
 
 ## Related endpoints
 

@@ -85,16 +85,11 @@ For a new or empty tenant, both collections are present and report zero rows:
 ## Behavior notes
 
 <Info>
-**`row_count` is chunks, not sources.** One ingested document typically becomes many chunks. A 30-page PDF can produce 100+ rows. To count distinct sources, use [List Documents](/api-reference/v2/endpoint/list-documents) with `page_size=1` and read `total`.
+**`row_count` is chunks, not sources.** One ingested document typically becomes many chunks (e.g., a 30-page PDF can produce 100+ rows). To count distinct sources, use [List Documents](/api-reference/v2/endpoint/list-documents) with `page_size=1` and read `total`.
 </Info>
 
-<Info>
-**Both collections always exist.** Even if you've only ingested knowledge (or only memories), both collections are provisioned. Empty collections report `row_count: 0` with the configured `dimensions`.
-</Info>
-
-<Info>
-**Stats are eventually consistent.** Immediately after ingestion or deletion, counts may lag until background processing completes. Check [Source Status](/api-reference/v2/endpoint/source-status) for recently ingested source IDs before treating counts as final.
-</Info>
+- **Both collections always exist:** Even if you've only ingested knowledge (or only memories), both collections are provisioned. Empty collections report `row_count: 0` with the configured `dimensions`.
+- **Stats are eventually consistent:** Immediately after ingestion or deletion, counts may lag until background processing completes. Check [Source Status](/api-reference/v2/endpoint/source-status) for recently ingested source IDs before treating counts as final.
 
 ## Related endpoints
 

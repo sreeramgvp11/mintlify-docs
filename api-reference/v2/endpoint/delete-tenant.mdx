@@ -65,20 +65,12 @@ After deletion completes, the same `tenant_id` can be used in a new `POST /tenan
 ## Behavior notes
 
 <Warning>
-**Irreversible.** Ingested documents, memories, embeddings, graph nodes, metadata schema, and storage objects are removed. There is no recovery window  -  make sure you have a backup if the content matters.
+**Irreversible action.** Ingested documents, memories, embeddings, graph nodes, metadata schema, and storage objects are permanently removed. There is no recovery window  -  ensure you have a backup if the content matters.
 </Warning>
 
-<Info>
-**Async cleanup.** The endpoint returns immediately after deregistering the tenant. Vector indices, MongoDB documents, the knowledge graph, and S3/MinIO objects are removed by background workers and may take a few minutes to fully disappear from infrastructure.
-</Info>
-
-<Warning>
-**Stop in-flight work first.** Stop ingestion, polling, search, and background jobs that target this tenant before deletion. Calls made after deregistration can fail with `TENANT_NOT_FOUND` even while infrastructure cleanup is still running.
-</Warning>
-
-<Info>
-**Repeat calls.** Deleting an already-deleted tenant returns `404 TENANT_NOT_FOUND`. Deleting a tenant that is still provisioning or already deleting is treated as a request to tear down that tenant; use the deletion-completion checks above before recreating the same ID.
-</Info>
+- **Stop in-flight work first:** Stop all ingestion, polling, search, and background jobs targeting this tenant before deleting. Calls made after deregistration can fail with `TENANT_NOT_FOUND` even while infrastructure cleanup is still running.
+- **Async cleanup:** The endpoint returns immediately after deregistering the tenant. Infrastructure cleanup of vector stores, graphs, and storage objects runs in the background and may take a few minutes to complete.
+- **Repeat calls:** Deleting an already-deleted tenant returns `404 TENANT_NOT_FOUND`. Deleting a tenant that is still provisioning or deleting is treated as a request to tear down that tenant.
 
 ## Related endpoints
 

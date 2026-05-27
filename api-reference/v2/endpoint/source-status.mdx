@@ -211,12 +211,10 @@ Typical processing time:
 ## Behavior notes
 
 <Info>
-**`graph_creation` is searchable.** Items in this state are already retrievable via `POST /search`. Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
+**`graph_creation` is searchable.** Items in this state are already retrievable via `/search`. Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
 </Info>
 
-<Info>
-**Unknown IDs return as `errored`.** If you pass an ID that doesn't exist (e.g., typo), HydraDB returns an entry with `indexing_status: "errored"` rather than silently dropping it.
-</Info>
+- **Unknown IDs return as `errored`:** If you pass an ID that does not exist (e.g., a typo), HydraDB returns an entry with `indexing_status: "errored"` rather than silently dropping it.
 
 ## Related endpoints
 

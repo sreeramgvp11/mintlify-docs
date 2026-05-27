@@ -67,9 +67,7 @@ If provisioning failed for a tenant, `failed_tenant_ids` contains diagnostic ent
 **Includes provisioning tenants.** Tenants returned in `tenant_ids` may still be provisioning. Use [Tenant Status](/api-reference/v2/endpoint/tenant-status) to confirm readiness before ingestion.
 </Info>
 
-<Info>
-**Retry failed tenants.** If a tenant appears in `failed_tenant_ids`, re-create that tenant with `POST /tenants` after addressing the reported issue. Poll status again before ingestion.
-</Info>
+- **Retry failed tenants:** If a tenant appears in `failed_tenant_ids`, re-create that tenant with `POST /tenants` after addressing the reported issue. Poll status again before ingestion.
 
 ## Related endpoints
 

@@ -140,21 +140,10 @@ while True:
 **Cursor opacity.** `next_cursor` is opaque (currently a numeric score). Don't construct it client-side or assume meaning  -  pass back exactly what the server returned.
 </Info>
 
-<Info>
-**Sub-tenant-wide queries.** Omitting `source_id` returns relations across the whole sub-tenant. Useful for full-graph exports; pair with a small `limit` and paginate.
-</Info>
-
-<Info>
-**Knowledge vs memory.** If the `source_id` belongs to a memory, set `is_memory=true`; otherwise the endpoint searches the Knowledge graph. The two graphs are separate.
-</Info>
-
-<Info>
-**Ordering.** Treat `relations[]` as ranked by relevance within the response. Preserve order for display or LLM context, but do not compare scores across unrelated queries as absolute probabilities.
-</Info>
-
-<Info>
-**Graph completeness.** Source relations only fully populate once the source's `indexing_status` reaches `completed`. Items in `graph_creation` are searchable but their relations may still be in flight.
-</Info>
+- **Sub-tenant-wide queries:** Omitting `source_id` returns relations across the entire sub-tenant. This is useful for full-graph exports; pair with a small `limit` and paginate.
+- **Knowledge vs memory:** If the `source_id` belongs to a memory, set `is_memory=true`; otherwise the endpoint searches the Knowledge graph. The two graphs are completely separate.
+- **Ordering:** Treat `relations[]` as ranked by relevance within the response. Preserve order for display or LLM context, but do not compare scores across unrelated queries as absolute probabilities.
+- **Graph completeness:** Source relations only fully populate once the source's `indexing_status` reaches `completed`. Items in `graph_creation` are searchable but their relations may still be in flight.
 
 ## Related endpoints
 
