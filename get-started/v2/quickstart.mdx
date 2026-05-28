@@ -87,6 +87,152 @@ client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
 ---
 
+## Fast path: create, ingest, search
+
+Create a tenant, add one memory to the default sub-tenant, wait for indexing, then search it.
+
+<CodeGroup>
+```python Python SDK
+import json, time
+
+tenant_id = "my_first_tenant"
+
+client.tenants.create(tenant_id=tenant_id)
+
+while True:
+    infra = client.tenants.status(tenant_id=tenant_id).infra
+    if infra.ready_for_ingestion:
+        break
+    time.sleep(5)
+
+ingest = client.source.ingest(
+    type="memory",
+    tenant_id=tenant_id,
+    memories=json.dumps([
+        {"text": "User prefers detailed technical explanations and dark mode"}
+    ]),
+)
+
+source_id = ingest.results[0].source_id
+
+while True:
+    status = client.source.status(
+        tenant_id=tenant_id,
+        file_ids=[source_id],
+    ).statuses[0]
+
+    if status.indexing_status == "completed":
+        break
+    if status.indexing_status == "errored":
+        raise RuntimeError(status.error_message)
+
+    time.sleep(2)
+
+results = client.search.query(
+    tenant_id=tenant_id,
+    source="memories",
+    query="What does the user prefer?",
+)
+
+print(results.chunks)
+```
+```typescript TypeScript SDK
+const tenantId = "my_first_tenant";
+
+await client.tenants.create({ tenant_id: tenantId });
+
+while (true) {
+  const { infra } = await client.tenants.status({ tenant_id: tenantId });
+  if (infra.ready_for_ingestion) break;
+  await new Promise((resolve) => setTimeout(resolve, 5_000));
+}
+
+const ingest = await client.source.ingest({
+  type: "memory",
+  tenant_id: tenantId,
+  memories: JSON.stringify([
+    { text: "User prefers detailed technical explanations and dark mode" },
+  ]),
+});
+
+const sourceId = ingest.results[0].source_id;
+
+while (true) {
+  const status = (await client.source.status({
+    tenant_id: tenantId,
+    file_ids: [sourceId],
+  })).statuses[0];
+
+  if (status.indexing_status === "completed") break;
+  if (status.indexing_status === "errored") {
+    throw new Error(status.error_message);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2_000));
+}
+
+const results = await client.search.query({
+  tenant_id: tenantId,
+  source: "memories",
+  query: "What does the user prefer?",
+});
+
+console.log(results.chunks);
+```
+```bash cURL
+export HYDRA_DB_API_KEY="your_api_key"
+TENANT_ID="my_first_tenant"
+
+curl -s -X POST 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d "{\"tenant_id\":\"${TENANT_ID}\"}"
+
+until curl -s "https://api.hydradb.com/tenants/status?tenant_id=${TENANT_ID}" \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  | jq -e '.data.infra.ready_for_ingestion' > /dev/null; do
+  sleep 5
+done
+
+SOURCE_ID=$(curl -s -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=${TENANT_ID}" \
+  -F 'memories=[{"text":"User prefers detailed technical explanations and dark mode"}]' \
+  | jq -r '.data.results[0].source_id')
+
+while true; do
+  STATUS=$(curl -s -G 'https://api.hydradb.com/source/status' \
+    -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+    -H "API-Version: 2" \
+    --data-urlencode "tenant_id=${TENANT_ID}" \
+    --data-urlencode "file_ids=${SOURCE_ID}")
+
+  INDEXING_STATUS=$(echo "$STATUS" | jq -r '.data.statuses[0].indexing_status')
+
+  if [ "$INDEXING_STATUS" = "completed" ]; then break; fi
+  if [ "$INDEXING_STATUS" = "errored" ]; then
+    echo "$STATUS" | jq -r '.data.statuses[0].error_message'
+    exit 1
+  fi
+
+  sleep 2
+done
+
+curl -s -X POST 'https://api.hydradb.com/search' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d "{\"tenant_id\":\"${TENANT_ID}\",\"source\":\"memories\",\"query\":\"What does the user prefer?\"}" \
+  | jq '.data.chunks'
+```
+</CodeGroup>
+
+---
+
 <Steps>
 
 <Step title="Step 1a — Create a tenant">
