@@ -3,17 +3,13 @@ title: "How to Use API Results"
 description: "Turn a search response into an LLM prompt."
 ---
 
-A search response is structured JSON. This page shows how to turn a `RetrievalResult` into a plain string you can pass to an LLM.
+`POST /search` returns structured JSON. Before you can pass it to an LLM, you need to convert it into a plain string. This page shows how.
 
-The same pattern works for every call to [`POST /search`](/api-reference/v2/endpoint/search), whether you set `source: "knowledge"`, `source: "memories"`, or `source: "all"` - the response shape is identical.
-
-<Tip>
-**Using the Python or TypeScript SDK?** `build_string` / `buildString` formats any search result automatically - no custom helper needed. Jump to [Section 2b](#2b-sdk-path-build_string--buildstring) or see [buildString / build_string](/api-reference/endpoint/build-string).
-</Tip>
+The same pattern works regardless of whether you set `source: "knowledge"`, `source: "memories"`, or `source: "all"` - the response shape is identical.
 
 ---
 
-## 1. What you get back
+## 1. What the response looks like
 
 `POST /search` returns the same core response shape regardless of `source` or `search_by`:
 
@@ -71,259 +67,13 @@ Four things matter for prompt construction:
 - **`graph_context.chunk_relations`** + **`chunk_id_to_group_ids`** - per-chunk graph relations grouped by `group_id`, so you can attach the right triplets to each chunk.
 - **`additional_context`** - a map keyed by `chunk_uuid`. When a chunk includes `extra_context_ids`, use those IDs to look up related chunks here.
 
-Don't pass the raw object to the LLM. Convert it into a structured context string first.
+The raw object has too much noise for an LLM — IDs, timestamps, metadata. Section 2 shows how to convert it into a clean string.
 
 ---
 
 ## 2. Transforming the response into LLM context
 
-### 2a. Raw API path - custom helper
-
-If you are calling the API directly (cURL, `httpx`, raw `fetch`), use the helper below to transform the response into a context string.
-
-First, call `POST /search`:
-
-<CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/search' \
-  -H "Authorization: Bearer YOUR_HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "your-tenant",
-    "sub_tenant_id": "your-sub-tenant",
-    "query": "How does authentication work?",
-    "source": "knowledge",
-    "search_by": "hybrid",
-    "max_results": 5,
-    "mode": "fast",
-    "alpha": 0.8,
-    "recency_bias": 0,
-    "graph_context": true,
-    "search_forceful_relations": true,
-    "metadata_filters": { "category": "engineering" }
-  }'
-```
-```python Python (httpx)
-import httpx
-
-response = httpx.post(
-    "https://api.hydradb.com/search",
-    headers={
-        "Authorization": "Bearer YOUR_HYDRA_DB_API_KEY",
-        "API-Version": "2",
-    },
-    json={
-        "tenant_id": "your-tenant",
-        "sub_tenant_id": "your-sub-tenant",
-        "query": "How does authentication work?",
-        "source": "knowledge",
-        "search_by": "hybrid",
-        "max_results": 5,
-        "mode": "fast",
-        "alpha": 0.8,
-        "recency_bias": 0,
-        "graph_context": True,
-        "search_forceful_relations": True,
-        "metadata_filters": {"category": "engineering"},
-    },
-)
-
-result = response.json()
-```
-```typescript TypeScript (fetch)
-const res = await fetch("https://api.hydradb.com/search", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: "Bearer YOUR_HYDRA_DB_API_KEY",
-    "API-Version": "2",
-  },
-  body: JSON.stringify({
-    tenant_id: "your-tenant",
-    sub_tenant_id: "your-sub-tenant",
-    query: "How does authentication work?",
-    source: "knowledge",
-    search_by: "hybrid",
-    max_results: 5,
-    mode: "fast",
-    alpha: 0.8,
-    recency_bias: 0,
-    graph_context: true,
-    search_forceful_relations: true,
-    metadata_filters: { category: "engineering" },
-  }),
-});
-
-const result = await res.json();
-```
-</CodeGroup>
-
-Then pass the response into the helper below. Note that raw API responses are plain dicts/objects - access fields with `result["chunks"]` (Python) or `result.chunks` (TypeScript), not SDK dot notation:
-
-<CodeGroup>
-```python Python (httpx)
-from __future__ import annotations
-from typing import Any
-
-
-def _format_path_chain(path: Any) -> str:
-    triplets = path.get("triplets") or []
-    parts = []
-    for t in triplets:
-        src  = t.get("source", {}).get("name", "")
-        tgt  = t.get("target", {}).get("name", "")
-        rel  = t.get("relation", {})
-        pred = rel.get("canonical_predicate", "")
-        line = f"[{src}] -> {pred} -> [{tgt}]"
-        ctx  = rel.get("context")
-        if ctx:
-            line += f": {ctx}"
-        temporal = rel.get("temporal_details")
-        if temporal:
-            line += f" [Time: {temporal}]"
-        parts.append(line)
-    return "\n  ↳ ".join(parts)
-
-
-def build_context_string(result: dict) -> str:
-    """
-    Build a formatted context string from a raw HydraDB POST /search response dict.
-    For SDK usage, use build_string() from hydra_db instead.
-    """
-    lines: list[str] = []
-    gc = result.get("graph_context") or {}
-
-    query_paths = gc.get("query_paths") or []
-    if query_paths:
-        lines.append("=== ENTITY PATHS ===")
-        for path in query_paths:
-            lines.append(_format_path_chain(path))
-        lines.append("")
-
-    chunks = result.get("chunks") or []
-    additional_context = result.get("additional_context") or {}
-    chunk_id_to_group_ids = gc.get("chunk_id_to_group_ids") or {}
-    chunk_relations = gc.get("chunk_relations") or []
-
-    if chunks:
-        lines.append("=== CONTEXT ===")
-        for i, chunk in enumerate(chunks):
-            lines.append(f"Chunk {i + 1}")
-            source = chunk.get("source_title", "")
-            if source:
-                lines.append(f"Source: {source}")
-            lines.append(chunk.get("chunk_content", ""))
-
-            chunk_uuid = chunk.get("chunk_uuid", "")
-            if chunk_uuid and chunk_id_to_group_ids and chunk_relations:
-                group_ids = chunk_id_to_group_ids.get(chunk_uuid, [])
-                relevant = [r for r in chunk_relations if r.get("group_id") in group_ids]
-                if relevant:
-                    lines.append("Graph Relations:")
-                    for rel in relevant:
-                        for triplet in rel.get("triplets") or []:
-                            src  = triplet.get("source", {}).get("name", "")
-                            tgt  = triplet.get("target", {}).get("name", "")
-                            pred = triplet.get("relation", {}).get("canonical_predicate", "")
-                            ctx  = triplet.get("relation", {}).get("context", "")
-                            line = f"  [{src}] -> {pred} -> [{tgt}]: {ctx}"
-                            temporal = triplet.get("relation", {}).get("temporal_details")
-                            if temporal:
-                                line += f" [Time: {temporal}]"
-                            lines.append(line)
-
-            extra_ids = chunk.get("extra_context_ids") or []
-            if extra_ids and additional_context:
-                extras = [additional_context[eid] for eid in extra_ids if eid in additional_context]
-                if extras:
-                    lines.append("Extra Context:")
-                    for extra in extras:
-                        lines.append(f"  Related Context ({extra.get('source_title', '')}): {extra.get('chunk_content', '')}")
-
-            lines.append("---")
-            lines.append("")
-
-    return "\n".join(lines)
-```
-```typescript TypeScript (fetch)
-function formatPathChain(path: any): string {
-  return (path.triplets || [])
-    .map((t: any) => {
-      let str = `[${t.source?.name}] -> ${t.relation?.canonical_predicate} -> [${t.target?.name}]`;
-      if (t.relation?.context) str += `: ${t.relation.context}`;
-      if (t.relation?.temporal_details) str += ` [Time: ${t.relation.temporal_details}]`;
-      return str;
-    })
-    .join("\n  ↳ ");
-}
-
-// Build a context string from a raw HydraDB POST /search response object.
-// For SDK usage, use buildString() from @hydradb/sdk instead.
-function buildContextString(result: any): string {
-  const lines: string[] = [];
-  const gc = result.graph_context;
-
-  if (gc?.query_paths?.length) {
-    lines.push("=== ENTITY PATHS ===");
-    for (const path of gc.query_paths) {
-      lines.push(formatPathChain(path));
-    }
-    lines.push("");
-  }
-
-  if (result.chunks?.length) {
-    lines.push("=== CONTEXT ===");
-    for (let i = 0; i < result.chunks.length; i++) {
-      const chunk = result.chunks[i];
-      lines.push(`Chunk ${i + 1}`);
-      lines.push(`Source: ${chunk.source_title}`);
-      lines.push(chunk.chunk_content);
-
-      if (gc?.chunk_id_to_group_ids && gc.chunk_relations) {
-        const groupIds = gc.chunk_id_to_group_ids[chunk.chunk_uuid] || [];
-        const relations = gc.chunk_relations.filter(
-          (r: any) => r.group_id && groupIds.includes(r.group_id)
-        );
-        if (relations.length) {
-          lines.push("Graph Relations:");
-          for (const rel of relations) {
-            for (const t of rel.triplets) {
-              let line = `  [${t.source.name}] -> ${t.relation.canonical_predicate} -> [${t.target.name}]: ${t.relation.context}`;
-              if (t.relation.temporal_details) line += ` [Time: ${t.relation.temporal_details}]`;
-              lines.push(line);
-            }
-          }
-        }
-      }
-
-      if (chunk.extra_context_ids?.length && result.additional_context) {
-        const extras = chunk.extra_context_ids
-          .map((id: string) => result.additional_context[id])
-          .filter(Boolean);
-        if (extras.length) {
-          lines.push("Extra Context:");
-          for (const extra of extras) {
-            lines.push(`  Related Context (${extra.source_title}): ${extra.chunk_content}`);
-          }
-        }
-      }
-
-      lines.push("---");
-      lines.push("");
-    }
-  }
-
-  return lines.join("\n");
-}
-```
-</CodeGroup>
-
----
-
-### 2b. SDK path - `build_string` / `buildString`
-
-If you are using the Python or TypeScript SDK, `build_string` / `buildString` does all of this automatically. No custom helper needed.
+Use `build_string` / `buildString` from the SDK. It takes any `POST /search` result and returns a formatted plain string.
 
 <CodeGroup>
 ```python Python SDK
@@ -382,35 +132,11 @@ context = build_string(result)
 ```
 </CodeGroup>
 
-See [buildString / build_string](/api-reference/v2/endpoint/build-string) for the full reference.
-
 ---
 
 ## 3. Feeding the context into your LLM
 
-Once you have a context string, call your LLM with a system prompt:
-
 <CodeGroup>
-```bash cURL
-# HydraDB does not wrap LLM calls. Pass your context string to any LLM provider.
-# Example using OpenAI's chat completions endpoint directly:
-curl -X POST 'https://api.openai.com/v1/chat/completions' \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-4o",
-    "messages": [
-      {
-        "role": "system",
-        "content": "Answer the user'\''s question using only the context below. If the answer is not in the context, say you don'\''t know."
-      },
-      {
-        "role": "user",
-        "content": "Context:\n<your_context_string>\n\nQuestion: <your_question>"
-      }
-    ]
-  }'
-```
 ```python Python SDK
 from hydra_db import HydraDB, build_string
 from openai import OpenAI
@@ -472,8 +198,7 @@ const completion = await openai.chat.completions.create({
   messages: [
     {
       role: "system",
-      content:
-        "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
+      content: "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
     },
     {
       role: "user",
@@ -526,9 +251,7 @@ print(completion.choices[0].message.content)
 
 ## 4. Combining Knowledge and Memories
 
-In v2, the simplest path is one `POST /search` with `source: "all"` - HydraDB searches both stores in parallel and returns one merged, ranked result set.
-
-### SDK path
+The simplest path is one `POST /search` with `source: "all"` - HydraDB searches both stores in parallel and returns one merged, ranked result set.
 
 <CodeGroup>
 ```python Python SDK
@@ -623,36 +346,7 @@ print(completion.choices[0].message.content)
 ```
 </CodeGroup>
 
-### Raw API path
-
-<CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/search' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "acme_corp",
-    "sub_tenant_id": "user_123",
-    "query": "refund policy",
-    "source": "all",
-    "search_by": "hybrid",
-    "mode": "thinking"
-  }'
-```
-```python Python (httpx)
-result = response.json()
-context = build_context_string(result)
-prompt = f"Context:\n{context}\n\nQuestion: {question}"
-```
-```typescript TypeScript (fetch)
-const result = await res.json();
-const context = buildContextString(result);
-const prompt = `Context:\n${context}\n\nQuestion: ${question}`;
-```
-</CodeGroup>
-
-If you need to format knowledge and memories differently (e.g., label "User preferences:" vs "Relevant docs:" sections), call `POST /search` twice with `source: "knowledge"` and `source: "memories"`, format each, and combine:
+If you need to format knowledge and memories in separate labeled sections, call `POST /search` twice in parallel:
 
 <CodeGroup>
 ```python Python SDK
@@ -713,7 +407,7 @@ const prompt =
 ```
 </CodeGroup>
 
-If memory search fails or times out, fall back to the knowledge-only prompt - personalisation is an enhancement, not a hard dependency.
+If memory search fails or times out, fall back to the knowledge-only prompt.
 
 ---
 
@@ -722,9 +416,9 @@ If memory search fails or times out, fall back to the knowledge-only prompt - pe
 - **Preserve server order.** Don't re-sort chunks client-side.
 - **Start small on chunks.** `max_results: 10` is a reasonable default. Drop to 5 if you hit token limits, raise to 20 if you rerank downstream.
 - **Use graph context selectively.** It improves relational queries and bloats simple lookups. See [Context Graphs](/essentials/v2/context-graphs).
-- **Always ground the model.** A system prompt like "answer only from the provided context" prevents the model from inventing answers when retrieval is thin.
+- **Always give the model a grounding instruction.** A system prompt like "answer only from the provided context" prevents the model from inventing answers when retrieval is thin.
 - **Format consistently.** Whatever section delimiters you choose (`=== CONTEXT ===`, `Chunk N`, `Source:`), keep them stable across calls so the model learns the structure.
-- **`source: "all"` is the simplest personalisation path.** One call, one result set, one `build_string` call.
+- **`source: "all"` is the simplest path when you need both knowledge and memories.** One call, one result set, one `build_string` call.
 
 ---
 
@@ -732,11 +426,11 @@ If memory search fails or times out, fall back to the knowledge-only prompt - pe
 
 | Mistake | What goes wrong | Fix |
 |---|---|---|
-| Passing the raw result object to the LLM | Wastes tokens on IDs and metadata; the model struggles to read the content | Use `build_string` / `buildString` (SDK) or the custom helper (raw API). |
+| Passing the raw result object to the LLM | Wastes tokens on IDs and metadata | Use `build_string` / `buildString`. |
 | Not including `sub_tenant_id` when searching memories | Searches the default sub-tenant instead of the user's | Always pass the same `sub_tenant_id` used at ingestion. |
 | Including too many chunks | Token overflow or answer quality drops | Start at `max_results: 10`; reduce if needed. |
 | Re-sorting chunks client-side | Overrides HydraDB's ranking | Preserve the server-returned order. |
-| Missing a grounding instruction | The model invents answers when context is thin | System prompt: answer only from the provided context. |
+| Missing a grounding instruction | The model invents answers when retrieval is thin | System prompt: answer only from the provided context. |
 | Setting `graph_context: false` and expecting graph fields | Graph context will be omitted | `graph_context` is on by default; only set it to `false` when you explicitly don't want graph data. |
 | Using `search_forceful_relations` with `mode: "fast"` | Flag is silently ignored | `search_forceful_relations` only takes effect when `mode: "thinking"`. |
 | Looking up `chunk_relations` without `chunk_id_to_group_ids` | The right relations don't attach to the right chunk | Use `chunk_id_to_group_ids[chunk_uuid]` to find the `group_id`s, then filter `chunk_relations` by them. |
@@ -749,3 +443,210 @@ If memory search fails or times out, fall back to the knowledge-only prompt - pe
 - [Memories](/essentials/v2/memories) - what `POST /search` with `source: "memories"` searches
 - [Knowledge](/essentials/v2/knowledge) - what `POST /search` with `source: "knowledge"` searches
 - [Context Graphs](/essentials/v2/context-graphs) - what `graph_context` fields contain
+
+---
+
+<Accordion title="Full flow without SDK">
+
+If you are not using the SDK, use the helper below to call `POST /search`, format the response, and pass the result to your LLM.
+
+<CodeGroup>
+```python Python
+from __future__ import annotations
+from typing import Any
+
+import httpx
+
+
+def _format_path_chain(path: Any) -> str:
+    triplets = path.get("triplets") or []
+    parts = []
+    for t in triplets:
+        src  = t.get("source", {}).get("name", "")
+        tgt  = t.get("target", {}).get("name", "")
+        rel  = t.get("relation", {})
+        pred = rel.get("canonical_predicate", "")
+        line = f"[{src}] -> {pred} -> [{tgt}]"
+        ctx  = rel.get("context")
+        if ctx:
+            line += f": {ctx}"
+        temporal = rel.get("temporal_details")
+        if temporal:
+            line += f" [Time: {temporal}]"
+        parts.append(line)
+    return "\n  ↳ ".join(parts)
+
+
+def build_context_string(result: dict) -> str:
+    lines: list[str] = []
+    gc = result.get("graph_context") or {}
+
+    query_paths = gc.get("query_paths") or []
+    if query_paths:
+        lines.append("=== ENTITY PATHS ===")
+        for path in query_paths:
+            lines.append(_format_path_chain(path))
+        lines.append("")
+
+    chunks = result.get("chunks") or []
+    additional_context = result.get("additional_context") or {}
+    chunk_id_to_group_ids = gc.get("chunk_id_to_group_ids") or {}
+    chunk_relations = gc.get("chunk_relations") or []
+
+    if chunks:
+        lines.append("=== CONTEXT ===")
+        for i, chunk in enumerate(chunks):
+            lines.append(f"Chunk {i + 1}")
+            source = chunk.get("source_title", "")
+            if source:
+                lines.append(f"Source: {source}")
+            lines.append(chunk.get("chunk_content", ""))
+
+            chunk_uuid = chunk.get("chunk_uuid", "")
+            if chunk_uuid and chunk_id_to_group_ids and chunk_relations:
+                group_ids = chunk_id_to_group_ids.get(chunk_uuid, [])
+                relevant = [r for r in chunk_relations if r.get("group_id") in group_ids]
+                if relevant:
+                    lines.append("Graph Relations:")
+                    for rel in relevant:
+                        for triplet in rel.get("triplets") or []:
+                            src  = triplet.get("source", {}).get("name", "")
+                            tgt  = triplet.get("target", {}).get("name", "")
+                            pred = triplet.get("relation", {}).get("canonical_predicate", "")
+                            ctx  = triplet.get("relation", {}).get("context", "")
+                            line = f"  [{src}] -> {pred} -> [{tgt}]: {ctx}"
+                            temporal = triplet.get("relation", {}).get("temporal_details")
+                            if temporal:
+                                line += f" [Time: {temporal}]"
+                            lines.append(line)
+
+            extra_ids = chunk.get("extra_context_ids") or []
+            if extra_ids and additional_context:
+                extras = [additional_context[eid] for eid in extra_ids if eid in additional_context]
+                if extras:
+                    lines.append("Extra Context:")
+                    for extra in extras:
+                        lines.append(f"  Related Context ({extra.get('source_title', '')}): {extra.get('chunk_content', '')}")
+
+            lines.append("---")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+# Call the API and format the result
+response = httpx.post(
+    "https://api.hydradb.com/search",
+    headers={
+        "Authorization": "Bearer YOUR_HYDRA_DB_API_KEY",
+        "API-Version": "2",
+    },
+    json={
+        "tenant_id": "your-tenant",
+        "query": "How does authentication work?",
+        "source": "knowledge",
+        "search_by": "hybrid",
+        "mode": "fast",
+        "graph_context": True,
+    },
+)
+
+result = response.json()
+context = build_context_string(result)
+
+# Pass context to your LLM
+print(context)
+```
+```typescript TypeScript
+function formatPathChain(path: any): string {
+  return (path.triplets || [])
+    .map((t: any) => {
+      let str = `[${t.source?.name}] -> ${t.relation?.canonical_predicate} -> [${t.target?.name}]`;
+      if (t.relation?.context) str += `: ${t.relation.context}`;
+      if (t.relation?.temporal_details) str += ` [Time: ${t.relation.temporal_details}]`;
+      return str;
+    })
+    .join("\n  ↳ ");
+}
+
+function buildContextString(result: any): string {
+  const lines: string[] = [];
+  const gc = result.graph_context;
+
+  if (gc?.query_paths?.length) {
+    lines.push("=== ENTITY PATHS ===");
+    for (const path of gc.query_paths) lines.push(formatPathChain(path));
+    lines.push("");
+  }
+
+  if (result.chunks?.length) {
+    lines.push("=== CONTEXT ===");
+    for (let i = 0; i < result.chunks.length; i++) {
+      const chunk = result.chunks[i];
+      lines.push(`Chunk ${i + 1}`);
+      lines.push(`Source: ${chunk.source_title}`);
+      lines.push(chunk.chunk_content);
+
+      if (gc?.chunk_id_to_group_ids && gc.chunk_relations) {
+        const groupIds = gc.chunk_id_to_group_ids[chunk.chunk_uuid] || [];
+        const relations = gc.chunk_relations.filter(
+          (r: any) => r.group_id && groupIds.includes(r.group_id)
+        );
+        if (relations.length) {
+          lines.push("Graph Relations:");
+          for (const rel of relations) {
+            for (const t of rel.triplets) {
+              let line = `  [${t.source.name}] -> ${t.relation.canonical_predicate} -> [${t.target.name}]: ${t.relation.context}`;
+              if (t.relation.temporal_details) line += ` [Time: ${t.relation.temporal_details}]`;
+              lines.push(line);
+            }
+          }
+        }
+      }
+
+      if (chunk.extra_context_ids?.length && result.additional_context) {
+        const extras = chunk.extra_context_ids
+          .map((id: string) => result.additional_context[id])
+          .filter(Boolean);
+        if (extras.length) {
+          lines.push("Extra Context:");
+          for (const extra of extras) {
+            lines.push(`  Related Context (${extra.source_title}): ${extra.chunk_content}`);
+          }
+        }
+      }
+
+      lines.push("---");
+      lines.push("");
+    }
+  }
+  return lines.join("\n");
+}
+
+// Call the API and format the result
+const res = await fetch("https://api.hydradb.com/search", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_HYDRA_DB_API_KEY",
+    "API-Version": "2",
+  },
+  body: JSON.stringify({
+    tenant_id: "your-tenant",
+    query: "How does authentication work?",
+    source: "knowledge",
+    search_by: "hybrid",
+    mode: "fast",
+    graph_context: true,
+  }),
+});
+
+const result = await res.json();
+const context = buildContextString(result);
+
+// Pass context to your LLM
+console.log(context);
+```
+</CodeGroup>
+
+</Accordion>
