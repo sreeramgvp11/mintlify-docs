@@ -355,6 +355,8 @@ from hydra_db import AsyncHydraDB, build_string
 
 hydra = AsyncHydraDB(token="YOUR_HYDRA_DB_API_KEY")
 
+question = "refund policy"
+
 knowledge_result, memory_result = await asyncio.gather(
     hydra.search.query(
         tenant_id="acme_corp",
