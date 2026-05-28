@@ -10,7 +10,7 @@ The single retrieval endpoint for everything. Use it any time you need to feed a
 
 Two independent dimensions control behavior:
 
-- **`type`** picks **what** to search: `"knowledge"`, `"memory"`, or `"all"` (both, merged and re-ranked together).
+- **`source`** picks **what** to search: `"knowledge"`, `"memory"`, or `"all"` (both, merged and re-ranked together).
 - **`search_by`** picks **how** to match: `"hybrid"` (semantic + BM25, the default), `"text"` (BM25 only  -  pair with `operator`), or `"vector"` (pure dense vectors).
 - **`mode`** picks **how** to rank results: `"fast"` (single-pass, low-latency), or `"thinking"` (expands query, reranks, and can include forceful-relation context).
 
@@ -25,7 +25,7 @@ result = client.search.query(
     query="What is our refund policy, and how should I explain it to this user?",
 
     # What to search: "knowledge", "memory", or "all".
-    type="all",
+    source="all",
 
     # How to match: "hybrid" (default), "text" (BM25), or "vector".
     search_by="hybrid",
@@ -63,7 +63,7 @@ const result = await client.search.query({
   query: "What is our refund policy, and how should I explain it to this user?",
 
   // What to search: "knowledge", "memory", or "all".
-  type: "all",
+  source: "all",
 
   // How to match: "hybrid" (default), "text" (BM25), or "vector".
   search_by: "hybrid",
@@ -103,7 +103,7 @@ curl -X POST 'https://api.hydradb.com/search' \
     "tenant_id": "acme_corp",
     "sub_tenant_id": "user_alex",
     "query": "What is our refund policy, and how should I explain it to this user?",
-    "type": "all",
+    "source": "all",
     "search_by": "hybrid", // or "text" or "vector"
     "mode": "thinking",
     "max_results": 10,
@@ -137,7 +137,7 @@ curl -X POST 'https://api.hydradb.com/search' \
   -d '{
     "tenant_id": "acme_corp",
     "query": "What is our refund policy?",
-    "type": "knowledge",
+    "source": "knowledge",
     "search_by": "hybrid",
     "mode": "thinking",
     "max_results": 10,
@@ -149,7 +149,7 @@ curl -X POST 'https://api.hydradb.com/search' \
 const result = await client.search.query({
   tenant_id: "acme_corp",
   query: "What is our refund policy?",
-  type: "knowledge",
+  source: "knowledge",
   search_by: "hybrid",
   mode: "thinking",
   max_results: 10,
@@ -161,7 +161,7 @@ const result = await client.search.query({
 result = client.search.query(
     tenant_id="acme_corp",
     query="What is our refund policy?",
-    type="knowledge",
+    source="knowledge",
     search_by="hybrid",
     mode="thinking",
     max_results=10,
@@ -184,7 +184,7 @@ curl -X POST 'https://api.hydradb.com/search' \
     "tenant_id": "acme_corp",
     "sub_tenant_id": "user_alex",
     "query": "What is our refund policy, and how should I explain it to this user?",
-    "type": "all",
+    "source": "all",
     "search_by": "hybrid",
     "mode": "thinking"
   }'
@@ -195,7 +195,7 @@ const result = await client.search.query({
   tenant_id: "acme_corp",
   sub_tenant_id: "user_alex",
   query: "What is our refund policy, and how should I explain it to this user?",
-  type: "all",
+  source: "all",
   search_by: "hybrid",
   mode: "thinking",
 });
@@ -206,7 +206,7 @@ result = client.search.query(
     tenant_id="acme_corp",
     sub_tenant_id="user_alex",
     query="What is our refund policy, and how should I explain it to this user?",
-    type="all",
+    source="all",
     search_by="hybrid",
     mode="thinking",
 )
@@ -227,7 +227,7 @@ curl -X POST 'https://api.hydradb.com/search' \
     "tenant_id": "acme_corp",
     "sub_tenant_id": "user_alex",
     "query": "Does the user have any specific preferences for tone or response length?",
-    "type": "memory",
+    "source": "memory",
     "search_by": "hybrid",
     "search_apps": true
   }'
@@ -238,7 +238,7 @@ const result = await client.search.query({
   tenant_id: "acme_corp",
   sub_tenant_id: "user_alex",
   query: "Does the user have any specific preferences for tone or response length?",
-  type: "memory",
+  source: "memory",
   search_by: "hybrid",
   search_apps: true,
 });
@@ -249,7 +249,7 @@ result = client.search.query(
     tenant_id="acme_corp",
     sub_tenant_id="user_alex",
     query="Does the user have any specific preferences for tone or response length?",
-    type="memory",
+    source="memory",
     search_by="hybrid",
     search_apps=True,
 )
@@ -269,7 +269,7 @@ curl -X POST 'https://api.hydradb.com/search' \
   -d '{
     "tenant_id": "acme_corp",
     "query": "GDPR Article 17",
-    "type": "knowledge",
+    "source": "knowledge",
     "search_by": "text",
     "operator": "phrase"
   }'
@@ -279,7 +279,7 @@ curl -X POST 'https://api.hydradb.com/search' \
 const result = await client.search.query({
   tenant_id: "acme_corp",
   query: "GDPR Article 17",
-  type: "knowledge",
+  source: "knowledge",
   search_by: "text",
   operator: "phrase",
 });
@@ -289,7 +289,7 @@ const result = await client.search.query({
 result = client.search.query(
     tenant_id="acme_corp",
     query="GDPR Article 17",
-    type="knowledge",
+    source="knowledge",
     search_by="text",
     operator="phrase",
 )
@@ -308,8 +308,8 @@ result = client.search.query(
 | <Field name="tenant_id" type="string" required /> | Owning tenant. |
 | <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. Required for per-user memory searches. (default=default sub-tenant) |
 | <Field name="query" type="string" required /> | Search terms or natural-language question. Cannot be empty. |
-| <Field name="type" type='"knowledge" or "memory" or "all"' /> | What collection to search. `"all"` runs knowledge and memory in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
-| <Field name="search_by" type='"hybrid" or "text" or "vector"' /> | Retrieval method. See [Search methods](#search-methods). (default=`"hybrid"`) |
+| <Field name="source" type='"knowledge" or "memory" or "all"' /> | What collection to search. `"all"` runs knowledge and memory in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
+| <Field name="search_by" type='"hybrid" or "text" or "vector"' /> | Retrieval method. See [Search methods](#decision-matrix). (default=`"hybrid"`) |
 | <Field name="search_apps" type="boolean" /> | Specialized search over app sources along with knowledge documents. (default=`false`) |
 | <Field name="operator" type='"or" or "and" or "phrase"' /> | BM25 operator for `search_by: "text"`. Ignored for `hybrid` and `vector`. (default=`"or"`) |
 | <Field name="mode" type='"fast" or "thinking"' /> | Retrieval pipeline. Applies to `hybrid` and `vector` only; ignored for `text`. (default=`"fast"`) |
@@ -319,7 +319,7 @@ result = client.search.query(
 | <Field name="graph_context" type="boolean" /> | When `true`, includes the entity/relation graph slice in the response under `graph_context`. Set to `false` when you only need ranked chunks. (default=`true`) |
 | <Field name="search_forceful_relations" type="boolean" /> | Pull author-declared related sources into `additional_context`. **Only takes effect when `mode: "thinking"`**  -  silently ignored in `fast` mode. (default=`true`) |
 | <Field name="additional_context" type="string or null" /> | Request-time hint to guide retrieval (e.g., "user is on the billing page"). This is different from the response `additional_context` map. (default=`null`) |
-| <Field name="metadata_filters" type="object or null" /> | Deterministic narrowing before ranking. See [Filters](#filters). (default=`null`) |
+| <Field name="metadata_filters" type="object or null" /> | Deterministic narrowing before ranking. See [Filters](#decision-matrix). (default=`null`) |
 
 <Tip>
 **Tuning heuristics.**
