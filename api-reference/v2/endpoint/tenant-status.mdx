@@ -6,7 +6,7 @@ openapi: "GET /tenants/status"
 
 import { Field } from "/snippets/field.jsx";
 
-Check the provisioning readiness of a tenant's infrastructure. Since tenant creation is asynchronous, poll this endpoint after calling `POST /tenants` and before executing ingestion or search requests.
+Since tenant creation is asynchronous, poll this endpoint after calling `POST /tenants` and before executing ingestion or search requests.
 
 The tenant is fully ready when:
 - Both `infra.vectorstore_status.knowledge` and `infra.vectorstore_status.memory` are `true`

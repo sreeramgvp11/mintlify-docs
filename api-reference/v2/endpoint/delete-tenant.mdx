@@ -6,7 +6,7 @@ openapi: "DELETE /tenants"
 
 import { Field } from "/snippets/field.jsx";
 
-Permanently delete a tenant and all of its associated data, including ingested content, memories, metadata schema, vector indices, and graphs. This action is irreversible. There is no soft-delete and no recovery window.
+This action is irreversible. Deleting a tenant removes all of its associated data, including ingested content, memories, metadata schema, vector indices, and graphs. There is no soft-delete and no recovery window.
 
 <RequestExample>
 ```bash cURL

@@ -6,7 +6,7 @@ openapi: "GET /tenants/stats"
 
 import { Field } from "/snippets/field.jsx";
 
-Retrieve usage statistics for a tenant, including storage growth, object counts, and vector dimensions.
+Get detailed metrics including storage growth, object counts, and vector dimensions.
 
 The response splits stats into two tenant-wide collections: `normal_collection` (Knowledge) and `memory_collection` (Memories), each with its own row count and embedding dimensionality. Counts aggregate across all sub-tenants in the tenant.
 
