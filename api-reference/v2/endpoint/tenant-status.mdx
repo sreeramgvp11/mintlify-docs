@@ -85,16 +85,6 @@ A tenant is ready when:
 - `infra.vectorstore_status.memory === true`
 
 <CodeGroup>
-```typescript TypeScript
-while (true) {
-  const status = await client.tenants.status({ tenant_id: "acme" });
-  const { graph_status, vectorstore_status, scheduler_status } = status.infra;
-  if (graph_status && scheduler_status && vectorstore_status.knowledge && vectorstore_status.memory) {
-    break;
-  }
-  await new Promise((r) => setTimeout(r, 15000));
-}
-```
 ```python Python
 import time
 
@@ -109,6 +99,16 @@ while True:
     ):
         break
     time.sleep(15)
+```
+```typescript TypeScript
+while (true) {
+  const status = await client.tenants.status({ tenant_id: "acme" });
+  const { graph_status, vectorstore_status, scheduler_status } = status.infra;
+  if (graph_status && scheduler_status && vectorstore_status.knowledge && vectorstore_status.memory) {
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 15000));
+}
 ```
 ```bash cURL polling loop
 TENANT="acme"

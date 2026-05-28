@@ -250,6 +250,45 @@ Your endpoint should return a `2xx` response quickly. Do any slow work after you
 
 <CodeGroup>
 
+```python Python
+import hashlib
+import hmac
+import json
+import os
+
+from fastapi import FastAPI, Header, Request, Response
+
+app = FastAPI()
+SIGNING_SECRET = os.getenv("HYDRADB_WEBHOOK_SECRET")
+
+
+@app.post("/webhooks/hydradb")
+async def hydradb_webhook(
+    request: Request,
+    delivery_id: str | None = Header(default=None, alias="X-HydraDB-Delivery-ID"),
+    signature: str | None = Header(default=None, alias="X-HydraDB-Signature"),
+):
+    raw_body = await request.body()
+
+    if SIGNING_SECRET:
+        digest = hmac.new(
+            SIGNING_SECRET.encode(),
+            raw_body,
+            hashlib.sha256,
+        ).hexdigest()
+        expected = f"sha256={digest}"
+
+        if not signature or not hmac.compare_digest(signature, expected):
+            return Response(status_code=401)
+
+    event = json.loads(raw_body)
+
+    # Store delivery_id and skip it if you have already processed it.
+    print("HydraDB webhook", delivery_id, event["id"], event["status"])
+
+    return Response(status_code=204)
+```
+
 ```typescript TypeScript
 import crypto from "node:crypto";
 import express from "express";
@@ -290,45 +329,6 @@ app.post(
 );
 
 app.listen(3000);
-```
-
-```python Python
-import hashlib
-import hmac
-import json
-import os
-
-from fastapi import FastAPI, Header, Request, Response
-
-app = FastAPI()
-SIGNING_SECRET = os.getenv("HYDRADB_WEBHOOK_SECRET")
-
-
-@app.post("/webhooks/hydradb")
-async def hydradb_webhook(
-    request: Request,
-    delivery_id: str | None = Header(default=None, alias="X-HydraDB-Delivery-ID"),
-    signature: str | None = Header(default=None, alias="X-HydraDB-Signature"),
-):
-    raw_body = await request.body()
-
-    if SIGNING_SECRET:
-        digest = hmac.new(
-            SIGNING_SECRET.encode(),
-            raw_body,
-            hashlib.sha256,
-        ).hexdigest()
-        expected = f"sha256={digest}"
-
-        if not signature or not hmac.compare_digest(signature, expected):
-            return Response(status_code=401)
-
-    event = json.loads(raw_body)
-
-    # Store delivery_id and skip it if you have already processed it.
-    print("HydraDB webhook", delivery_id, event["id"], event["status"])
-
-    return Response(status_code=204)
 ```
 
 </CodeGroup>

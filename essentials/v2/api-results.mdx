@@ -152,15 +152,111 @@ Then pass the response into the helper below to build a context string:
 
 <CodeGroup>
 
-```bash cURL
-# build_context_string is a client-side utility that converts the data
-# returned by POST /search into a formatted context string.
-#
-# The logic remains the same, except that search objects are now dictionaries
-# instead of JSON objects.
-#
-# SDKs access values using dot notation (result.xyz), whereas API responses
-# use dictionary access (result.get("xyz")).
+```python Python SDK
+from __future__ import annotations
+
+from typing import Any
+
+
+def _format_path_chain(path: Any) -> str:
+    """Format a ScoredPathResponse into a readable chain string.
+
+    Each triplet becomes: [src] -> predicate -> [tgt]: context [Time: ...]
+    Multiple triplets are joined with ↳ to show traversal direction.
+    """
+    triplets = getattr(path, "triplets", None) or []
+    parts = []
+    for t in triplets:
+        src  = t.source.name if t.source else ""
+        tgt  = t.target.name if t.target else ""
+        rel  = t.relation
+        pred = rel.canonical_predicate if rel else ""
+        line = f"[{src}] -> {pred} -> [{tgt}]"
+        ctx  = rel.context if rel else None
+        if ctx:
+            line += f": {ctx}"
+        temporal = rel.temporal_details if rel else None
+        if temporal:
+            line += f" [Time: {temporal}]"
+        parts.append(line)
+
+    return "\n  ↳ ".join(parts)
+
+
+def build_context_string(result) -> str:
+    """
+    Build a formatted context string from a HydraDB /search response.
+
+    Combines entity paths, chunk content, graph relations, and extra context
+    into a single readable string ready to pass into an LLM prompt.
+    """
+    lines: list[str] = []
+    gc = result.graph_context
+
+    # --- Entity paths -----------------------------------------------------------
+    query_paths = gc.query_paths if gc else []
+    if query_paths:
+        lines.append("=== ENTITY PATHS ===")
+        for path in query_paths:
+            lines.append(_format_path_chain(path))
+        lines.append("")
+
+    # --- Chunks -----------------------------------------------------------------
+    chunks = result.chunks or []
+    additional_context = result.additional_context or {}
+    chunk_id_to_group_ids = gc.chunk_id_to_group_ids if gc else {}
+    chunk_relations = gc.chunk_relations if gc else []
+
+    if chunks:
+        lines.append("=== CONTEXT ===")
+        for i, chunk in enumerate(chunks):
+            lines.append(f"Chunk {i + 1}")
+            source = chunk.source_title or ""
+            if source:
+                lines.append(f"Source: {source}")
+            lines.append(chunk.chunk_content or "")
+
+            # Graph relations for this chunk
+            chunk_uuid = chunk.chunk_uuid or ""
+            if chunk_uuid and chunk_id_to_group_ids and chunk_relations:
+                group_ids = chunk_id_to_group_ids.get(chunk_uuid, [])
+                relevant_relations = [
+                    r for r in chunk_relations
+                    if r.group_id in group_ids
+                ]
+                if relevant_relations:
+                    lines.append("Graph Relations:")
+                    for rel in relevant_relations:
+                        for triplet in (rel.triplets or []):
+                            src  = triplet.source.name if triplet.source else ""
+                            tgt  = triplet.target.name if triplet.target else ""
+                            pred = triplet.relation.canonical_predicate if triplet.relation else ""
+                            ctx  = triplet.relation.context if triplet.relation else ""
+                            line = f"  [{src}] -> {pred} -> [{tgt}]: {ctx}"
+                            temporal = triplet.relation.temporal_details if triplet.relation else None
+                            if temporal:
+                                line += f" [Time: {temporal}]"
+                            lines.append(line)
+
+            # Extra context
+            extra_ids = getattr(chunk, "extra_context_ids", None) or []
+            if extra_ids and additional_context:
+                extras = [
+                    additional_context[eid]
+                    for eid in extra_ids
+                    if eid in additional_context
+                ]
+                if extras:
+                    lines.append("Extra Context:")
+                    for extra in extras:
+                        extra_source = extra.source_title or ""
+                        extra_content = extra.chunk_content or ""
+                        lines.append(f"  Related Context ({extra_source}): {extra_content}")
+
+            lines.append("---")
+            lines.append("")
+
+    return "\n".join(lines)
 ```
 
 ```typescript TypeScript SDK
@@ -311,111 +407,15 @@ export function buildContextString(result: RetrievalResult): string {
 }
 ```
 
-```python Python SDK
-from __future__ import annotations
-
-from typing import Any
-
-
-def _format_path_chain(path: Any) -> str:
-    """Format a ScoredPathResponse into a readable chain string.
-
-    Each triplet becomes: [src] -> predicate -> [tgt]: context [Time: ...]
-    Multiple triplets are joined with ↳ to show traversal direction.
-    """
-    triplets = getattr(path, "triplets", None) or []
-    parts = []
-    for t in triplets:
-        src  = t.source.name if t.source else ""
-        tgt  = t.target.name if t.target else ""
-        rel  = t.relation
-        pred = rel.canonical_predicate if rel else ""
-        line = f"[{src}] -> {pred} -> [{tgt}]"
-        ctx  = rel.context if rel else None
-        if ctx:
-            line += f": {ctx}"
-        temporal = rel.temporal_details if rel else None
-        if temporal:
-            line += f" [Time: {temporal}]"
-        parts.append(line)
-
-    return "\n  ↳ ".join(parts)
-
-
-def build_context_string(result) -> str:
-    """
-    Build a formatted context string from a HydraDB /search response.
-
-    Combines entity paths, chunk content, graph relations, and extra context
-    into a single readable string ready to pass into an LLM prompt.
-    """
-    lines: list[str] = []
-    gc = result.graph_context
-
-    # --- Entity paths -----------------------------------------------------------
-    query_paths = gc.query_paths if gc else []
-    if query_paths:
-        lines.append("=== ENTITY PATHS ===")
-        for path in query_paths:
-            lines.append(_format_path_chain(path))
-        lines.append("")
-
-    # --- Chunks -----------------------------------------------------------------
-    chunks = result.chunks or []
-    additional_context = result.additional_context or {}
-    chunk_id_to_group_ids = gc.chunk_id_to_group_ids if gc else {}
-    chunk_relations = gc.chunk_relations if gc else []
-
-    if chunks:
-        lines.append("=== CONTEXT ===")
-        for i, chunk in enumerate(chunks):
-            lines.append(f"Chunk {i + 1}")
-            source = chunk.source_title or ""
-            if source:
-                lines.append(f"Source: {source}")
-            lines.append(chunk.chunk_content or "")
-
-            # Graph relations for this chunk
-            chunk_uuid = chunk.chunk_uuid or ""
-            if chunk_uuid and chunk_id_to_group_ids and chunk_relations:
-                group_ids = chunk_id_to_group_ids.get(chunk_uuid, [])
-                relevant_relations = [
-                    r for r in chunk_relations
-                    if r.group_id in group_ids
-                ]
-                if relevant_relations:
-                    lines.append("Graph Relations:")
-                    for rel in relevant_relations:
-                        for triplet in (rel.triplets or []):
-                            src  = triplet.source.name if triplet.source else ""
-                            tgt  = triplet.target.name if triplet.target else ""
-                            pred = triplet.relation.canonical_predicate if triplet.relation else ""
-                            ctx  = triplet.relation.context if triplet.relation else ""
-                            line = f"  [{src}] -> {pred} -> [{tgt}]: {ctx}"
-                            temporal = triplet.relation.temporal_details if triplet.relation else None
-                            if temporal:
-                                line += f" [Time: {temporal}]"
-                            lines.append(line)
-
-            # Extra context
-            extra_ids = getattr(chunk, "extra_context_ids", None) or []
-            if extra_ids and additional_context:
-                extras = [
-                    additional_context[eid]
-                    for eid in extra_ids
-                    if eid in additional_context
-                ]
-                if extras:
-                    lines.append("Extra Context:")
-                    for extra in extras:
-                        extra_source = extra.source_title or ""
-                        extra_content = extra.chunk_content or ""
-                        lines.append(f"  Related Context ({extra_source}): {extra_content}")
-
-            lines.append("---")
-            lines.append("")
-
-    return "\n".join(lines)
+```bash cURL
+# build_context_string is a client-side utility that converts the data
+# returned by POST /search into a formatted context string.
+#
+# The logic remains the same, except that search objects are now dictionaries
+# instead of JSON objects.
+#
+# SDKs access values using dot notation (result.xyz), whereas API responses
+# use dictionary access (result.get("xyz")).
 ```
 
 </CodeGroup>
@@ -428,25 +428,27 @@ Once you have a context string, call your model with a grounded system prompt:
 
 <CodeGroup>
 
-```bash cURL
-# HydraDB does not wrap LLM calls. Pass your context string to any LLM provider.
-# Example using OpenAI's chat completions endpoint directly:
-curl -X POST 'https://api.openai.com/v1/chat/completions' \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-4o",
-    "messages": [
-      {
-        "role": "system",
-        "content": "Answer the user'\''s question using only the context below. If the answer is not in the context, say you don'\''t know."
-      },
-      {
-        "role": "user",
-        "content": "Context:\n<your_context_string>\n\nQuestion: <your_question>"
-      }
-    ]
-  }'
+```python Python SDK
+from openai import OpenAI
+
+client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+question = "How does authentication work?"
+
+completion = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {
+            "role": "system",
+            "content": "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
+        },
+        {
+            "role": "user",
+            "content": f"Context:\n{context}\n\nQuestion: {question}",
+        },
+    ],
+)
+
+print(completion.choices[0].message.content)
 ```
 
 ```typescript TypeScript SDK
@@ -473,27 +475,25 @@ const completion = await client.chat.completions.create({
 console.log(completion.choices[0].message.content);
 ```
 
-```python Python SDK
-from openai import OpenAI
-
-client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
-question = "How does authentication work?"
-
-completion = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {
-            "role": "system",
-            "content": "You are a helpful assistant. Answer the user's question using only the context provided. If the answer is not in the context, say you don't know.",
-        },
-        {
-            "role": "user",
-            "content": f"Context:\n{context}\n\nQuestion: {question}",
-        },
-    ],
-)
-
-print(completion.choices[0].message.content)
+```bash cURL
+# HydraDB does not wrap LLM calls. Pass your context string to any LLM provider.
+# Example using OpenAI's chat completions endpoint directly:
+curl -X POST 'https://api.openai.com/v1/chat/completions' \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Answer the user'\''s question using only the context below. If the answer is not in the context, say you don'\''t know."
+      },
+      {
+        "role": "user",
+        "content": "Context:\n<your_context_string>\n\nQuestion: <your_question>"
+      }
+    ]
+  }'
 ```
 
 </CodeGroup>
@@ -506,19 +506,18 @@ For personalised answers, the simplest path is one `POST /search` with `source: 
 
 <CodeGroup>
 
-```bash cURL
-curl -X POST 'https://api.hydradb.com/search' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "acme_corp",
-    "sub_tenant_id": "user_123",
-    "query": "refund policy",
-    "source": "all",
-    "search_by": "hybrid",
-    "mode": "thinking"
-  }'
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme_corp",
+    sub_tenant_id="user_123",
+    query="refund policy",
+    source="all",
+    search_by="hybrid",
+    mode="thinking",
+)
+
+context = build_context_string(result)
+prompt = f"Context:\n{context}\n\nQuestion: {question}"
 ```
 
 ```typescript TypeScript SDK
@@ -535,18 +534,19 @@ const context = buildContextString(result);
 const prompt = `Context:\n${context}\n\nQuestion: ${question}`;
 ```
 
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme_corp",
-    sub_tenant_id="user_123",
-    query="refund policy",
-    source="all",
-    search_by="hybrid",
-    mode="thinking",
-)
-
-context = build_context_string(result)
-prompt = f"Context:\n{context}\n\nQuestion: {question}"
+```bash cURL
+curl -X POST 'https://api.hydradb.com/search' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "acme_corp",
+    "sub_tenant_id": "user_123",
+    "query": "refund policy",
+    "source": "all",
+    "search_by": "hybrid",
+    "mode": "thinking"
+  }'
 ```
 
 </CodeGroup>

@@ -133,23 +133,6 @@ The normal progression is `queued` → `processing` → `graph_creation` → `co
 Use this for normal RAG/search flows. `graph_creation` means chunks are indexed and can be retrieved.
 
 <CodeGroup>
-```typescript TypeScript
-const sourceIds = ["policy_main", "runbook_deploy"];
-
-while (true) {
-  const response = await client.source.status({
-    tenant_id: "acme_corp",
-    sub_tenant_id: "team_docs",
-    source_ids: sourceIds,
-  });
-
-  const statuses = response.statuses.map((s) => s.indexing_status);
-  if (statuses.every((s) => s === "graph_creation" || s === "completed")) break;
-  if (statuses.some((s) => s === "errored")) throw new Error("Source processing failed");
-
-  await new Promise((r) => setTimeout(r, 5000));
-}
-```
 ```python Python
 import time
 
@@ -169,6 +152,23 @@ while True:
         raise RuntimeError("Source processing failed")
 
     time.sleep(5)
+```
+```typescript TypeScript
+const sourceIds = ["policy_main", "runbook_deploy"];
+
+while (true) {
+  const response = await client.source.status({
+    tenant_id: "acme_corp",
+    sub_tenant_id: "team_docs",
+    source_ids: sourceIds,
+  });
+
+  const statuses = response.statuses.map((s) => s.indexing_status);
+  if (statuses.every((s) => s === "graph_creation" || s === "completed")) break;
+  if (statuses.some((s) => s === "errored")) throw new Error("Source processing failed");
+
+  await new Promise((r) => setTimeout(r, 5000));
+}
 ```
 </CodeGroup>
 

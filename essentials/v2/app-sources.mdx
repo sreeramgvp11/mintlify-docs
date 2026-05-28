@@ -71,43 +71,6 @@ Stick with the file-upload path when you have the original binary (PDF/DOCX/MD/C
 Send `app_knowledge` as a **stringified JSON** value on the multipart form. Each entry becomes one source.
 
 <CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
-  -F 'app_knowledge=[
-    {
-      "id": "slack_C01_1716213600_000100",
-      "title": "Auth rollback discussion - #engineering",
-      "type": "slack",
-      "url": "https://acme.slack.com/archives/C01/p1716213600000100",
-      "timestamp": "2026-05-20T10:00:00Z",
-      "content": { "text": "Can someone review the auth rollback? Bob, you free to pair?" },
-      "tenant_metadata": { "channel": "engineering", "workspace": "acme" },
-      "document_metadata": { "slack_ts": "1716213600.000100", "author": "alice" }
-    }
-  ]'
-```
-```typescript TypeScript SDK
-const result = await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
-    {
-      id: "slack_C01_1716213600_000100",
-      title: "Auth rollback discussion - #engineering",
-      type: "slack",
-      url: "https://acme.slack.com/archives/C01/p1716213600000100",
-      timestamp: "2026-05-20T10:00:00Z",
-      content: { text: "Can someone review the auth rollback? Bob, you free to pair?" },
-      tenant_metadata: { channel: "engineering", workspace: "acme" },
-      document_metadata: { slack_ts: "1716213600.000100", author: "alice" },
-    },
-  ]),
-});
-```
 ```python Python SDK
 import json
 
@@ -127,6 +90,43 @@ result = client.source.ingest(
         }
     ]),
 )
+```
+```typescript TypeScript SDK
+const result = await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  app_knowledge: JSON.stringify([
+    {
+      id: "slack_C01_1716213600_000100",
+      title: "Auth rollback discussion - #engineering",
+      type: "slack",
+      url: "https://acme.slack.com/archives/C01/p1716213600000100",
+      timestamp: "2026-05-20T10:00:00Z",
+      content: { text: "Can someone review the auth rollback? Bob, you free to pair?" },
+      tenant_metadata: { channel: "engineering", workspace: "acme" },
+      document_metadata: { slack_ts: "1716213600.000100", author: "alice" },
+    },
+  ]),
+});
+```
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F 'app_knowledge=[
+    {
+      "id": "slack_C01_1716213600_000100",
+      "title": "Auth rollback discussion - #engineering",
+      "type": "slack",
+      "url": "https://acme.slack.com/archives/C01/p1716213600000100",
+      "timestamp": "2026-05-20T10:00:00Z",
+      "content": { "text": "Can someone review the auth rollback? Bob, you free to pair?" },
+      "tenant_metadata": { "channel": "engineering", "workspace": "acme" },
+      "document_metadata": { "slack_ts": "1716213600.000100", "author": "alice" }
+    }
+  ]'
 ```
 </CodeGroup>
 

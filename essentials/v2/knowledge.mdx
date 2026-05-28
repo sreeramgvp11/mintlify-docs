@@ -74,33 +74,6 @@ When in doubt, ask "would a different user benefit from seeing this?"  -  if yes
 Binary files HydraDB should parse and chunk: PDF, DOCX, Markdown, CSV, TXT.
 
 <CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
-  -F "files=@/path/to/policy.pdf" \
-  -F "files=@/path/to/runbook.pdf" \
-  -F 'file_metadata=[
-    { "source_id": "policy_v2", "tenant_metadata": { "document_type": "policy", "status": "approved" } },
-    { "source_id": "runbook_deploy", "tenant_metadata": { "document_type": "runbook" } }
-  ]'
-```
-```typescript TypeScript SDK
-const result = await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  files: [
-    { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
-    { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
-  ],
-  file_metadata: JSON.stringify([
-    { source_id: "policy_v2", tenant_metadata: { document_type: "policy", status: "approved" } },
-    { source_id: "runbook_deploy", tenant_metadata: { document_type: "runbook" } },
-  ]),
-});
-```
 ```python Python SDK
 import json
 
@@ -118,6 +91,33 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
         ]),
     )
 ```
+```typescript TypeScript SDK
+const result = await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  files: [
+    { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
+    { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
+  ],
+  file_metadata: JSON.stringify([
+    { source_id: "policy_v2", tenant_metadata: { document_type: "policy", status: "approved" } },
+    { source_id: "runbook_deploy", tenant_metadata: { document_type: "runbook" } },
+  ]),
+});
+```
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F "files=@/path/to/policy.pdf" \
+  -F "files=@/path/to/runbook.pdf" \
+  -F 'file_metadata=[
+    { "source_id": "policy_v2", "tenant_metadata": { "document_type": "policy", "status": "approved" } },
+    { "source_id": "runbook_deploy", "tenant_metadata": { "document_type": "runbook" } }
+  ]'
+```
 </CodeGroup>
 
 ### Path B  -  App sources
@@ -125,43 +125,6 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
 Pre-parsed text from connected apps. You supply the text, [metadata](/essentials/v2/metadata), and an optional URL. Use this when your application already extracts content (Slack messages, Notion pages, Gmail threads, webpages) and you want HydraDB to skip the parsing step.
 
 <CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
-  -F 'app_knowledge=[
-    {
-      "tenant_id": "acme_corp",
-      "sub_tenant_id": "default",
-      "id": "slack_thread_001",
-      "title": "Pricing discussion - Slack #product",
-      "type": "slack",
-      "content": { "text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
-      "tenant_metadata": { "channel": "product", "status": "finalized" },
-      "document_metadata": { "slack_ts": "1715012345.000100" }
-    }
-  ]'
-```
-```typescript TypeScript SDK
-const result = await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
-    {
-      tenant_id: "acme_corp",
-      sub_tenant_id: "default",
-      id: "slack_thread_001",
-      title: "Pricing discussion - Slack #product",
-      type: "slack",
-      content: { text: "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
-      tenant_metadata: { channel: "product", status: "finalized" },
-      document_metadata: { slack_ts: "1715012345.000100" },
-    },
-  ]),
-});
-```
 ```python Python SDK
 import json
 
@@ -181,6 +144,43 @@ result = client.source.ingest(
         }
     ]),
 )
+```
+```typescript TypeScript SDK
+const result = await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  app_knowledge: JSON.stringify([
+    {
+      tenant_id: "acme_corp",
+      sub_tenant_id: "default",
+      id: "slack_thread_001",
+      title: "Pricing discussion - Slack #product",
+      type: "slack",
+      content: { text: "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
+      tenant_metadata: { channel: "product", status: "finalized" },
+      document_metadata: { slack_ts: "1715012345.000100" },
+    },
+  ]),
+});
+```
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F 'app_knowledge=[
+    {
+      "tenant_id": "acme_corp",
+      "sub_tenant_id": "default",
+      "id": "slack_thread_001",
+      "title": "Pricing discussion - Slack #product",
+      "type": "slack",
+      "content": { "text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
+      "tenant_metadata": { "channel": "product", "status": "finalized" },
+      "document_metadata": { "slack_ts": "1715012345.000100" }
+    }
+  ]'
 ```
 </CodeGroup>
 
@@ -219,24 +219,21 @@ All endpoints return this envelope shape. Access the payload via `response.data`
 Ingestion is async, so you need to confirm each source actually finished before it'll show up in [search](/essentials/v2/search). Poll [`GET /source/status`](/api-reference/v2/endpoint/source-status) with the `source_id`s you got back from ingestion. The snippets below loop until every item reaches a terminal state (`completed` or `errored`):
 
 <CodeGroup>
-```bash cURL
-while true; do
-  response=$(curl -s -G 'https://api.hydradb.com/source/status' \
-    -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-    -H "API-Version: 2" \
-    --data-urlencode "tenant_id=acme_corp" \
-    --data-urlencode "sub_tenant_id=default" \
-    --data-urlencode "source_ids=policy_v2" \
-    --data-urlencode "source_ids=runbook_deploy")
+```python Python SDK
+import time
 
-  statuses=$(echo "$response" | jq -r '.data.statuses[].indexing_status')
-  if echo "$statuses" | grep -qv '^\(completed\|errored\)$'; then
-    sleep 5
-    continue
-  fi
-  echo "$response" | jq
-  break
-done
+source_ids = ["policy_v2", "runbook_deploy"]
+terminal = {"completed", "errored"}
+
+while True:
+    status = client.source.status(
+        tenant_id="acme_corp",
+        sub_tenant_id="default",
+        source_ids=source_ids,
+    )
+    if all(s.indexing_status in terminal for s in status.statuses):
+        break
+    time.sleep(5)
 ```
 ```typescript TypeScript SDK
 const sourceIds = ["policy_v2", "runbook_deploy"];
@@ -256,21 +253,24 @@ while (true) {
   await new Promise((r) => setTimeout(r, 5_000));
 }
 ```
-```python Python SDK
-import time
+```bash cURL
+while true; do
+  response=$(curl -s -G 'https://api.hydradb.com/source/status' \
+    -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+    -H "API-Version: 2" \
+    --data-urlencode "tenant_id=acme_corp" \
+    --data-urlencode "sub_tenant_id=default" \
+    --data-urlencode "source_ids=policy_v2" \
+    --data-urlencode "source_ids=runbook_deploy")
 
-source_ids = ["policy_v2", "runbook_deploy"]
-terminal = {"completed", "errored"}
-
-while True:
-    status = client.source.status(
-        tenant_id="acme_corp",
-        sub_tenant_id="default",
-        source_ids=source_ids,
-    )
-    if all(s.indexing_status in terminal for s in status.statuses):
-        break
-    time.sleep(5)
+  statuses=$(echo "$response" | jq -r '.data.statuses[].indexing_status')
+  if echo "$statuses" | grep -qv '^\(completed\|errored\)$'; then
+    sleep 5
+    continue
+  fi
+  echo "$response" | jq
+  break
+done
 ```
 </CodeGroup>
 
@@ -354,35 +354,6 @@ Set the `relations` field on any item in `file_metadata` or `app_knowledge`:
 ```
 
 <CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
-  -F 'app_knowledge=[
-    {
-      "id": "auth-guide",
-      "title": "Authentication Guide",
-      "content": { "text": "..." },
-      "relations": { "source_ids": ["auth-troubleshooting", "auth-faq"] }
-    }
-  ]'
-```
-```typescript TypeScript SDK
-await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
-    {
-      id: "auth-guide",
-      title: "Authentication Guide",
-      content: { text: "..." },
-      relations: { source_ids: ["auth-troubleshooting", "auth-faq"] },
-    },
-  ]),
-});
-```
 ```python Python SDK
 client.source.ingest(
     type="knowledge",
@@ -398,6 +369,35 @@ client.source.ingest(
         }
     ]),
 )
+```
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  app_knowledge: JSON.stringify([
+    {
+      id: "auth-guide",
+      title: "Authentication Guide",
+      content: { text: "..." },
+      relations: { source_ids: ["auth-troubleshooting", "auth-faq"] },
+    },
+  ]),
+});
+```
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=knowledge" \
+  -F "tenant_id=acme_corp" \
+  -F 'app_knowledge=[
+    {
+      "id": "auth-guide",
+      "title": "Authentication Guide",
+      "content": { "text": "..." },
+      "relations": { "source_ids": ["auth-troubleshooting", "auth-faq"] }
+    }
+  ]'
 ```
 </CodeGroup>
 

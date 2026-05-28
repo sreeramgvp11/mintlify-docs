@@ -161,37 +161,6 @@ The legacy alias `cortex_source_ids` is still accepted for backward compatibilit
 </Note>
 
 <CodeGroup>
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=memory" \
-  -F "tenant_id=acme_corp" \
-  -F "sub_tenant_id=user_alex" \
-  -F 'memories=[
-    {
-      "text": "User prefers concise answers",
-      "source_id": "pref-concise",
-      "infer": true,
-      "relations": { "source_ids": ["pref-tone", "pref-format"] }
-    }
-  ]'
-```
-```typescript TypeScript SDK
-await client.source.ingest({
-  type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
-  memories: JSON.stringify([
-    {
-      text: "User prefers concise answers",
-      source_id: "pref-concise",
-      infer: true,
-      relations: { source_ids: ["pref-tone", "pref-format"] },
-    },
-  ]),
-});
-```
 ```python Python SDK
 import json
 
@@ -208,6 +177,37 @@ client.source.ingest(
         }
     ]),
 )
+```
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "memory",
+  tenant_id: "acme_corp",
+  sub_tenant_id: "user_alex",
+  memories: JSON.stringify([
+    {
+      text: "User prefers concise answers",
+      source_id: "pref-concise",
+      infer: true,
+      relations: { source_ids: ["pref-tone", "pref-format"] },
+    },
+  ]),
+});
+```
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_alex" \
+  -F 'memories=[
+    {
+      "text": "User prefers concise answers",
+      "source_id": "pref-concise",
+      "infer": true,
+      "relations": { "source_ids": ["pref-tone", "pref-format"] }
+    }
+  ]'
 ```
 </CodeGroup>
 
@@ -231,21 +231,26 @@ This example stores a user preference scoped to one user.
 
 <CodeGroup>
 
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=memory" \
-  -F "tenant_id=acme_corp" \
-  -F "sub_tenant_id=user_john_123" \
-  -F "upsert=true" \
-  -F 'memories=[
-    {
-      "text": "Prefers short, direct answers with no preamble.",
-      "infer": true,
-      "user_name": "John"
-    }
-  ]'
+```python Python SDK
+import json
+import os
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+
+result = client.source.ingest(
+    type="memory",
+    tenant_id="acme_corp",
+    sub_tenant_id="user_john_123",
+    upsert=True,
+    memories=json.dumps([
+        {
+            "text": "Prefers short, direct answers with no preamble.",
+            "infer": True,
+            "user_name": "John",
+        }
+    ]),
+)
 ```
 
 ```typescript TypeScript SDK
@@ -270,26 +275,21 @@ const result = await client.source.ingest({
 });
 ```
 
-```python Python SDK
-import json
-import os
-from hydra_db import HydraDB
-
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
-
-result = client.source.ingest(
-    type="memory",
-    tenant_id="acme_corp",
-    sub_tenant_id="user_john_123",
-    upsert=True,
-    memories=json.dumps([
-        {
-            "text": "Prefers short, direct answers with no preamble.",
-            "infer": True,
-            "user_name": "John",
-        }
-    ]),
-)
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_john_123" \
+  -F "upsert=true" \
+  -F 'memories=[
+    {
+      "text": "Prefers short, direct answers with no preamble.",
+      "infer": true,
+      "user_name": "John"
+    }
+  ]'
 ```
 
 </CodeGroup>
@@ -360,21 +360,28 @@ Here is a more realistic example. A user has been toggling dark mode in your app
 
 <CodeGroup>
 
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=memory" \
-  -F "tenant_id=acme_corp" \
-  -F "sub_tenant_id=user_john_123" \
-  -F 'memories=[
-    {
-      "text": "User opened the app 14 times in the last week. Switched to dark mode on first session. Toggled back to light once on 2026-04-12 at 3pm, then switched back to dark within 4 minutes. Has not changed theme since.",
-      "infer": true,
-      "user_name": "John",
-      "custom_instructions": "Focus on display and theme preferences."
-    }
-  ]'
+```python Python SDK
+import json
+
+client.source.ingest(
+    type="memory",
+    tenant_id="acme_corp",
+    sub_tenant_id="user_john_123",
+    memories=json.dumps([
+        {
+            "text": (
+                "User opened the app 14 times in the last week. "
+                "Switched to dark mode on first session. "
+                "Toggled back to light once on 2026-04-12 at 3pm, "
+                "then switched back to dark within 4 minutes. "
+                "Has not changed theme since."
+            ),
+            "infer": True,
+            "user_name": "John",
+            "custom_instructions": "Focus on display and theme preferences.",
+        }
+    ]),
+)
 ```
 
 ```typescript TypeScript SDK
@@ -398,28 +405,21 @@ const result = await client.source.ingest({
 });
 ```
 
-```python Python SDK
-import json
-
-client.source.ingest(
-    type="memory",
-    tenant_id="acme_corp",
-    sub_tenant_id="user_john_123",
-    memories=json.dumps([
-        {
-            "text": (
-                "User opened the app 14 times in the last week. "
-                "Switched to dark mode on first session. "
-                "Toggled back to light once on 2026-04-12 at 3pm, "
-                "then switched back to dark within 4 minutes. "
-                "Has not changed theme since."
-            ),
-            "infer": True,
-            "user_name": "John",
-            "custom_instructions": "Focus on display and theme preferences.",
-        }
-    ]),
-)
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_john_123" \
+  -F 'memories=[
+    {
+      "text": "User opened the app 14 times in the last week. Switched to dark mode on first session. Toggled back to light once on 2026-04-12 at 3pm, then switched back to dark within 4 minutes. Has not changed theme since.",
+      "infer": true,
+      "user_name": "John",
+      "custom_instructions": "Focus on display and theme preferences."
+    }
+  ]'
 ```
 
 </CodeGroup>

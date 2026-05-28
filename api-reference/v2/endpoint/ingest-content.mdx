@@ -210,35 +210,6 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   <Accordion title="Knowledge files - upload PDFs, DOCX, CSV, Markdown, or text for HydraDB to parse">
     <CodeGroup>
 
-```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer <your_api_key>" \
-  -H "API-Version: 2" \
-  -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
-  -F "files=@/path/to/policy.pdf" \
-  -F "files=@/path/to/runbook.pdf" \
-  -F 'file_metadata=[
-    { "source_id": "policy_main", "tenant_metadata": { "department": "legal" } },
-    { "source_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
-  ]'
-```
-
-```typescript TypeScript SDK
-const result = await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  files: [
-    { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
-    { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
-  ],
-  file_metadata: JSON.stringify([
-    { source_id: "policy_main", tenant_metadata: { department: "legal" } },
-    { source_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
-  ]),
-});
-```
-
 ```python Python SDK
 import json
 
@@ -257,11 +228,20 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
     )
 ```
 
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="Knowledge app sources - index text your app already extracted">
-    <CodeGroup>
+```typescript TypeScript SDK
+const result = await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  files: [
+    { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
+    { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
+  ],
+  file_metadata: JSON.stringify([
+    { source_id: "policy_main", tenant_metadata: { department: "legal" } },
+    { source_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
+  ]),
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/source/ingest' \
@@ -269,32 +249,19 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -H "API-Version: 2" \
   -F "type=knowledge" \
   -F "tenant_id=acme_corp" \
-  -F 'app_knowledge=[
-    {
-      "id": "slack_thread_001",
-      "title": "Pricing discussion",
-      "type": "slack",
-      "content": { "text": "We agreed on three tiers..." },
-      "tenant_metadata": { "channel": "product" }
-    }
+  -F "files=@/path/to/policy.pdf" \
+  -F "files=@/path/to/runbook.pdf" \
+  -F 'file_metadata=[
+    { "source_id": "policy_main", "tenant_metadata": { "department": "legal" } },
+    { "source_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
   ]'
 ```
 
-```typescript TypeScript SDK
-await client.source.ingest({
-  type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
-    {
-      id: "slack_thread_001",
-      title: "Pricing discussion",
-      type: "slack",
-      content: { text: "We agreed on three tiers..." },
-      tenant_metadata: { channel: "product" },
-    },
-  ]),
-});
-```
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Knowledge app sources - index text your app already extracted">
+    <CodeGroup>
 
 ```python Python SDK
 import json
@@ -314,42 +281,44 @@ client.source.ingest(
 )
 ```
 
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="Memory raw text - store notes or infer user preferences">
-    <CodeGroup>
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "knowledge",
+  tenant_id: "acme_corp",
+  app_knowledge: JSON.stringify([
+    {
+      id: "slack_thread_001",
+      title: "Pricing discussion",
+      type: "slack",
+      content: { text: "We agreed on three tiers..." },
+      tenant_metadata: { channel: "product" },
+    },
+  ]),
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/source/ingest' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
-  -F "type=memory" \
+  -F "type=knowledge" \
   -F "tenant_id=acme_corp" \
-  -F "sub_tenant_id=user_alex" \
-  -F 'memories=[
+  -F 'app_knowledge=[
     {
-      "text": "Prefers dark mode and short answers.",
-      "infer": true,
-      "user_name": "Alex"
+      "id": "slack_thread_001",
+      "title": "Pricing discussion",
+      "type": "slack",
+      "content": { "text": "We agreed on three tiers..." },
+      "tenant_metadata": { "channel": "product" }
     }
   ]'
 ```
 
-```typescript TypeScript SDK
-await client.source.ingest({
-  type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
-  memories: JSON.stringify([
-    {
-      text: "Prefers dark mode and short answers.",
-      infer: true,
-      user_name: "Alex",
-    },
-  ]),
-});
-```
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Memory raw text - store notes or infer user preferences">
+    <CodeGroup>
 
 ```python Python SDK
 import json
@@ -368,11 +337,20 @@ client.source.ingest(
 )
 ```
 
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="Memory conversation pairs - store chat history or support context">
-    <CodeGroup>
+```typescript TypeScript SDK
+await client.source.ingest({
+  type: "memory",
+  tenant_id: "acme_corp",
+  sub_tenant_id: "user_alex",
+  memories: JSON.stringify([
+    {
+      text: "Prefers dark mode and short answers.",
+      infer: true,
+      user_name: "Alex",
+    },
+  ]),
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/source/ingest' \
@@ -383,13 +361,36 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "sub_tenant_id=user_alex" \
   -F 'memories=[
     {
-      "title": "Support conversation about refunds",
-      "user_assistant_pairs": [
-        { "user": "Can I get a refund?", "assistant": "Refunds are available within 30 days." }
-      ],
-      "infer": false
+      "text": "Prefers dark mode and short answers.",
+      "infer": true,
+      "user_name": "Alex"
     }
   ]'
+```
+
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Memory conversation pairs - store chat history or support context">
+    <CodeGroup>
+
+```python Python SDK
+import json
+
+client.source.ingest(
+    type="memory",
+    tenant_id="acme_corp",
+    sub_tenant_id="user_alex",
+    memories=json.dumps([
+        {
+            "title": "Support conversation about refunds",
+            "user_assistant_pairs": [
+                {"user": "Can I get a refund?", "assistant": "Refunds are available within 30 days."},
+            ],
+            "infer": False,
+        }
+    ]),
+)
 ```
 
 ```typescript TypeScript SDK
@@ -409,23 +410,22 @@ await client.source.ingest({
 });
 ```
 
-```python Python SDK
-import json
-
-client.source.ingest(
-    type="memory",
-    tenant_id="acme_corp",
-    sub_tenant_id="user_alex",
-    memories=json.dumps([
-        {
-            "title": "Support conversation about refunds",
-            "user_assistant_pairs": [
-                {"user": "Can I get a refund?", "assistant": "Refunds are available within 30 days."},
-            ],
-            "infer": False,
-        }
-    ]),
-)
+```bash cURL
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_alex" \
+  -F 'memories=[
+    {
+      "title": "Support conversation about refunds",
+      "user_assistant_pairs": [
+        { "user": "Can I get a refund?", "assistant": "Refunds are available within 30 days." }
+      ],
+      "infer": false
+    }
+  ]'
 ```
 
     </CodeGroup>

@@ -208,6 +208,43 @@ Use HydraDB's batch upload capabilities for efficient data ingestion:
 
 
 <CodeGroup>
+```python Python SDK
+import os
+import json
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+
+# Upload a batch of knowledge sources
+def upload_batch(sources: list, tenant_id: str, sub_tenant_id: str = None):
+    app_knowledge = [
+        {**source, "tenant_id": tenant_id, "sub_tenant_id": sub_tenant_id or tenant_id}
+        for source in sources
+    ]
+
+    result = client.source.ingest(
+        tenant_id=tenant_id,
+        app_knowledge=json.dumps(app_knowledge)
+    )
+    return result
+
+# Upload with verification — confirm each item is indexed before proceeding
+def upload_with_verification(sources: list, tenant_id: str, sub_tenant_id: str = None):
+    upload_result = upload_batch(sources, tenant_id, sub_tenant_id)
+
+    if upload_result.results:
+        for item in upload_result.results:
+            source_id = item.source_id
+            status = client.source.status(
+                tenant_id=tenant_id,
+                source_ids=[source_id]
+            )
+            items = status.statuses or []
+            if items and items[0].indexing_status == "errored":
+                raise Exception(f"Processing failed for source {source_id}")
+
+    return upload_result
+```
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
@@ -248,43 +285,6 @@ const uploadWithVerification = async (sources: any[], tenantId: string, subTenan
   return uploadResult;
 };
 ```
-```python Python SDK
-import os
-import json
-from hydra_db import HydraDB
-
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
-
-# Upload a batch of knowledge sources
-def upload_batch(sources: list, tenant_id: str, sub_tenant_id: str = None):
-    app_knowledge = [
-        {**source, "tenant_id": tenant_id, "sub_tenant_id": sub_tenant_id or tenant_id}
-        for source in sources
-    ]
-
-    result = client.source.ingest(
-        tenant_id=tenant_id,
-        app_knowledge=json.dumps(app_knowledge)
-    )
-    return result
-
-# Upload with verification — confirm each item is indexed before proceeding
-def upload_with_verification(sources: list, tenant_id: str, sub_tenant_id: str = None):
-    upload_result = upload_batch(sources, tenant_id, sub_tenant_id)
-
-    if upload_result.results:
-        for item in upload_result.results:
-            source_id = item.source_id
-            status = client.source.status(
-                tenant_id=tenant_id,
-                source_ids=[source_id]
-            )
-            items = status.statuses or []
-            if items and items[0].indexing_status == "errored":
-                raise Exception(f"Processing failed for source {source_id}")
-
-    return upload_result
-```
 </CodeGroup>
 
 
@@ -298,6 +298,34 @@ Create a search interface that queries across all data sources:
 
 
 <CodeGroup>
+```python Python SDK
+import os
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+
+def search(query: str, tenant_id: str, sub_tenant_id: str = None,
+           max_results: int = 10, mode: str = "fast",
+           metadata: dict = None):
+    return client.search.query(
+        query=query,
+        tenant_id=tenant_id,
+        sub_tenant_id=sub_tenant_id,
+        max_results=max_results,
+        mode=mode,
+        alpha=0.5,        # Balance semantic vs keyword search (0.0 to 1.0)
+        recency_bias=0.3, # Recency preference (0.0 to 1.0)
+        **({"metadata": metadata} if metadata else {}),
+    )
+
+# Filter search by source type
+def search_by_source_type(query: str, tenant_id: str, source_type: str):
+    return search(query, tenant_id, metadata={"source_type": source_type})
+
+# Filter search by source title
+def search_by_source_title(query: str, tenant_id: str, source_title: str):
+    return search(query, tenant_id, metadata={"source_title": source_title})
+```
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
@@ -338,34 +366,6 @@ const searchBySourceType = (query: string, tenantId: string, sourceType: string)
 const searchBySourceTitle = (query: string, tenantId: string, sourceTitle: string) =>
   search(query, tenantId, { metadata: { source_title: sourceTitle } });
 ```
-```python Python SDK
-import os
-from hydra_db import HydraDB
-
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
-
-def search(query: str, tenant_id: str, sub_tenant_id: str = None,
-           max_results: int = 10, mode: str = "fast",
-           metadata: dict = None):
-    return client.search.query(
-        query=query,
-        tenant_id=tenant_id,
-        sub_tenant_id=sub_tenant_id,
-        max_results=max_results,
-        mode=mode,
-        alpha=0.5,        # Balance semantic vs keyword search (0.0 to 1.0)
-        recency_bias=0.3, # Recency preference (0.0 to 1.0)
-        **({"metadata": metadata} if metadata else {}),
-    )
-
-# Filter search by source type
-def search_by_source_type(query: str, tenant_id: str, source_type: str):
-    return search(query, tenant_id, metadata={"source_type": source_type})
-
-# Filter search by source title
-def search_by_source_title(query: str, tenant_id: str, source_title: str):
-    return search(query, tenant_id, metadata={"source_title": source_title})
-```
 </CodeGroup>
 
 
@@ -381,6 +381,58 @@ Implement advanced search capabilities:
 
 
 <CodeGroup>
+```python Python SDK
+import os
+import json
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+
+# Search with optional source type / title metadata filters
+def search_with_filters(query: str, tenant_id: str, source_types: str = None, source_titles: str = None):
+    metadata = {}
+    if source_types:
+        metadata["source_type"] = source_types
+    if source_titles:
+        metadata["source_title"] = source_titles
+
+    return client.search.query(
+        query=query,
+        tenant_id=tenant_id,
+        max_results=10,
+        mode="fast",
+        alpha=0.5,
+        recency_bias=0.3,
+        **({"metadata": metadata} if metadata else {})
+    )
+
+# Guide retrieval with additional context — prepend context to the query string
+def search_with_context(query: str, tenant_id: str, context: str):
+    return client.search.query(
+        query=f"{context}\n\n{query}" if context else query,
+        tenant_id=tenant_id,
+        max_results=10,
+        mode="fast",
+        alpha=0.5,
+        recency_bias=0.3,
+    )
+
+# Conversational search — fold prior conversation turns into the query
+def conversational_search(query: str, tenant_id: str, conversation_history: list = None):
+    history = conversation_history or []
+    enriched_query = (
+        f"Previous conversation context: {json.dumps(history)}\n\n{query}"
+        if history else query
+    )
+    return client.search.query(
+        query=enriched_query,
+        tenant_id=tenant_id,
+        max_results=10,
+        mode="fast",
+        alpha=0.5,
+        recency_bias=0.3,
+    )
+```
 ```typescript TypeScript SDK
 import { HydraDBClient } from "@hydradb/sdk";
 
@@ -435,58 +487,6 @@ const conversationalSearch = async (
     recency_bias: 0.3,
   });
 ```
-```python Python SDK
-import os
-import json
-from hydra_db import HydraDB
-
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
-
-# Search with optional source type / title metadata filters
-def search_with_filters(query: str, tenant_id: str, source_types: str = None, source_titles: str = None):
-    metadata = {}
-    if source_types:
-        metadata["source_type"] = source_types
-    if source_titles:
-        metadata["source_title"] = source_titles
-
-    return client.search.query(
-        query=query,
-        tenant_id=tenant_id,
-        max_results=10,
-        mode="fast",
-        alpha=0.5,
-        recency_bias=0.3,
-        **({"metadata": metadata} if metadata else {})
-    )
-
-# Guide retrieval with additional context — prepend context to the query string
-def search_with_context(query: str, tenant_id: str, context: str):
-    return client.search.query(
-        query=f"{context}\n\n{query}" if context else query,
-        tenant_id=tenant_id,
-        max_results=10,
-        mode="fast",
-        alpha=0.5,
-        recency_bias=0.3,
-    )
-
-# Conversational search — fold prior conversation turns into the query
-def conversational_search(query: str, tenant_id: str, conversation_history: list = None):
-    history = conversation_history or []
-    enriched_query = (
-        f"Previous conversation context: {json.dumps(history)}\n\n{query}"
-        if history else query
-    )
-    return client.search.query(
-        query=enriched_query,
-        tenant_id=tenant_id,
-        max_results=10,
-        mode="fast",
-        alpha=0.5,
-        recency_bias=0.3,
-    )
-```
 </CodeGroup>
 
 
@@ -507,88 +507,6 @@ HydraDB's AI memories are dynamic, user-specific profiles that evolve over time.
 
 
 <CodeGroup>
-```typescript TypeScript SDK
-import { HydraDBClient } from "@hydradb/sdk";
-
-const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
-
-// In-memory profile store — replace with your own database in production
-const userProfiles = new Map<string, any>();
-
-const getUserProfile = (userId: string) => {
-  if (!userProfiles.has(userId)) {
-    userProfiles.set(userId, {
-      userId,
-      preferredMode: "fast",
-      preferredSourceTypes: [] as string[],
-      frequentQueries: [] as string[],
-      preferredFormats: ["bullet_points"],
-      responseStyle: "concise",
-      favoriteSources: [] as string[],
-      searchHistory: [] as object[],
-      lastInteraction: null as string | null
-    });
-  }
-  return userProfiles.get(userId)!;
-};
-
-const buildPersonalizedInstructions = (userProfile: any, query: string): string => {
-  let instructions = "User preferences: ";
-  if (userProfile.preferredFormats.includes("bullet_points")) instructions += "Prefer bullet point responses. ";
-  if (userProfile.responseStyle === "concise") instructions += "Keep responses concise and to the point. ";
-  if (userProfile.favoriteSources.length > 0) instructions += `User frequently uses sources: ${userProfile.favoriteSources.join(", ")}. `;
-  if (userProfile.frequentQueries.length > 0) instructions += `User often searches for: ${userProfile.frequentQueries.slice(0, 3).join(", ")}. `;
-  instructions += `Current query: ${query}`;
-  return instructions;
-};
-
-const saveUserProfile = async (userId: string, profile: any) => {
-  // Persist to your backend database
-  console.log(`Saving profile for user ${userId}:`, profile);
-};
-
-// Search with personalized query enrichment derived from the user's local profile
-const searchWithMemory = async (query: string, tenantId: string, userId: string) => {
-  const userProfile = getUserProfile(userId);
-  const enrichedQuery = `${buildPersonalizedInstructions(userProfile, query)}\n\n${query}`;
-
-  const searchResults = await client.search.query({
-    query: enrichedQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: userId,
-    max_results: 10,
-    mode: userProfile.preferredMode || "fast",
-    alpha: 0.5,
-    recency_bias: 0.3,
-    ...(userProfile.preferredSourceTypes?.length > 0 && {
-      metadata: { source_type: userProfile.preferredSourceTypes }
-    })
-  });
-
-  // Update local profile history
-  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.chunks?.length || 0 });
-  if (userProfile.searchHistory.length > 50) userProfile.searchHistory = userProfile.searchHistory.slice(-50);
-
-  const queryLower = query.toLowerCase();
-  if (!userProfile.frequentQueries.some((q: string) => q.toLowerCase().includes(queryLower))) {
-    userProfile.frequentQueries = [query, ...userProfile.frequentQueries].slice(0, 10);
-  }
-
-  if (searchResults.chunks) {
-    for (const chunk of searchResults.chunks) {
-      if (chunk.source && !userProfile.favoriteSources.includes(chunk.source)) {
-        userProfile.favoriteSources.push(chunk.source);
-      }
-    }
-    userProfile.favoriteSources = userProfile.favoriteSources.slice(0, 5);
-  }
-
-  userProfile.lastInteraction = new Date().toISOString();
-  await saveUserProfile(userId, userProfile);
-
-  return searchResults;
-};
-```
 ```python Python SDK
 import os
 from datetime import datetime
@@ -670,6 +588,88 @@ def search_with_memory(query: str, tenant_id: str, user_id: str):
     save_user_profile(user_id, profile)
 
     return search_results
+```
+```typescript TypeScript SDK
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
+
+// In-memory profile store — replace with your own database in production
+const userProfiles = new Map<string, any>();
+
+const getUserProfile = (userId: string) => {
+  if (!userProfiles.has(userId)) {
+    userProfiles.set(userId, {
+      userId,
+      preferredMode: "fast",
+      preferredSourceTypes: [] as string[],
+      frequentQueries: [] as string[],
+      preferredFormats: ["bullet_points"],
+      responseStyle: "concise",
+      favoriteSources: [] as string[],
+      searchHistory: [] as object[],
+      lastInteraction: null as string | null
+    });
+  }
+  return userProfiles.get(userId)!;
+};
+
+const buildPersonalizedInstructions = (userProfile: any, query: string): string => {
+  let instructions = "User preferences: ";
+  if (userProfile.preferredFormats.includes("bullet_points")) instructions += "Prefer bullet point responses. ";
+  if (userProfile.responseStyle === "concise") instructions += "Keep responses concise and to the point. ";
+  if (userProfile.favoriteSources.length > 0) instructions += `User frequently uses sources: ${userProfile.favoriteSources.join(", ")}. `;
+  if (userProfile.frequentQueries.length > 0) instructions += `User often searches for: ${userProfile.frequentQueries.slice(0, 3).join(", ")}. `;
+  instructions += `Current query: ${query}`;
+  return instructions;
+};
+
+const saveUserProfile = async (userId: string, profile: any) => {
+  // Persist to your backend database
+  console.log(`Saving profile for user ${userId}:`, profile);
+};
+
+// Search with personalized query enrichment derived from the user's local profile
+const searchWithMemory = async (query: string, tenantId: string, userId: string) => {
+  const userProfile = getUserProfile(userId);
+  const enrichedQuery = `${buildPersonalizedInstructions(userProfile, query)}\n\n${query}`;
+
+  const searchResults = await client.search.query({
+    query: enrichedQuery,
+    tenant_id: tenantId,
+    sub_tenant_id: userId,
+    max_results: 10,
+    mode: userProfile.preferredMode || "fast",
+    alpha: 0.5,
+    recency_bias: 0.3,
+    ...(userProfile.preferredSourceTypes?.length > 0 && {
+      metadata: { source_type: userProfile.preferredSourceTypes }
+    })
+  });
+
+  // Update local profile history
+  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.chunks?.length || 0 });
+  if (userProfile.searchHistory.length > 50) userProfile.searchHistory = userProfile.searchHistory.slice(-50);
+
+  const queryLower = query.toLowerCase();
+  if (!userProfile.frequentQueries.some((q: string) => q.toLowerCase().includes(queryLower))) {
+    userProfile.frequentQueries = [query, ...userProfile.frequentQueries].slice(0, 10);
+  }
+
+  if (searchResults.chunks) {
+    for (const chunk of searchResults.chunks) {
+      if (chunk.source && !userProfile.favoriteSources.includes(chunk.source)) {
+        userProfile.favoriteSources.push(chunk.source);
+      }
+    }
+    userProfile.favoriteSources = userProfile.favoriteSources.slice(0, 5);
+  }
+
+  userProfile.lastInteraction = new Date().toISOString();
+  await saveUserProfile(userId, userProfile);
+
+  return searchResults;
+};
 ```
 </CodeGroup>
 
@@ -1157,41 +1157,6 @@ class DataSyncManager {
 
 
 <CodeGroup>
-```typescript TypeScript SDK
-import { HydraDBClient } from "@hydradb/sdk";
-
-const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
-
-// Express.js webhook handler
-app.post("/webhooks/slack", async (req, res) => {
-  const { event } = req.body;
-
-  if (event.type === "message") {
-    const normalizedData = {
-      id: `slack_${event.ts}`,
-      tenant_id: process.env.TENANT_ID!,
-      sub_tenant_id: process.env.SUB_TENANT_ID!,
-      title: `Message in ${event.channel}`,
-      source: "slack_message",
-      content: { text: event.text },
-      metadata: {},
-      additional_metadata: {
-        id: event.ts,
-        author: event.user,
-        created_at: new Date(event.ts * 1000).toISOString(),
-        channel: event.channel
-      }
-    };
-
-    await client.source.ingest({
-      tenant_id: process.env.TENANT_ID!,
-      app_knowledge: JSON.stringify([normalizedData])
-    });
-  }
-
-  res.status(200).send("OK");
-});
-```
 ```python Python SDK
 import os
 import json
@@ -1229,6 +1194,41 @@ def slack_webhook():
         )
 
     return "OK", 200
+```
+```typescript TypeScript SDK
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
+
+// Express.js webhook handler
+app.post("/webhooks/slack", async (req, res) => {
+  const { event } = req.body;
+
+  if (event.type === "message") {
+    const normalizedData = {
+      id: `slack_${event.ts}`,
+      tenant_id: process.env.TENANT_ID!,
+      sub_tenant_id: process.env.SUB_TENANT_ID!,
+      title: `Message in ${event.channel}`,
+      source: "slack_message",
+      content: { text: event.text },
+      metadata: {},
+      additional_metadata: {
+        id: event.ts,
+        author: event.user,
+        created_at: new Date(event.ts * 1000).toISOString(),
+        channel: event.channel
+      }
+    };
+
+    await client.source.ingest({
+      tenant_id: process.env.TENANT_ID!,
+      app_knowledge: JSON.stringify([normalizedData])
+    });
+  }
+
+  res.status(200).send("OK");
+});
 ```
 </CodeGroup>
 

@@ -56,6 +56,36 @@ Start with the API default (`0.8`) and tune from observed results. If users sear
 
 <CodeGroup>
 
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme",
+    sub_tenant_id="team-mobile",
+    query="How do we rotate API keys?",
+    source="knowledge",
+    search_by="hybrid",
+    max_results=8,
+    alpha=0.8,
+    recency_bias=0.2,
+    graph_context=True,
+    metadata_filters={"project": "phoenix"},
+)
+```
+
+```typescript TypeScript SDK
+const result = await client.search.query({
+  tenant_id: "acme",
+  sub_tenant_id: "team-mobile",
+  query: "How do we rotate API keys?",
+  source: "knowledge",
+  search_by: "hybrid",
+  max_results: 8,
+  alpha: 0.8,
+  recency_bias: 0.2,
+  graph_context: true,
+  metadata_filters: { project: "phoenix" },
+});
+```
+
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/search' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
@@ -77,36 +107,6 @@ curl -X POST 'https://api.hydradb.com/search' \
   }'
 ```
 
-```typescript TypeScript SDK
-const result = await client.search.query({
-  tenant_id: "acme",
-  sub_tenant_id: "team-mobile",
-  query: "How do we rotate API keys?",
-  source: "knowledge",
-  search_by: "hybrid",
-  max_results: 8,
-  alpha: 0.8,
-  recency_bias: 0.2,
-  graph_context: true,
-  metadata_filters: { project: "phoenix" },
-});
-```
-
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme",
-    sub_tenant_id="team-mobile",
-    query="How do we rotate API keys?",
-    source="knowledge",
-    search_by="hybrid",
-    max_results=8,
-    alpha=0.8,
-    recency_bias=0.2,
-    graph_context=True,
-    metadata_filters={"project": "phoenix"},
-)
-```
-
 </CodeGroup>
 
 `metadata_filters` run before ranking. Use them whenever the query has a scope that should not be violated. Top-level keys match `tenant_metadata`; nest under a `document_metadata` key to filter free-form per-document fields.
@@ -120,6 +120,28 @@ result = client.search.query(
 Use the default semantic-leaning blend for natural-language questions over documents.
 
 <CodeGroup>
+
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme",
+    query="How does onboarding work?",
+    source="knowledge",
+    search_by="hybrid",
+    max_results=8,
+    alpha=0.8,
+)
+```
+
+```typescript TypeScript SDK
+const result = await client.search.query({
+  tenant_id: "acme",
+  query: "How does onboarding work?",
+  source: "knowledge",
+  search_by: "hybrid",
+  max_results: 8,
+  alpha: 0.8,
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/search' \
@@ -136,28 +158,6 @@ curl -X POST 'https://api.hydradb.com/search' \
   }'
 ```
 
-```typescript TypeScript SDK
-const result = await client.search.query({
-  tenant_id: "acme",
-  query: "How does onboarding work?",
-  source: "knowledge",
-  search_by: "hybrid",
-  max_results: 8,
-  alpha: 0.8,
-});
-```
-
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme",
-    query="How does onboarding work?",
-    source="knowledge",
-    search_by="hybrid",
-    max_results=8,
-    alpha=0.8,
-)
-```
-
 </CodeGroup>
 
 ### Technical Lookup
@@ -165,6 +165,30 @@ result = client.search.query(
 Lower `alpha` when names, IDs, and literal strings matter.
 
 <CodeGroup>
+
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme",
+    query="TimeoutError in payments-worker v4.2.1",
+    source="knowledge",
+    search_by="hybrid",
+    max_results=5,
+    alpha=0.3,
+    recency_bias=0.4,
+)
+```
+
+```typescript TypeScript SDK
+const result = await client.search.query({
+  tenant_id: "acme",
+  query: "TimeoutError in payments-worker v4.2.1",
+  source: "knowledge",
+  search_by: "hybrid",
+  max_results: 5,
+  alpha: 0.3,
+  recency_bias: 0.4,
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/search' \
@@ -182,30 +206,6 @@ curl -X POST 'https://api.hydradb.com/search' \
   }'
 ```
 
-```typescript TypeScript SDK
-const result = await client.search.query({
-  tenant_id: "acme",
-  query: "TimeoutError in payments-worker v4.2.1",
-  source: "knowledge",
-  search_by: "hybrid",
-  max_results: 5,
-  alpha: 0.3,
-  recency_bias: 0.4,
-});
-```
-
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme",
-    query="TimeoutError in payments-worker v4.2.1",
-    source="knowledge",
-    search_by="hybrid",
-    max_results=5,
-    alpha=0.3,
-    recency_bias=0.4,
-)
-```
-
 </CodeGroup>
 
 ### Scoped Retrieval
@@ -213,6 +213,28 @@ result = client.search.query(
 Use metadata filters to keep retrieval inside a project, team, customer, data class, or source.
 
 <CodeGroup>
+
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme",
+    sub_tenant_id="team-mobile",
+    query="What is the current sprint status?",
+    source="knowledge",
+    search_by="hybrid",
+    metadata_filters={"project": "phoenix"},
+)
+```
+
+```typescript TypeScript SDK
+const result = await client.search.query({
+  tenant_id: "acme",
+  sub_tenant_id: "team-mobile",
+  query: "What is the current sprint status?",
+  source: "knowledge",
+  search_by: "hybrid",
+  metadata_filters: { project: "phoenix" },
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/search' \
@@ -231,28 +253,6 @@ curl -X POST 'https://api.hydradb.com/search' \
   }'
 ```
 
-```typescript TypeScript SDK
-const result = await client.search.query({
-  tenant_id: "acme",
-  sub_tenant_id: "team-mobile",
-  query: "What is the current sprint status?",
-  source: "knowledge",
-  search_by: "hybrid",
-  metadata_filters: { project: "phoenix" },
-});
-```
-
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme",
-    sub_tenant_id="team-mobile",
-    query="What is the current sprint status?",
-    source="knowledge",
-    search_by="hybrid",
-    metadata_filters={"project": "phoenix"},
-)
-```
-
 </CodeGroup>
 
 ### Exact Phrase Search
@@ -260,6 +260,28 @@ result = client.search.query(
 Switch to `search_by: "text"` with `operator: "phrase"` when a literal match is the point of the query.
 
 <CodeGroup>
+
+```python Python SDK
+result = client.search.query(
+    tenant_id="acme",
+    query="mechanical engineer",
+    source="knowledge",
+    search_by="text",
+    operator="phrase",
+    max_results=10,
+)
+```
+
+```typescript TypeScript SDK
+const result = await client.search.query({
+  tenant_id: "acme",
+  query: "mechanical engineer",
+  source: "knowledge",
+  search_by: "text",
+  operator: "phrase",
+  max_results: 10,
+});
+```
 
 ```bash cURL
 curl -X POST 'https://api.hydradb.com/search' \
@@ -274,28 +296,6 @@ curl -X POST 'https://api.hydradb.com/search' \
     "operator": "phrase",
     "max_results": 10
   }'
-```
-
-```typescript TypeScript SDK
-const result = await client.search.query({
-  tenant_id: "acme",
-  query: "mechanical engineer",
-  source: "knowledge",
-  search_by: "text",
-  operator: "phrase",
-  max_results: 10,
-});
-```
-
-```python Python SDK
-result = client.search.query(
-    tenant_id="acme",
-    query="mechanical engineer",
-    source="knowledge",
-    search_by="text",
-    operator="phrase",
-    max_results=10,
-)
 ```
 
 </CodeGroup>

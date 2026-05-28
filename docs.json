@@ -11,6 +11,11 @@
   "contextual": {
     "options": ["copy", "chatgpt", "claude"]
   },
+  "api": {
+    "examples": {
+      "languages": ["python", "javascript", "curl"]
+    }
+  },
   "navigation": {
     "versions": [
       {

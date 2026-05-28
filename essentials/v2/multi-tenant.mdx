@@ -128,36 +128,37 @@ The example below shows a common personalized-answer flow: write a user Memory, 
 
 <CodeGroup>
 
-```bash cURL
+```python Python SDK
+import json
+import os
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+
 # 1. Write a per-user memory under the user's sub_tenant_id.
-curl -X POST 'https://api.hydradb.com/source/ingest' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -F "type=memory" \
-  -F "tenant_id=acme_corp" \
-  -F "sub_tenant_id=user_123" \
-  -F "upsert=true" \
-  -F 'memories=[
-    {
-      "text": "Prefers dark mode and short answers.",
-      "infer": true,
-      "user_name": "John"
-    }
-  ]'
+client.source.ingest(
+    type="memory",
+    tenant_id="acme_corp",
+    sub_tenant_id="user_123",
+    upsert=True,
+    memories=json.dumps([
+        {
+            "text": "Prefers dark mode and short answers.",
+            "infer": True,
+            "user_name": "John",
+        }
+    ]),
+)
 
 # 2. Search Knowledge + Memories together with source: "all".
-curl -X POST 'https://api.hydradb.com/search' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "acme_corp",
-    "sub_tenant_id": "user_123",
-    "query": "refund policy",
-    "source": "all",
-    "search_by": "hybrid",
-    "mode": "thinking"
-  }'
+result = client.search.query(
+    tenant_id="acme_corp",
+    sub_tenant_id="user_123",
+    query="refund policy",
+    source="all",
+    search_by="hybrid",
+    mode="thinking",
+)
 ```
 
 ```typescript TypeScript SDK
@@ -193,37 +194,36 @@ const result = await client.search.query({
 });
 ```
 
-```python Python SDK
-import json
-import os
-from hydra_db import HydraDB
-
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
-
+```bash cURL
 # 1. Write a per-user memory under the user's sub_tenant_id.
-client.source.ingest(
-    type="memory",
-    tenant_id="acme_corp",
-    sub_tenant_id="user_123",
-    upsert=True,
-    memories=json.dumps([
-        {
-            "text": "Prefers dark mode and short answers.",
-            "infer": True,
-            "user_name": "John",
-        }
-    ]),
-)
+curl -X POST 'https://api.hydradb.com/source/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=acme_corp" \
+  -F "sub_tenant_id=user_123" \
+  -F "upsert=true" \
+  -F 'memories=[
+    {
+      "text": "Prefers dark mode and short answers.",
+      "infer": true,
+      "user_name": "John"
+    }
+  ]'
 
 # 2. Search Knowledge + Memories together with source: "all".
-result = client.search.query(
-    tenant_id="acme_corp",
-    sub_tenant_id="user_123",
-    query="refund policy",
-    source="all",
-    search_by="hybrid",
-    mode="thinking",
-)
+curl -X POST 'https://api.hydradb.com/search' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "acme_corp",
+    "sub_tenant_id": "user_123",
+    "query": "refund policy",
+    "source": "all",
+    "search_by": "hybrid",
+    "mode": "thinking"
+  }'
 ```
 
 </CodeGroup>
