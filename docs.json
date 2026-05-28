@@ -129,8 +129,7 @@
                 "group": "Search",
                 "pages": [
                   "api-reference/v2/endpoint/search-overview",
-                  "api-reference/v2/endpoint/search",
-                  "api-reference/v2/endpoint/build-string"
+                  "api-reference/v2/endpoint/search"
                 ]
               },
               {
