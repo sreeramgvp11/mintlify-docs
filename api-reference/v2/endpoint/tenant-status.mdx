@@ -9,7 +9,7 @@ import { Field } from "/snippets/field.jsx";
 Since tenant creation is asynchronous, poll this endpoint after calling `POST /tenants` and before executing ingestion or search requests.
 
 The tenant is fully ready when:
-- Both `infra.vectorstore_status.knowledge` and `infra.vectorstore_status.memory` are `true`
+- Both `infra.vectorstore_status.knowledge` and `infra.vectorstore_status.memories` are `true`
 - `infra.graph_status` (the knowledge-graph layer) is `true`
 - `infra.scheduler_status` (the background indexing scheduler) is `true`
 
@@ -54,7 +54,7 @@ curl -X GET 'https://api.hydradb.com/tenants/status?tenant_id=my_first_tenant' \
       "graph_status": true,
       "vectorstore_status": {
         "knowledge": true,
-        "memory": true
+        "memories": true
       }
     },
     "message": "Deployed infrastructure status"
@@ -70,7 +70,7 @@ curl -X GET 'https://api.hydradb.com/tenants/status?tenant_id=my_first_tenant' \
 </ResponseExample>
 
 <Info>
-The tenant is fully ready only when both `vectorstore_status.knowledge` and `vectorstore_status.memory` are `true`.
+The tenant is fully ready only when both `vectorstore_status.knowledge` and `vectorstore_status.memories` are `true`.
 </Info>
 
 ## Polling pattern
@@ -82,7 +82,7 @@ A tenant is ready when:
 - `infra.scheduler_status === true`
 - `infra.graph_status === true`
 - `infra.vectorstore_status.knowledge === true`
-- `infra.vectorstore_status.memory === true`
+- `infra.vectorstore_status.memories === true`
 
 <CodeGroup>
 ```python Python
@@ -95,7 +95,7 @@ while True:
         infra.graph_status
         and infra.scheduler_status
         and infra.vectorstore_status.knowledge
-        and infra.vectorstore_status.memory
+        and infra.vectorstore_status.memories
     ):
         break
     time.sleep(15)
@@ -104,7 +104,7 @@ while True:
 while (true) {
   const status = await client.tenants.status({ tenant_id: "acme" });
   const { graph_status, vectorstore_status, scheduler_status } = status.infra;
-  if (graph_status && scheduler_status && vectorstore_status.knowledge && vectorstore_status.memory) {
+  if (graph_status && scheduler_status && vectorstore_status.knowledge && vectorstore_status.memories) {
     break;
   }
   await new Promise((r) => setTimeout(r, 15000));
@@ -115,7 +115,7 @@ TENANT="acme"
 until curl -s -X GET "https://api.hydradb.com/tenants/status?tenant_id=${TENANT}" \
      -H "Authorization: Bearer ${HYDRA_DB_API_KEY}" \
      -H "API-Version: 2" \
-     | jq -e '.data.infra | .graph_status and .scheduler_status and .vectorstore_status.knowledge and .vectorstore_status.memory' > /dev/null; do
+     | jq -e '.data.infra | .graph_status and .scheduler_status and .vectorstore_status.knowledge and .vectorstore_status.memories' > /dev/null; do
   sleep 2
 done
 ```
