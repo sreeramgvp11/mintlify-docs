@@ -88,8 +88,6 @@ response = client.tenants.create(
 | <Field name="is_embeddings_tenant" type="boolean" /> | Set to `true` to create a pure embeddings tenant (raw vector storage rather than parsed sources). Most applications leave this `false`. (default=`false`) |
 | <Field name="embeddings_dimension" type="integer" /> | Dimensionality of the dense vector store. Only applies when `is_embeddings_tenant: true`. (default=`1536`) |
 
-## Response
-
 <ResponseExample>
 
 ```json Response
@@ -101,12 +99,6 @@ response = client.tenants.create(
 ```
 
 </ResponseExample>
-
-| Field | Description |
-|---|---|
-| <Field name="status" type="enum" /> | Always `accepted`. Provisioning runs in the background. |
-| <Field name="tenant_id" type="string" /> | The tenant identifier provided in the request. |
-| <Field name="message" type="string" /> | Human-readable next-step hint. |
 
 ## What happens next?
 

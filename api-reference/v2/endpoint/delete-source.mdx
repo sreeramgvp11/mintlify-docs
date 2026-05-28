@@ -78,10 +78,6 @@ The body wraps two fields together.
 | <Field name="request.ids" type="string[]" required /> | One or more source IDs to delete. At least one is required. |
 | <Field name="type" type='"knowledge" or "memory"' /> | Bucket selector. (default=`"knowledge"`) |
 
-## Response
-
-### Knowledge (`type=knowledge`)
-
 <ResponseExample>
 
 ```json Response
@@ -98,16 +94,6 @@ The body wraps two fields together.
 
 </ResponseExample>
 
-| Field | Description |
-|---|---|
-| <Field name="success" type="boolean" /> | `true` if at least one ID was deleted. |
-| <Field name="results[].id" type="string" /> | The ID being reported on. |
-| <Field name="results[].deleted" type="boolean" /> | Whether deletion succeeded for this specific ID. |
-| <Field name="results[].error" type="string or null" /> | Error message if deletion failed (e.g., not found). |
-| <Field name="deleted_count" type="integer" /> | Total IDs successfully deleted. |
-
-### Memory (`type=memory`)
-
 <ResponseExample>
 
 ```json Response
@@ -118,11 +104,6 @@ The body wraps two fields together.
 ```
 
 </ResponseExample>
-
-| Field | Description |
-|---|---|
-| <Field name="success" type="boolean" /> | `true` if all listed memories were deleted. |
-| <Field name="user_memory_deleted" type="boolean" /> | `true` only when every listed memory was deleted. `false` if any deletion failed. |
 
 ## Behavior notes
 

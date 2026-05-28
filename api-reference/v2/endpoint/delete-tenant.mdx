@@ -6,9 +6,7 @@ openapi: "DELETE /tenants"
 
 import { Field } from "/snippets/field.jsx";
 
-Permanently delete a tenant and all of its associated data, including ingested content, memories, metadata schema, vector indices, and graphs.
-
-This action is irreversible. There is no soft-delete and no recovery window. For details on multi-tenant architecture, see the [Multi-Tenant Support](/essentials/v2/multi-tenant) guide.
+Permanently delete a tenant and all of its associated data, including ingested content, memories, metadata schema, vector indices, and graphs. This action is irreversible. There is no soft-delete and no recovery window.
 
 <RequestExample>
 ```bash cURL
@@ -29,14 +27,9 @@ response = client.tenants.delete(tenant_id="my_first_tenant")
 
 
 ## Query parameters
-
-
-
 | Name | Description |
 | --- | --- |
 | <Field name="tenant_id" type="string" required /> | Identifier of the tenant to delete. |
-
-## Response
 
 <ResponseExample>
 
@@ -49,12 +42,6 @@ response = client.tenants.delete(tenant_id="my_first_tenant")
 ```
 
 </ResponseExample>
-
-| Field | Description |
-|---|---|
-| <Field name="tenant_id" type="string" /> | The tenant that was deregistered. |
-| <Field name="status" type="enum" /> | Always `deletion_scheduled` on success. Background workers continue removing data. |
-| <Field name="message" type="string" /> | Human-readable hint. |
 
 ## Deletion completion
 

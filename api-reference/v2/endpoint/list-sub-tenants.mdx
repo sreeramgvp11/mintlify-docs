@@ -36,8 +36,6 @@ response = client.tenants.sub_tenants(tenant_id="my_first_tenant")
 | --- | --- |
 | <Field name="tenant_id" type="string" required /> | Identifier of the tenant whose sub-tenants you want to list. |
 
-## Response
-
 <ResponseExample>
 
 ```json Response
@@ -57,11 +55,6 @@ A tenant with no indexed content can return an empty list:
   "message": "Successfully retrieved sub-tenant IDs"
 }
 ```
-
-| Field | Description |
-|---|---|
-| <Field name="sub_tenant_ids" type="string[]" /> | Array of unique sub-tenant IDs that have indexed data in either collection (Knowledge or Memories). |
-| <Field name="message" type="string" /> | Human-readable status (string). |
 
 ## Behavior notes
 

@@ -41,8 +41,6 @@ status = client.tenants.status(tenant_id="my_first_tenant")
 | --- | --- |
 | <Field name="tenant_id" type="string" required /> | Identifier of the tenant to inspect. |
 
-## Response
-
 <ResponseExample>
 
 ```json Response
@@ -62,21 +60,6 @@ status = client.tenants.status(tenant_id="my_first_tenant")
 ```
 
 </ResponseExample>
-
-| Field | Description |
-|---|---|
-| <Field name="tenant_id" type="string" /> | The tenant being inspected (string). |
-| <Field name="org_id" type="string" /> | Owning organization ID (string). |
-| <Field name="infra" type="object" /> | Nested infrastructure status object. See [Infra fields](#infra-fields). |
-| <Field name="message" type="string" /> | Human-readable status (string). |
-
-### `Infra` fields
-
-| Field | Description |
-| --- | --- |
-| <Field name="scheduler_status" type="boolean" /> | Whether the background indexing scheduler is up. |
-| <Field name="graph_status" type="boolean" /> | Whether the knowledge-graph layer is provisioned. |
-| <Field name="vectorstore_status" type="object" /> | Vector-store readiness by bucket. Contains `knowledge` and `memory` booleans. |
 
 <Info>
 The tenant is fully ready only when both `vectorstore_status.knowledge` and `vectorstore_status.memory` are `true`.

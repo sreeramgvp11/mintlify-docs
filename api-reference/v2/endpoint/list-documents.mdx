@@ -108,8 +108,6 @@ Allowed values are `title`, `type`, `description`, `url`, `timestamp`, `tenant_m
 
 `include_fields` only applies to `kind=knowledge`. It is ignored for `kind=memories`.
 
-## Response
-
 <ResponseExample>
 
 ```json Response
@@ -140,12 +138,6 @@ Allowed values are `title`, `type`, `description`, `url`, `timestamp`, `tenant_m
 ```
 
 </ResponseExample>
-
-| Field | Description |
-|---|---|
-| <Field name="sources[]" type="SourceModel[]" /> | One entry per source (or memory when `kind=memories`). Shape matches `SourceModel`. |
-| <Field name="total" type="integer" /> | Total matching items across all pages. |
-| <Field name="pagination" type="PaginationMeta" /> | Standard `PaginationMeta` with `page`, `page_size`, `total`, `total_pages`, `has_next`, `has_previous`. |
 
 When `kind=memories`, the response shape is `ListUserMemoriesResponse` instead  -  same idea but with a `user_memories[]` array of memory items.
 
