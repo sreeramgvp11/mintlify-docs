@@ -299,11 +299,11 @@ def ingest_earnings_transcript(competitor: str, quarter: str, transcript: str) -
 
 After uploading, poll `GET /source/status` until `indexing_status` is `completed`. HydraDB indexes asynchronously - typically 10–30 seconds per file. Do not query until indexing is complete; unindexed sources return empty results.
 
-> **Note**: [`GET /source/status`](/api-reference/v2/endpoint/source-status) takes `file_ids` and `tenant_id` as **query parameters**. Pass multiple `file_ids` to check a batch in one call.
+> **Note**: [`GET /source/status`](/api-reference/v2/endpoint/source-status) takes `source_ids` and `tenant_id` as **query parameters**. Pass multiple `source_ids` to check a batch in one call.
 
 ```bash
 curl -X POST \
-  'https://api.hydradb.com/source/status?tenant_id=competitive-intel&file_ids=YOUR_SOURCE_ID' \
+  'https://api.hydradb.com/source/status?tenant_id=competitive-intel&source_ids=YOUR_SOURCE_ID' \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -314,7 +314,7 @@ curl -X POST \
 {
   "statuses": [
     {
-      "file_id": "d25fb5a6-0378-4bcb-8cbc-2012c3d12ca2",
+      "source_id": "d25fb5a6-0378-4bcb-8cbc-2012c3d12ca2",
       "indexing_status": "completed",
       "error_code": "",
       "error_message": "",
@@ -343,7 +343,7 @@ def wait_until_indexed(source_id: str, max_tries: int = 20, interval: int = 3) -
         time.sleep(interval)
         status_result = client.source.status(
             tenant_id=TENANT_ID,
-            file_ids=[source_id],
+            source_ids=[source_id],
         )
         items  = status_result.statuses or []
         status = items[0].indexing_status if items else None
@@ -640,7 +640,7 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 |--------|----------|---------|
 | `POST` | `/tenants` | Create the competitive-intel tenant |
 | `POST` | `/source/ingest` | Upload a signal file (multipart form-data) |
-| `POST` | `/source/status?tenant_id=...&file_ids=...` | Check indexing status |
+| `POST` | `/source/status?tenant_id=...&source_ids=...` | Check indexing status |
 | `POST` | `/search` | Query indexed signals |
 
 ### Create Tenant
@@ -660,7 +660,7 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 
 ### Verify Processing (URL params + empty body)
 ```
-GET /source/status?tenant_id=competitive-intel&file_ids=YOUR_SOURCE_ID
+GET /source/status?tenant_id=competitive-intel&source_ids=YOUR_SOURCE_ID
 Body: {}
 ```
 

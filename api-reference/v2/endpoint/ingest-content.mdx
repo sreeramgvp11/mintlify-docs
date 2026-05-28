@@ -29,7 +29,7 @@ with open("/path/to/policy.pdf", "rb") as policy:
         files=[("policy.pdf", policy, "application/pdf")],
         file_metadata=json.dumps([
             {
-                "file_id": "policy_main",
+                "source_id": "policy_main",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"source": "policy"},
             }
@@ -93,7 +93,7 @@ const knowledgeResult = await client.source.ingest({
   ],
   file_metadata: JSON.stringify([
     {
-      file_id: "policy_main",
+      source_id: "policy_main",
       tenant_metadata: { department: "legal" },
       document_metadata: { source: "policy" },
     },
@@ -154,7 +154,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "files=@/path/to/policy.pdf" \
   -F 'file_metadata=[
     {
-      "file_id": "policy_main",
+      "source_id": "policy_main",
       "tenant_metadata": { "department": "legal" },
       "document_metadata": { "source": "policy" }
     }
@@ -219,8 +219,8 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "files=@/path/to/policy.pdf" \
   -F "files=@/path/to/runbook.pdf" \
   -F 'file_metadata=[
-    { "file_id": "policy_main", "tenant_metadata": { "department": "legal" } },
-    { "file_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
+    { "source_id": "policy_main", "tenant_metadata": { "department": "legal" } },
+    { "source_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
   ]'
 ```
 
@@ -233,8 +233,8 @@ const result = await client.source.ingest({
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
   ],
   file_metadata: JSON.stringify([
-    { file_id: "policy_main", tenant_metadata: { department: "legal" } },
-    { file_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
+    { source_id: "policy_main", tenant_metadata: { department: "legal" } },
+    { source_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
   ]),
 });
 ```
@@ -251,8 +251,8 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
             ("runbook.pdf", f2, "application/pdf"),
         ],
         file_metadata=json.dumps([
-            {"file_id": "policy_main", "tenant_metadata": {"department": "legal"}},
-            {"file_id": "runbook_deploy", "tenant_metadata": {"department": "ops"}},
+            {"source_id": "policy_main", "tenant_metadata": {"department": "legal"}},
+            {"source_id": "runbook_deploy", "tenant_metadata": {"department": "ops"}},
         ]),
     )
 ```
@@ -455,7 +455,7 @@ After ingestion, save every returned `results[].source_id`. Use these IDs for st
 
 | Field | Description |
 | --- | --- |
-| <Field name="file_id" type="string" /> | Optional source ID. If set, becomes the `source_id` for this file (use your app's document ID for parity). |
+| <Field name="source_id" type="string" /> | Optional source ID. If set, becomes the `source_id` for this file (use your app's document ID for parity). |
 | <Field name="tenant_metadata" type="object" /> | Tenant-schema fields for filtering and search. Keys must be declared in `tenant_metadata_schema`. (default=`{}`) |
 | <Field name="document_metadata" type="object" /> | Free-form per-document fields for display or bookkeeping. To filter on these at search time, nest under `metadata_filters.document_metadata`. (default=`{}`) |
 | <Field name="title" type="string" /> | Override the source title shown in search results. (default=filename) |

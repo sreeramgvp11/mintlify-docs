@@ -8,21 +8,21 @@ import { Field } from "/snippets/field.jsx";
 
 Since ingestion is asynchronous, use this endpoint to determine when content is ready to be searched.
 
-Pass one or more `source_id` values in `file_ids` to retrieve status. Works for files, app sources, and memories. For more information, see the [Knowledge](/essentials/v2/knowledge) and [Memories](/essentials/v2/memories) guides.
+Pass one or more `source_id` values in `source_ids` to retrieve status. Works for files, app sources, and memories. For more information, see the [Knowledge](/essentials/v2/knowledge) and [Memories](/essentials/v2/memories) guides.
 
 <RequestExample>
 ```python Python SDK
 status = client.source.status(
     tenant_id="acme_corp",
     sub_tenant_id="team_docs",
-    file_ids=["policy_main", "runbook_deploy"],
+    source_ids=["policy_main", "runbook_deploy"],
 )
 ```
 ```typescript TypeScript SDK
 const status = await client.source.status({
   tenant_id: "acme_corp",
   sub_tenant_id: "team_docs",
-  file_ids: ["policy_main", "runbook_deploy"],
+  source_ids: ["policy_main", "runbook_deploy"],
 });
 ```
 ```bash cURL
@@ -31,8 +31,8 @@ curl -G 'https://api.hydradb.com/source/status' \
   -H "API-Version: 2" \
   --data-urlencode "tenant_id=acme_corp" \
   --data-urlencode "sub_tenant_id=team_docs" \
-  --data-urlencode "file_ids=policy_main" \
-  --data-urlencode "file_ids=runbook_deploy"
+  --data-urlencode "source_ids=policy_main" \
+  --data-urlencode "source_ids=runbook_deploy"
 ```
 </RequestExample>
 
@@ -40,23 +40,17 @@ curl -G 'https://api.hydradb.com/source/status' \
 
 ## Query parameters
 
- Provide `tenant_id` and at least one source ID using `file_ids` or the deprecated single `file_id`.
+ Provide `tenant_id` and at least one source ID using `source_ids`.
 
 <Info>
-For multiple IDs over raw HTTP, repeat the query parameter: `/source/status?tenant_id=acme_corp&file_ids=policy_main&file_ids=runbook_deploy`
+For multiple IDs over raw HTTP, repeat the query parameter: `/source/status?tenant_id=acme_corp&source_ids=policy_main&source_ids=runbook_deploy`
 </Info>
 
 | Name | Description |
 | --- | --- |
-| <Field name="file_id" type="string" /> | **Deprecated**  -  single ID. Use `file_ids` instead. |
-| <Field name="file_ids" type="string[]" recommended /> | One or more `source_id` values returned at ingestion. Despite the name, accepts IDs of any source  -  files, app sources, memories. Required unless using deprecated `file_id`. |
+| <Field name="source_ids" type="string[]" required /> | One or more `source_id` values returned at ingestion. Accepts IDs of any source  -  files, app sources, memories. |
 | <Field name="tenant_id" type="string" required /> | Tenant the items belong to. |
 | <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
-
-<Info> 
-TODO: remove and fix api
-The query parameter is named `file_ids` for legacy reasons. It accepts the `source_id` returned by both file uploads and app sources and memories  -  not only file-backed sources.
-</Info>
 
 `200` response body matches OpenAPI schema **`BatchProcessingStatus`** with one `ProcessingStatus` per requested ID.
 
@@ -68,14 +62,14 @@ The query parameter is named `file_ids` for legacy reasons. It accepts the `sour
   "data": {
     "statuses": [
       {
-        "file_id": "policy_main",
+        "source_id": "policy_main",
         "indexing_status": "completed",
         "error_code": "",
         "success": true,
         "message": "Processing status retrieved successfully"
       },
       {
-        "file_id": "runbook_deploy",
+        "source_id": "runbook_deploy",
         "indexing_status": "graph_creation",
         "error_code": "",
         "success": true,
@@ -146,7 +140,7 @@ while (true) {
   const response = await client.source.status({
     tenant_id: "acme_corp",
     sub_tenant_id: "team_docs",
-    file_ids: sourceIds,
+    source_ids: sourceIds,
   });
 
   const statuses = response.statuses.map((s) => s.indexing_status);
@@ -165,7 +159,7 @@ while True:
     response = client.source.status(
         tenant_id="acme_corp",
         sub_tenant_id="team_docs",
-        file_ids=source_ids,
+        source_ids=source_ids,
     )
     statuses = [s.indexing_status for s in response.statuses]
 
@@ -187,7 +181,7 @@ while True:
     response = client.source.status(
         tenant_id="acme_corp",
         sub_tenant_id="team_docs",
-        file_ids=["policy_main", "runbook_deploy"],
+        source_ids=["policy_main", "runbook_deploy"],
     )
     statuses = [s.indexing_status for s in response.statuses]
 

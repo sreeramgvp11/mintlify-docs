@@ -73,7 +73,7 @@ Most of the time the defaults are right. When they aren't, here's where to start
 - **Pick `tenant_metadata` for hot paths, `additional_metadata` for cold ones.** Tenant-level scopes are pre-applied in the vector store; document-level scopes force a post-retrieval pass with over-fetch.
 - **Use exact-equality only.** `metadata_filters` are equality constraints across all categories. Range, contains, or fuzzy matching belong in the query, search mode, or downstream reranking  -  not here.
 - **Keep keys stable.** Renaming a metadata key requires re-ingesting affected sources. Same goes for changing `enable_match` flags.
-- **Ingested metadata is immutable.** Once a source is indexed, its `tenant_metadata` and `additional_metadata` values are locked. To change them, re-ingest the source with the new values (use `upsert: true` and the same `source_id` / `file_id`).
+- **Ingested metadata is immutable.** Once a source is indexed, its `tenant_metadata` and `additional_metadata` values are locked. To change them, re-ingest the source with the new values (use `upsert: true` and the same `source_id`).
 - **Don't substitute `metadata_filters` for `sub_tenant_id`.** `metadata_filters` scopes results *inside* a partition. For partitioning by user, team, or workspace, use [`sub_tenant_id`](/essentials/v2/multi-tenant).
 
 ---
@@ -202,7 +202,7 @@ client.source.ingest(
 </CodeGroup>
 
 <Warning>
-**Ingested metadata is immutable.** Once a source is indexed, its `tenant_metadata` and `additional_metadata` values are locked. To change them, re-ingest the source with the new values using `upsert: true` and the same `source_id` / `file_id`.
+**Ingested metadata is immutable.** Once a source is indexed, its `tenant_metadata` and `additional_metadata` values are locked. To change them, re-ingest the source with the new values using `upsert: true` and the same `source_id`.
 </Warning>
 
 ### Step 2  -  Scope at search
@@ -263,7 +263,7 @@ Top-level `compliance_framework` is the fast scope, applied in the vector store 
 | `metadata_filters` doesn't scope results | Key isn't declared in `tenant_metadata_schema`, or `enable_match` is `false` | Re-create the tenant with the field declared (`enable_match: true`), or move the field to `additional_metadata` and nest the scope under `additional_metadata`. |
 | Scope on an `additional_metadata` key silently ignored | Scope passed as top-level key | Nest it: `metadata_filters: { additional_metadata: { author: "alice" } }`. |
 | Schema field changes don't take effect | Schema is immutable after tenant creation | Create a new tenant with the corrected schema. There's no in-place schema migration. |
-| Metadata values on a source don't update | Ingested metadata is immutable | Re-ingest the source with `upsert: true` and the same `source_id` / `file_id`. |
+| Metadata values on a source don't update | Ingested metadata is immutable | Re-ingest the source with `upsert: true` and the same `source_id`. |
 | Search returns 0 results after adding a scope | Over-scoping  -  combined constraints exclude everything | Start with the minimum hard constraints; add scopes one at a time and re-check counts. |
 | Range / contains / fuzzy scope doesn't work | `metadata_filters` is equality-only | Move that constraint into the `query` text, use a different `search_by`, or apply it in your own post-scoping. |
 | Fields used in `metadata` but missing from response objects | Field declared as embedding-only without `enable_match` | Embedding-enabled doesn't imply scoping-enabled. Add `enable_match: true` to use it in `metadata_filters`. |

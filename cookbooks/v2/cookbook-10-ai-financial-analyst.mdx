@@ -130,7 +130,7 @@ def ingest_earnings_pdf(
     period_end_date: str, # ISO 8601, e.g. "2023-06-30T00:00:00Z"
 ) -> str:
     """
-    Upload a single earnings PDF. Returns the file_id for verification.
+    Upload a single earnings PDF. Returns the source_id for verification.
 
     IMPORTANT: tenant_id and sub_tenant_id must appear both as top-level
     SDK params AND inside the app_knowledge JSON - AppKnowledgeModel validates both.
@@ -163,9 +163,9 @@ def ingest_earnings_pdf(
             files=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
-    file_id = result.results[0].source_id if result.results else str(result)
-    print(f"Uploaded {ticker} {period_label} {doc_type} → file_id: {file_id}")
-    return file_id
+    source_id = result.results[0].source_id if result.results else str(result)
+    print(f"Uploaded {ticker} {period_label} {doc_type} → source_id: {source_id}")
+    return source_id
 
 
 def ingest_earnings_batch(filings: list[dict]) -> list[str]:
@@ -174,15 +174,15 @@ def ingest_earnings_batch(filings: list[dict]) -> list[str]:
     Each item in filings: {file_path, ticker, doc_type, fiscal_year,
                            fiscal_quarter, period_label, period_end_date}
     """
-    file_ids = []
+    source_ids = []
     for i in range(0, len(filings), 20):
         batch = filings[i:i+20]
         for filing in batch:
             fid = ingest_earnings_pdf(**filing)
-            file_ids.append(fid)
+            source_ids.append(fid)
         if i + 20 < len(filings):
             time.sleep(1)   # rate limit between batches
-    return file_ids
+    return source_ids
 
 
 # ── Example: ingest 4 quarters of ACME Corp transcripts ─────────────────
@@ -224,12 +224,12 @@ filings = [
         "period_end_date": "2023-12-31T00:00:00Z",
     },
 ]
-file_ids = ingest_earnings_batch(filings)
+source_ids = ingest_earnings_batch(filings)
 # Output:
-# Uploaded ACME Q1 2023 earnings_transcript → file_id: 988293fa-e29
-# Uploaded ACME Q2 2023 earnings_transcript → file_id: 9d7951c8-160
-# Uploaded ACME Q3 2023 earnings_transcript → file_id: 2cf6ea6e-5fe
-# Uploaded ACME Q4 2023 earnings_transcript → file_id: edff67d5-237
+# Uploaded ACME Q1 2023 earnings_transcript → source_id: 988293fa-e29
+# Uploaded ACME Q2 2023 earnings_transcript → source_id: 9d7951c8-160
+# Uploaded ACME Q3 2023 earnings_transcript → source_id: 2cf6ea6e-5fe
+# Uploaded ACME Q4 2023 earnings_transcript → source_id: edff67d5-237
 ```
 
 > **The `timestamp` field is load-bearing.** HydraDB uses `timestamp` to sort and weight results when `recency_bias` is set. If you leave it blank or use the upload date instead of the reporting period end date, every Q2 and Q4 call will look equally "recent" and temporal queries will fail. Always use the fiscal period end date.
@@ -431,9 +431,9 @@ def ingest_board_memo(
             files=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
-    file_id = result.results[0].source_id if result.results else str(result)
-    print(f"Uploaded memo: {ticker} {period_label} → {file_id}")
-    return file_id
+    source_id = result.results[0].source_id if result.results else str(result)
+    print(f"Uploaded memo: {ticker} {period_label} → {source_id}")
+    return source_id
 ```
 
 ### 2.4 Verify Indexing Before Going Live
@@ -448,12 +448,12 @@ from hydra_db import HydraDB
 TENANT_ID = "financial-analyst"
 client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 
-def verify_all_indexed(file_ids: list[str], poll_interval: int = 3, max_polls: int = 20) -> bool:
+def verify_all_indexed(source_ids: list[str], poll_interval: int = 3, max_polls: int = 20) -> bool:
     """
-    Poll /source/status until all file_ids report status 'completed'.
+    Poll /source/status until all source_ids report status 'completed'.
     Returns True when all are ready, raises if any fail after max_polls.
     """
-    pending = set(file_ids)
+    pending = set(source_ids)
     for attempt in range(max_polls):
         if not pending:
             print("All documents indexed ✓")
@@ -462,7 +462,7 @@ def verify_all_indexed(file_ids: list[str], poll_interval: int = 3, max_polls: i
         for fid in list(pending):
             status = client.source.status(
                 tenant_id=TENANT_ID,
-                file_ids=[fid],
+                source_ids=[fid],
             )
             items = status.statuses or []
             s = items[0].indexing_status if items else "unknown"
@@ -488,7 +488,7 @@ def verify_all_indexed(file_ids: list[str], poll_interval: int = 3, max_polls: i
 #   ✓ 2cf6ea6e-5fe - indexed
 #   ✓ edff67d5-237 - indexed
 #   All documents indexed ✓
-verify_all_indexed(file_ids)
+verify_all_indexed(source_ids)
 ```
 
 > **Batch limit reminder.** Maximum 20 sources per request. Wait 1 second between batches. Call [`/source/status`](/api-reference/v2/endpoint/source-status) before any production query.
@@ -1424,7 +1424,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 ### Verify Indexing
 
 ```http
-GET /source/status?file_ids=FILE_ID&tenant_id=financial-analyst
+GET /source/status?source_ids=SOURCE_ID&tenant_id=financial-analyst
 ```
 
 ### Store Metrics / Analyst Memory

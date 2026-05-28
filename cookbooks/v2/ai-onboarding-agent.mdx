@@ -194,7 +194,7 @@ def upload_doc(filepath: str, doc_id: str, doc_type: str, team: str):
             files=[(os.path.basename(filepath), f, "application/octet-stream")],
             file_metadata=json.dumps([
                 {
-                    "file_id": doc_id,
+                    "source_id": doc_id,
                     "additional_metadata": {
                         "doc_type": doc_type,
                         "team": team,
@@ -321,7 +321,7 @@ def ingest_decision_docs(folder: str):
         file_handles = [open(f, "rb") for f in batch]
         metadata = json.dumps([
             {
-                "file_id": f"adr-{f.stem}",
+                "source_id": f"adr-{f.stem}",
                 "additional_metadata": {"doc_type": "adr", "team": "engineering"}
             }
             for f in batch
@@ -390,7 +390,7 @@ def ingest_people(people: list):
 
         file_handles.append(open(filepath, "rb"))
         metadata_list.append({
-            "file_id": f"person-{p['name'].lower().replace(' ', '-')}",
+            "source_id": f"person-{p['name'].lower().replace(' ', '-')}",
             "additional_metadata": {"doc_type": "person", "team": p["team"]},
         })
 
@@ -462,7 +462,7 @@ def ingest_product_docs(folder: str, team: str = "product", status: str = "curre
     file_handles = [open(f, "rb") for f in files]
     metadata = json.dumps([
         {
-            "file_id": f"product-{f.stem}",
+            "source_id": f"product-{f.stem}",
             "additional_metadata": {
                 "doc_type": "product_spec",
                 "team": team,
@@ -520,7 +520,7 @@ def ingest_meeting_notes(folder: str):
     file_handles = [open(f, "rb") for f in files]
     metadata = json.dumps([
         {
-            "file_id": f"meeting-{f.stem}",
+            "source_id": f"meeting-{f.stem}",
             "additional_metadata": {
                 "doc_type": "meeting_notes",
                 "team": "all",
@@ -844,7 +844,7 @@ All SDK methods used in this cookbook.
 |---|---|---|
 | `tenant_id` | `str` | Required. Your tenant ID. |
 | `files` | `list[IO[bytes]]` | Required. Open file handles - not file paths, not dicts. |
-| `file_metadata` | `str` | Optional. JSON **string** (not dict) with per-file `file_id` and `additional_metadata`. |
+| `file_metadata` | `str` | Optional. JSON **string** (not dict) with per-file `source_id` and `additional_metadata`. |
 
 ### client.search.query - key parameters
 

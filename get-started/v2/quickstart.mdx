@@ -326,7 +326,7 @@ while true; do
     -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
     -H "API-Version: 2" \
     --data-urlencode "tenant_id=my_first_tenant" \
-    --data-urlencode "file_ids=${SOURCE_ID}")
+    --data-urlencode "source_ids=${SOURCE_ID}")
 
   statuses=$(echo "$response" | jq -r '.data.statuses[].indexing_status')
 
@@ -348,7 +348,7 @@ const terminal = new Set(["completed", "errored"]);
 while (true) {
   const status = await client.source.status({
     tenant_id: "my_first_tenant",
-    file_ids: sourceIds,
+    source_ids: sourceIds,
   });
 
   const allDone = status.statuses.every((s) => terminal.has(s.indexing_status));
@@ -369,7 +369,7 @@ terminal = {"completed", "errored"}
 while True:
     status = client.source.status(
         tenant_id="my_first_tenant",
-        file_ids=source_ids,
+        source_ids=source_ids,
     )
     if all(s.indexing_status in terminal for s in status.statuses):
         print("Done:", status.statuses)
@@ -385,7 +385,7 @@ while True:
   "success": true,
   "data": {
     "statuses": [
-      { "file_id": "<source_id>", "indexing_status": "completed", "success": true, "message": "..." }
+      { "source_id": "<source_id>", "indexing_status": "completed", "success": true, "message": "..." }
     ]
   }
 }

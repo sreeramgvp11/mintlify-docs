@@ -182,9 +182,9 @@ if __name__ == "__main__":
 
 ```
 STATUS CODE: 200
-RESPONSE: {"results": [{"source_id": "YOUR_FILE_ID_HERE", "filename": "auth_middleware.md", "status": "accepted", "error": null}]}
+RESPONSE: {"results": [{"source_id": "YOUR_SOURCE_ID_HERE", "filename": "auth_middleware.md", "status": "accepted", "error": null}]}
 
-Copy your source_id for use in verify.py: {'results': [{'source_id': 'YOUR_FILE_ID_HERE', 'filename': 'auth_middleware.md', 'status': 'accepted', 'error': None}]}
+Copy your source_id for use in verify.py: {'results': [{'source_id': 'YOUR_SOURCE_ID_HERE', 'filename': 'auth_middleware.md', 'status': 'accepted', 'error': None}]}
 ```
 
 The exact value of `source_id` depends on HydraDB's internal file registration. Copy the value returned and use it in Step 3.
@@ -199,7 +199,7 @@ The exact value of `source_id` depends on HydraDB's internal file registration. 
 
 **What:** Polls `/source/status` using the `source_id` returned in Step 2. HydraDB returns a `statuses` array; you read `statuses[0].indexing_status`. Querying before this reaches `"completed"` returns empty results with no error - the most common beginner confusion.
 
-Replace `YOUR_FILE_ID_HERE` with the `source_id` from Step 2:
+Replace `YOUR_SOURCE_ID_HERE` with the `source_id` from Step 2:
 
 ```python
 import sys, os, time
@@ -207,25 +207,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import client, TENANT_ID
 
 # Replace with the source_id returned by upload_file.py in Step 2
-FILE_ID = "YOUR_FILE_ID_HERE"
+SOURCE_ID = "YOUR_SOURCE_ID_HERE"
 
-def verify_file(file_id: str, timeout: int = 120, interval: int = 3):
+def verify_source(source_id: str, timeout: int = 120, interval: int = 3):
     """
     Polls /source/status until indexing_status is "completed" or "errored".
     """
-    print(f"Verifying '{file_id}'...")
+    print(f"Verifying '{source_id}'...")
     deadline = time.time() + timeout
     while time.time() < deadline:
         status = client.source.status(
             tenant_id=TENANT_ID,
-            file_ids=[file_id],
+            source_ids=[source_id],
         )
         print("STATUS:", status)
 
         items = status.statuses or []
         if items:
             s = items[0].indexing_status
-            if   s == "completed": print(f"✓ '{file_id}' ready."); return
+            if   s == "completed": print(f"✓ '{source_id}' ready."); return
             elif s == "errored":   print("Indexing errored."); return
             print(f"  indexing_status: {s} - waiting...")
 
@@ -233,19 +233,19 @@ def verify_file(file_id: str, timeout: int = 120, interval: int = 3):
     raise TimeoutError("Indexing timed out")
 
 if __name__ == "__main__":
-    verify_file(FILE_ID)
+    verify_source(SOURCE_ID)
 ```
 
 **Expected output:**
 
 ```
-Verifying 'YOUR_FILE_ID_HERE'...
+Verifying 'YOUR_SOURCE_ID_HERE'...
 STATUS CODE: 200
-RESPONSE: {"statuses": [{"file_id": "YOUR_FILE_ID_HERE", "indexing_status": "processing"}]}
+RESPONSE: {"statuses": [{"source_id": "YOUR_SOURCE_ID_HERE", "indexing_status": "processing"}]}
   indexing_status: processing - waiting...
 STATUS CODE: 200
-RESPONSE: {"statuses": [{"file_id": "YOUR_FILE_ID_HERE", "indexing_status": "completed"}]}
-✓ 'YOUR_FILE_ID_HERE' ready.
+RESPONSE: {"statuses": [{"source_id": "YOUR_SOURCE_ID_HERE", "indexing_status": "completed"}]}
+✓ 'YOUR_SOURCE_ID_HERE' ready.
 ```
 
 ---
@@ -542,7 +542,7 @@ A developer asking "why does the auth middleware skip token validation for inter
 | Source | Answers | Role | Without it |
 |---|---|---|---|
 | **Source files** | *What* the code does | Anchors the query. Entry node for graph traversal. | No traversal starting point |
-| **Pull requests** | *Why* the change happened | Intent and debate behind the change. Review comments capture rejected alternatives. Set `relations.hydradb_source_ids` to the changed file IDs. | Code exists but has no rationale |
+| **Pull requests** | *Why* the change happened | Intent and debate behind the change. Review comments capture rejected alternatives. Set `relations.hydradb_source_ids` to the changed source IDs. | Code exists but has no rationale |
 | **Slack threads** | Discussion and trade-offs | Captures informal approvals and decisions never written up in docs. | Informal approvals are invisible |
 | **Wikis & RFCs** | Formal decision record | Authoritative rationale and approval chain. An RFC directly answers a whole class of "why" questions. | Missing the authoritative "because" |
 
@@ -1404,12 +1404,12 @@ client.source.ingest(
 **POST** `/source/status` - Returns `statuses[]` array · poll until `"completed"`
 
 ```json
-// Required: ?file_ids=<id>&tenant_id=engineering-docs
+// Required: ?source_ids=<id>&tenant_id=engineering-docs
 
 // Response:
 {
   "statuses": [
-    { "file_id": "<id>", "indexing_status": "completed" }
+    { "source_id": "<id>", "indexing_status": "completed" }
   ]
 }
 // indexing_status: "processing" | "completed" | "errored"

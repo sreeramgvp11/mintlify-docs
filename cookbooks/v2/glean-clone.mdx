@@ -237,7 +237,7 @@ const uploadWithVerification = async (sources: any[], tenantId: string, subTenan
     for (const sourceId of uploadResult.ids) {
       const status = await client.source.status({
         tenant_id: tenantId,
-        file_ids: [sourceId]
+        source_ids: [sourceId]
       });
       if (status.indexing_status === "errored") {
         throw new Error(`Processing failed for source ${sourceId}`);
@@ -277,7 +277,7 @@ def upload_with_verification(sources: list, tenant_id: str, sub_tenant_id: str =
             source_id = item.source_id
             status = client.source.status(
                 tenant_id=tenant_id,
-                file_ids=[source_id]
+                source_ids=[source_id]
             )
             items = status.statuses or []
             if items and items[0].indexing_status == "errored":

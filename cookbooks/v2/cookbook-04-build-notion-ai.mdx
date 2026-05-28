@@ -117,7 +117,7 @@ def extract_text(page_id: str) -> str:
 
 
 def upload_batch(sources: list, sub_tenant_id: str = None) -> list:
-    """Upload up to 20 sources. Returns list of file IDs."""
+    """Upload up to 20 sources. Returns list of source IDs."""
     if sub_tenant_id:
         for s in sources:
             s["sub_tenant_id"] = sub_tenant_id
@@ -216,25 +216,25 @@ def ingest_space(space_key: str, sub_tenant_id: str = None) -> list:
 
 After uploading, always verify that HydraDB has fully processed and indexed your content before running search queries.
 
-**Endpoint:** `GET /source/status?file_ids=FILE_ID&tenant_id=TENANT` - Check indexing status
+**Endpoint:** `GET /source/status?source_ids=SOURCE_ID&tenant_id=TENANT` - Check indexing status
 
 ```python
-def poll_until_indexed(file_id: str, timeout: int = 120, interval: int = 3):
+def poll_until_indexed(source_id: str, timeout: int = 120, interval: int = 3):
     """Poll until indexed, errored, or timeout."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         result = client.source.status(
             tenant_id=TENANT_ID,
-            file_ids=file_id,
+            source_ids=source_id,
         )
         items  = result.statuses or []
         status = items[0].indexing_status if items else None
         if status == "completed":
             return True
         if status == "errored":
-            raise RuntimeError(f"Indexing failed for {file_id}")
+            raise RuntimeError(f"Indexing failed for {source_id}")
         time.sleep(interval)
-    raise TimeoutError(f"Indexing timed out for {file_id}")
+    raise TimeoutError(f"Indexing timed out for {source_id}")
 
 def verify_all(ids: list):
     for fid in ids:
@@ -519,7 +519,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
 ### Verify processing
 
-**POST** `/source/status?file_ids=FILE_ID&tenant_id=YOUR_TENANT` - Poll until status = "completed"
+**POST** `/source/status?source_ids=SOURCE_ID&tenant_id=YOUR_TENANT` - Poll until status = "completed"
 
 ### Full search
 

@@ -83,8 +83,8 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "files=@/path/to/policy.pdf" \
   -F "files=@/path/to/runbook.pdf" \
   -F 'file_metadata=[
-    { "file_id": "policy_v2", "tenant_metadata": { "document_type": "policy", "status": "approved" } },
-    { "file_id": "runbook_deploy", "tenant_metadata": { "document_type": "runbook" } }
+    { "source_id": "policy_v2", "tenant_metadata": { "document_type": "policy", "status": "approved" } },
+    { "source_id": "runbook_deploy", "tenant_metadata": { "document_type": "runbook" } }
   ]'
 ```
 ```typescript TypeScript SDK
@@ -96,8 +96,8 @@ const result = await client.source.ingest({
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
   ],
   file_metadata: JSON.stringify([
-    { file_id: "policy_v2", tenant_metadata: { document_type: "policy", status: "approved" } },
-    { file_id: "runbook_deploy", tenant_metadata: { document_type: "runbook" } },
+    { source_id: "policy_v2", tenant_metadata: { document_type: "policy", status: "approved" } },
+    { source_id: "runbook_deploy", tenant_metadata: { document_type: "runbook" } },
   ]),
 });
 ```
@@ -113,8 +113,8 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
             ("runbook.pdf", f2, "application/pdf"),
         ],
         file_metadata=json.dumps([
-            {"file_id": "policy_v2", "tenant_metadata": {"document_type": "policy", "status": "approved"}},
-            {"file_id": "runbook_deploy", "tenant_metadata": {"document_type": "runbook"}},
+            {"source_id": "policy_v2", "tenant_metadata": {"document_type": "policy", "status": "approved"}},
+            {"source_id": "runbook_deploy", "tenant_metadata": {"document_type": "runbook"}},
         ]),
     )
 ```
@@ -226,8 +226,8 @@ while true; do
     -H "API-Version: 2" \
     --data-urlencode "tenant_id=acme_corp" \
     --data-urlencode "sub_tenant_id=default" \
-    --data-urlencode "file_ids=policy_v2" \
-    --data-urlencode "file_ids=runbook_deploy")
+    --data-urlencode "source_ids=policy_v2" \
+    --data-urlencode "source_ids=runbook_deploy")
 
   statuses=$(echo "$response" | jq -r '.data.statuses[].indexing_status')
   if echo "$statuses" | grep -qv '^\(completed\|errored\)$'; then
@@ -247,7 +247,7 @@ while (true) {
   status = await client.source.status({
     tenant_id: "acme_corp",
     sub_tenant_id: "default",
-    file_ids: sourceIds,
+    source_ids: sourceIds,
   });
 
   const allDone = status.statuses.every((s) => terminal.has(s.indexing_status));
@@ -266,7 +266,7 @@ while True:
     status = client.source.status(
         tenant_id="acme_corp",
         sub_tenant_id="default",
-        file_ids=source_ids,
+        source_ids=source_ids,
     )
     if all(s.indexing_status in terminal for s in status.statuses):
         break
@@ -278,7 +278,7 @@ while True:
 {
   "statuses": [
     {
-      "file_id": "policy_v2",
+      "source_id": "policy_v2",
       "indexing_status": "completed",
       "success": true
     }
@@ -302,7 +302,7 @@ The full schema lives on [`POST /source/ingest`](/api-reference/v2/endpoint/inge
 
 | Field | Description |
 |---|---|
-| <Field name="file_id" type="string" /> | Optional stable identifier. Used as upsert key when `upsert: true`. |
+| <Field name="source_id" type="string" /> | Optional stable identifier. Used as upsert key when `upsert: true`. |
 | <Field name="tenant_metadata" type="object" /> | Filterable fields. Keys must match the tenant metadata schema. Also accepted as `metadata`. |
 | <Field name="document_metadata" type="object" /> | Free-form fields for display and bookkeeping. Filterable only when nested under `document_metadata` in `metadata_filters`. Also accepted as `additional_metadata`. |
 | <Field name="title" type="string" /> | Override the source title shown in search results. |
@@ -333,7 +333,7 @@ The full schema lives on [`POST /source/ingest`](/api-reference/v2/endpoint/inge
 |---|---|---|
 | <Field name="tenant_id" type="string" required /> | — | Target tenant. |
 | <Field name="sub_tenant_id" type="string" /> | none | Scope this knowledge to a sub-tenant. If omitted, knowledge is available to all sub-tenants. |
-| <Field name="upsert" type="boolean" /> | `true` | Replace existing items with the same `source_id` / `file_id`. |
+| <Field name="upsert" type="boolean" /> | `true` | Replace existing items with the same `source_id`. |
 
 ---
 

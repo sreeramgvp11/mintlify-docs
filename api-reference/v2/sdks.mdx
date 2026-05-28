@@ -219,12 +219,12 @@ const result = await client.source.ingest({
   ],
   file_metadata: JSON.stringify([
     {
-      file_id: "contract_q4",
+      source_id: "contract_q4",
       tenant_metadata: { department: "legal" },
       document_metadata: { author: "Alice" },
     },
     {
-      file_id: "policy_2025",
+      source_id: "policy_2025",
       tenant_metadata: { department: "legal" },
       document_metadata: { author: "Bob" },
     },
@@ -244,12 +244,12 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
         ],
         file_metadata=json.dumps([
             {
-                "file_id": "contract_q4",
+                "source_id": "contract_q4",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"author": "Alice"},
             },
             {
-                "file_id": "policy_2025",
+                "source_id": "policy_2025",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"author": "Bob"},
             },
@@ -313,13 +313,13 @@ Poll `source.status` with the `source_id`s from the ingest response:
 ```typescript TypeScript SDK
 const status = await client.source.status({
   tenant_id: "my_first_tenant",
-  file_ids: ["contract_q4", "policy_2025"],
+  source_ids: ["contract_q4", "policy_2025"],
 });
 ```
 ```python Python SDK
 status = client.source.status(
     tenant_id="my_first_tenant",
-    file_ids=["contract_q4", "policy_2025"],
+    source_ids=["contract_q4", "policy_2025"],
 )
 ```
 </CodeGroup>
