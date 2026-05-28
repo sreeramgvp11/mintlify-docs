@@ -34,54 +34,32 @@ Steps 1 and 3 are **asynchronous**(runs in background)  -  HydraDB provisions in
 ## Prerequisites
 
 - An API key from [app.hydradb.com](https://app.hydradb.com)
-- A backend that can make HTTP calls, or one of the HydraDB [SDKs](/api-reference/v2/sdks)
 
-| Setting | Value |
-|---|---|
-| **Base URL** | `https://api.hydradb.com` |
-| **Auth header** | `Authorization: Bearer <your_api_key>` |
-| **Version header** | `API-Version: 2` (auto-set by the SDKs) |
-
-### Install the SDK (optional)
+### Install and initialize
 
 <CodeGroup>
-```bash cURL
-# No install needed — smoke-test the connection directly.
-# Lists tenants visible to this key. A 200 response confirms
-# auth + the version header are both wired up.
-export HYDRA_DB_API_KEY="your_api_key"
+```python Python SDK
+# Install: pip install "hydradb-sdk>=2,<3"
+import os
+from hydra_db import HydraDB
 
-curl 'https://api.hydradb.com/tenants' \
-  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -H "API-Version: 2"
-```
-```bash TypeScript SDK
-npm install @hydradb/sdk@^2
-```
-```bash Python SDK
-pip install "hydradb-sdk>=2,<3"
-```
-</CodeGroup>
-
-### Initialize a client
-
-<CodeGroup>
-```bash cURL
-# Set your key once and reuse it on every request
-export HYDRA_DB_API_KEY="your_api_key"
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
 ```
 ```typescript TypeScript SDK
+// Install: npm install @hydradb/sdk@^2
 import { HydraDBClient } from "@hydradb/sdk";
 
 const client = new HydraDBClient({
   token: process.env.HYDRA_DB_API_KEY,
 });
 ```
-```python Python SDK
-import os
-from hydra_db import HydraDB
+```bash cURL
+# No SDK needed — set your key once and reuse it.
+export HYDRA_DB_API_KEY="your_api_key"
 
-client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+curl 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
 ```
 </CodeGroup>
 
@@ -241,7 +219,7 @@ curl -s -X POST 'https://api.hydradb.com/search' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
-  -d @- <<EOF | jq '.data.chunks'
+  --data-binary @- <<EOF | jq '.data.chunks'
 {
   "tenant_id": "${TENANT_ID}",
   "source": "memories",
