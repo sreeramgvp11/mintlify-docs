@@ -81,8 +81,6 @@ curl -X POST 'https://api.hydradb.com/tenants' \
 | --- | --- |
 | <Field name="tenant_id" type="string" required /> | Account-scoped tenant identifier. Use a stable, case-sensitive ID up to 25 characters; prefer lowercase letters, numbers, and underscores for portability. |
 | <Field name="tenant_metadata_schema" type="array" /> | Defines tenant-level metadata fields. See the [Scoping using metadata](/essentials/v2/metadata#schema-declaration-set-at-tenant-creation) guide for detailed schema parameters. (default=`null`) |
-| <Field name="is_embeddings_tenant" type="boolean" /> | Set to `true` to create a pure embeddings tenant (raw vector storage rather than parsed sources). Most applications leave this `false`. (default=`false`) |
-| <Field name="embeddings_dimension" type="integer" /> | Dimensionality of the dense vector store. Only applies when `is_embeddings_tenant: true`. (default=`1536`) |
 
 <ResponseExample>
 
@@ -147,7 +145,6 @@ Schema field names are **immutable** after tenant creation. You can add per-docu
 
 - **Default sub-tenant:** HydraDB assigns an auto-generated default sub-tenant ID for calls that omit `sub_tenant_id`. That default is created once and reused. See [Concepts → Multi-Tenant](/essentials/v2/multi-tenant) for details.
 - **Reserved field names:** Some names are reserved by the indexing layer (e.g., system fields used to track ingestion and graph state). `name` values are validated server-side; reserved names return a `422 VALIDATION_ERROR`. Use prefixes like `app_` if you're worried about collisions.
-- **Embeddings tenants:** `is_embeddings_tenant: true` creates a raw-vector tenant for `/embeddings/*`. It is not intended for `/source/ingest`, and its tenant status may not report the memory vector store as ready.
 
 ## Errors
 

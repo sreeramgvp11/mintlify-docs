@@ -393,9 +393,7 @@ console.log(result.chunks);
       "enable_sparse_embedding": false,
       "max_length": 1024
     }
-  ],
-  "is_embeddings_tenant": false,
-  "embeddings_dimension": 1536
+  ]
 }
 ```
 
@@ -404,7 +402,6 @@ Notes:
 - Tenant creation is async.
 - `tenant_id` should be stable; docs recommend lowercase letters, numbers, and underscores for portability.
 - `tenant_metadata_schema` is effectively planned up front. If you need to change filterable metadata fields, expect to create a new tenant or re-ingest under a new schema.
-- `is_embeddings_tenant: true` is for raw vector storage, not normal parsed-source ingestion.
 - `POST /tenants` may return `409 TENANT_ALREADY_EXISTS` for duplicate tenant IDs and `403 FORBIDDEN` when the API key or plan cannot create more tenants.
 
 ### Check readiness
@@ -418,7 +415,7 @@ Ready when infrastructure reports usable status. Current docs show `infra.ready_
 - `infra.vectorstore_status.knowledge`
 - `infra.vectorstore_status.memory` / `memories`
 
-Use SDK autocomplete/returned object shape for the exact field spelling. For embeddings-only tenants (`is_embeddings_tenant: true`), `ready_for_ingestion` is not the right gate for `/source/ingest`; the memory vector store may remain false while raw `/embeddings/*` operations are usable.
+Use SDK autocomplete/returned object shape for the exact field spelling.
 
 ### Other tenant endpoints
 
@@ -1130,34 +1127,7 @@ try {
 
 ---
 
-## 13. BYO raw embeddings
-
-For normal RAG, use `/source/ingest`. For raw vector storage/search, create an embeddings tenant and use the embeddings endpoints.
-
-Tenant creation:
-
-```json
-{
-  "tenant_id": "acme_vectors",
-  "is_embeddings_tenant": true,
-  "embeddings_dimension": 1536
-}
-```
-
-Endpoints present in OpenAPI:
-
-| Endpoint | Purpose |
-|---|---|
-| `POST /embeddings/insert_raw_embeddings` | insert raw embedding documents |
-| `POST /embeddings/search_raw_embeddings` | vector search by query embedding |
-| `POST /embeddings/filter_raw_embeddings` | fetch/filter raw embeddings |
-| `DELETE /embeddings/delete_raw_embeddings` | delete raw embeddings |
-
-Use this only when the application owns embedding generation and chunking. Embeddings tenants are not intended for `/source/ingest`; their status may show `vectorstore_status.memories: false` even when raw embeddings operations are available.
-
----
-
-## 14. v1 to v2 migration cheatsheet
+## 13. v1 to v2 migration cheatsheet
 
 | v1 concept/method | v2 replacement |
 |---|---|
@@ -1181,7 +1151,7 @@ Use this only when the application owns embedding generation and chunking. Embed
 
 ---
 
-## 15. Cookbook patterns
+## 14. Cookbook patterns
 
 The v2 cookbooks show production patterns. Click the links below to read the raw Markdown guides with complete setup code and schemas:
 
@@ -1211,7 +1181,7 @@ Common architecture across cookbooks:
 
 ---
 
-## 16. Common mistakes checklist
+## 15. Common mistakes checklist
 
 - [ ] Using v1 endpoints for new code instead of `/tenants`, `/source/*`, `/search`.
 - [ ] Forgetting `API-Version: 2` in raw HTTP calls.
@@ -1235,9 +1205,9 @@ Common architecture across cookbooks:
 
 ---
 
-## 17. SDK Method Reference
+## 16. SDK Method Reference
 
-### 17.1 TypeScript SDK (v2)
+### 16.1 TypeScript SDK (v2)
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -1255,7 +1225,7 @@ Common architecture across cookbooks:
 | `client.tenants.subTenants()` | `GET /tenants/sub-tenants` | List active sub-tenants |
 | `client.tenants.stats()` | `GET /tenants/stats` | Get tenant usage stats |
 
-### 17.2 Python SDK (v2)
+### 16.2 Python SDK (v2)
 
 | Group | Method | Endpoint | Description |
 |---|---|---|---|
@@ -1273,7 +1243,7 @@ Common architecture across cookbooks:
 | Tenants | `client.tenants.sub_tenants()` | `GET /tenants/sub-tenants` | List active sub-tenants |
 | Tenants | `client.tenants.stats()` | `GET /tenants/stats` | Get tenant usage stats |
 
-### 17.3 Minimal cURL example
+### 16.3 Minimal cURL example
 
 Use `source` on raw `/search` requests because that is the OpenAPI field. The raw API response is wrapped; read payloads from `.data`.
 
@@ -1322,7 +1292,7 @@ curl -s -X POST 'https://api.hydradb.com/search' \
   | jq '.data.chunks'
 ```
 
-### 17.4 Raw HTTP: ingest app-source knowledge
+### 16.4 Raw HTTP: ingest app-source knowledge
 
 Use this for connector output where your app already extracted the text. `app_knowledge` must be a JSON string in multipart form data.
 
@@ -1380,7 +1350,7 @@ curl -s -X POST 'https://api.hydradb.com/search' \
 
 ---
 
-## 18. Navigation and support
+## 17. Navigation and support
 
 - Docs root for v2: `get-started/v2`, `essentials/v2`, `api-reference/v2`, `cookbooks/v2`
 - API reference OpenAPI: `api-reference/v2/openapi.json`
