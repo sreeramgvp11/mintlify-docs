@@ -62,7 +62,7 @@ from urllib.request import Request, urlopen
 # Top-level configuration: safe to edit locally.
 # -----------------------------------------------------------------------------
 BASE_URL = os.getenv("HYDRADB_BASE_URL", "https://api-v2.staging.hydradb.com/")
-API_KEY = "sk_test_p4iVZLQAo0NX.yKx4-tu5CLm6WYsTPq-i0N4xKq7k0QpzgXXcwWfi0fk"  #
+API_KEY = os.getenv("HYDRADB_API_KEY", "")
 TENANT_ID = os.getenv("HYDRADB_TENANT_ID", "default-tenant")
 SUB_TENANT_ID = os.getenv("HYDRADB_SUB_TENANT_ID", "e2e_user_alex")
 
