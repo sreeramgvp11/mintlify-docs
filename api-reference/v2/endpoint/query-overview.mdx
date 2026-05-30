@@ -42,7 +42,7 @@ linkStyle default stroke:#64748b,stroke-width:2px;
 | <Field name="alpha" /> | `0.0`-`1.0` or `"auto"` | Tune hybrid query. Lower values favor BM25 keywords; higher values favor semantic similarity. |
 | <Field name="metadata_filters" /> | object | Narrow candidates before ranking. Top-level keys match `tenant_metadata`; nested `document_metadata` filters free-form per-source fields. |
 | <Field name="graph_context" /> | boolean | Include entity/relation context with the chunks. On by default; set `false` for chunk-only responses. |
-| <Field name="search_apps" /> | boolean | Adds app-aware retrieval while still querying the full selected knowledge scope. Use it for better app-source matching; it does not restrict retrieval to app sources only. |
+| <Field name="query_apps" /> | boolean | Adds app-aware retrieval while still querying the full selected knowledge scope. Use it for better app-source matching; it does not restrict retrieval to app sources only. |
 
 <Tip>
 For filter design, read [Usage - Metadata](/essentials/v2/metadata) before creating tenant schemas. For exact request fields, defaults, and response shape, use [Query](/api-reference/v2/endpoint/query).

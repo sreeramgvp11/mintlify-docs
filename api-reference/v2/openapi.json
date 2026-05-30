@@ -7977,9 +7977,9 @@
             "title": "Additional Context",
             "description": "Additional context provided by the user to guide retrieval"
           },
-          "search_apps": {
+          "query_apps": {
             "type": "boolean",
-            "title": "Search Apps",
+            "title": "Query Apps",
             "description": "Temporary retrieval vertical switch. When True, a parallel app-aware retrieval lane runs alongside the standard lane and results are fused into one ranked list. When False (default), current behavior is preserved exactly. Memory searches ignore this flag.",
             "default": false
           },

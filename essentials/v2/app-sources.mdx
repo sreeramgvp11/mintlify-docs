@@ -10,7 +10,7 @@ App sources are pre-parsed records from business applications  -  emails, chat m
 Every app item becomes one [Knowledge](/essentials/v2/knowledge) source under a flat shape. There are no typed `kind`/`provider`/`fields` discriminators. Threads, replies, and comments are modeled as **separate sources** linked together with [`relations.source_ids`](#7-forceful-relations).
 
 <Info>
-  App sources land in the [Knowledge](/essentials/v2/knowledge) store and are queryable through [`POST /query`](/api-reference/v2/endpoint/query) with **`search_apps: true`** and `type: "knowledge"` (or `type: "all"` to merge with [Memories](/essentials/v2/memories)).
+  App sources land in the [Knowledge](/essentials/v2/knowledge) store and are queryable through [`POST /query`](/api-reference/v2/endpoint/query) with **`query_apps: true`** and `type: "knowledge"` (or `type: "all"` to merge with [Memories](/essentials/v2/memories)).
 </Info>
 
 ## 1. What it is
@@ -486,7 +486,7 @@ See [Scoping using metadata](/essentials/v2/metadata) for the full schema design
 
 ## 10. How app sources affect query
 
-When `search_apps: true` is passed to the [`POST /query`](/api-reference/v2/endpoint/query) endpoint, HydraDB runs an app-aware query lane alongside normal semantic and lexical retrieval. The query still queries the full selected knowledge scope; `search_apps: true` does **not** limit results to only app sources. It improves app-source matching and expansion while preserving regular knowledge-base retrieval.
+When `query_apps: true` is passed to the [`POST /query`](/api-reference/v2/endpoint/query) endpoint, HydraDB runs an app-aware query lane alongside normal semantic and lexical retrieval. The query still queries the full selected knowledge scope; `query_apps: true` does **not** limit results to only app sources. It improves app-source matching and expansion while preserving regular knowledge-base retrieval.
 
 The app-aware lane does more than Query raw text. It parses the query for app-specific hints (e.g., provider names, object types, exact external IDs, authors, thread keywords, or relationship terms like "linked to", "blocked by", "reply", or "parent") and uses these clues to build candidate sets and expand context around matching sources.
 
@@ -505,7 +505,7 @@ This means a query like *"show me Slack replies from Alice about AUTH-123"* comb
 
 Parent/child and hierarchical query is based on provider-scoped external IDs and relationships. When HydraDB ingests a source with a parent relation or `parent_id` hierarchy link, it indexes that connection in the context graph.
 
-At recall time, `search_apps: true` lets the app-aware lane find an initial source. In `thinking` mode, if the query asks for parents, children, ancestors, descendants, epics, subtasks, accounts, deals, or similar hierarchy wording, HydraDB automatically expands around the matched source:
+At recall time, `query_apps: true` lets the app-aware lane find an initial source. In `thinking` mode, if the query asks for parents, children, ancestors, descendants, epics, subtasks, accounts, deals, or similar hierarchy wording, HydraDB automatically expands around the matched source:
 
 * **To find a parent:** HydraDB matches the source's parent relation to another source's `external_id` under the same `provider`.
 * **To find children:** HydraDB looks for sources that point to the matched source's `external_id` as their parent.
@@ -514,7 +514,7 @@ At recall time, `search_apps: true` lets the app-aware lane find an initial sour
 These expanded sources are brought into the retrieved results as connected context. Chunks retrieved through this path are tagged with `_retrieval_source: "app_relation_expansion"` in their metadata and may include an `_app_relation_type` property (e.g., `parent`, `child`, `grandparent`, `grandchild`).
 
 <Note>
-  Set `mode: "thinking"` and `search_apps: true` on your [query request](/api-reference/v2/endpoint/query) for optimal app-source behavior. This keeps normal knowledge-base retrieval active and gives the app-aware relation-expansion and reranking layers the space to assemble complete conversational and workflow context.
+  Set `mode: "thinking"` and `query_apps: true` on your [query request](/api-reference/v2/endpoint/query) for optimal app-source behavior. This keeps normal knowledge-base retrieval active and gives the app-aware relation-expansion and reranking layers the space to assemble complete conversational and workflow context.
 </Note>
 
 ```json
@@ -522,7 +522,7 @@ These expanded sources are brought into the retrieved results as connected conte
   "tenant_id": "acme_corp",
   "query": "show me tickets linked to AUTH-123 and comments from Alice",
   "mode": "thinking",
-  "search_apps": true,
+  "query_apps": true,
   "max_results": 10
 }
 ```
@@ -546,7 +546,7 @@ Use this as the compact contract for `app_knowledge` ingestion in API v2. Unlike
 | <Field name="content" type="object" required /> | Queryable body. Use `content.text` for plain text or `content.markdown` for Markdown. | Primary text that HydraDB chunks, embeds, graphs, and indexes. |
 | <Field name="tenant_metadata" type="object" /> | Schema-aligned, filterable fields such as channel, project, space, mailbox, pipeline, region, or environment. | Queryable via `metadata_filters` when keys are declared in `tenant_metadata_schema`. |
 | <Field name="document_metadata" type="object" /> | Free-form display/bookkeeping fields such as author, ticket key, provider IDs, status, assignee, thread ID, or stage. | Preserved on the source and queryable/filterable under `metadata_filters.document_metadata`. |
-| <Field name="kind" type="string" recommended /> | App-source object kind, such as `email`, `message`, `ticket`, `knowledge_base`, `comment`, or `custom`. | Used by `search_apps: true` to route queries and enable specialized app query behavior. |
+| <Field name="kind" type="string" recommended /> | App-source object kind, such as `email`, `message`, `ticket`, `knowledge_base`, `comment`, or `custom`. | Used by `query_apps: true` to route queries and enable specialized app query behavior. |
 | <Field name="provider" type="string" recommended /> | App system/namespace the source came from (e.g., `slack`, `gmail`, `jira`, `notion`, `salesforce`, `linear`). | Prevents ID collisions across different systems and scopes queries to specific providers. |
 | <Field name="external_id" type="string" recommended /> | Stable provider ID for this exact item in the external system. | Used for exact ID matching, resolving relations, and thread/hierarchy traversal. |
 | <Field name="fields" type="object" recommended /> | Structured kind-specific fields. | Houses author, body, thread and parent identifiers. Put primary text inside `fields` instead of raw top-level `content`. |
@@ -673,7 +673,7 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 | Using a non-stable string for `id` | Re-ingests create duplicate sources instead of upserting | Compose `id` from stable provider IDs (e.g. `slack_<channel>_<ts>`, `jira_<key>`) |
 | Pointing `relations.source_ids` at memory IDs from a Knowledge source | Silently returns nothing at query | Forceful relations stay within one store - Knowledge ↔ Knowledge, Memory ↔ Memory |
 | Skipping [`/source/status`](/api-reference/v2/endpoint/source-status) before querying | Source not indexed yet; empty results | Poll until `indexing_status: "completed"` (or `graph_creation` for partial availability) |
-| Forgetting to set `search_apps: true` on [`POST /query`](/api-reference/v2/endpoint/query) | Returns only text/vector matches without the app-aware lane expansion | Always set `search_apps: true` (and use `mode: "thinking"`) when querying app-source data |
+| Forgetting to set `query_apps: true` on [`POST /query`](/api-reference/v2/endpoint/query) | Returns only text/vector matches without the app-aware lane expansion | Always set `query_apps: true` (and use `mode: "thinking"`) when querying app-source data |
 
 ---
 ## Related
