@@ -122,7 +122,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
 ### Path B  -  App sources
 
-Pre-parsed text from connected apps. You supply the text, [metadata](/essentials/v2/metadata), and an optional URL. Use this when your application already extracts content (Slack messages, Notion pages, Gmail threads, webpages) and you want HydraDB to skip the parsing step.
+Pre-parsed records from connected apps. You supply app-native fields (`kind`, `provider`, `external_id`, and `fields`), [metadata](/essentials/v2/metadata), and optional attachments/comments. Use this when your application already extracts content from Slack messages, Notion pages, Gmail messages, tickets, or CRM records and you want HydraDB to preserve app structure instead of treating the item as generic text.
 
 <CodeGroup>
 ```python Python SDK
@@ -135,12 +135,21 @@ result = client.source.ingest(
         {
             "tenant_id": "acme_corp",
             "sub_tenant_id": "default",
-            "id": "slack_thread_001",
+            "id": "slack_C01_1716213600_000100",
             "title": "Pricing discussion - Slack #product",
             "type": "slack",
-            "content": {"text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199."},
+            "kind": "message",
+            "provider": "slack",
+            "external_id": "1716213600.000100",
+            "fields": {
+                "kind": "message",
+                "body": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
+                "author": "alice",
+                "thread_id": "1716213600.000100",
+                "created_at": "2026-05-20T10:00:00Z",
+            },
             "tenant_metadata": {"channel": "product", "status": "finalized"},
-            "document_metadata": {"slack_ts": "1715012345.000100"},
+            "additional_metadata": {"slack_ts": "1716213600.000100"},
         }
     ]),
 )
@@ -153,12 +162,21 @@ const result = await client.source.ingest({
     {
       tenant_id: "acme_corp",
       sub_tenant_id: "default",
-      id: "slack_thread_001",
+      id: "slack_C01_1716213600_000100",
       title: "Pricing discussion - Slack #product",
       type: "slack",
-      content: { text: "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
+      kind: "message",
+      provider: "slack",
+      external_id: "1716213600.000100",
+      fields: {
+        kind: "message",
+        body: "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
+        author: "alice",
+        thread_id: "1716213600.000100",
+        created_at: "2026-05-20T10:00:00Z",
+      },
       tenant_metadata: { channel: "product", status: "finalized" },
-      document_metadata: { slack_ts: "1715012345.000100" },
+      additional_metadata: { slack_ts: "1716213600.000100" },
     },
   ]),
 });
@@ -173,19 +191,28 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
     {
       "tenant_id": "acme_corp",
       "sub_tenant_id": "default",
-      "id": "slack_thread_001",
+      "id": "slack_C01_1716213600_000100",
       "title": "Pricing discussion - Slack #product",
       "type": "slack",
-      "content": { "text": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199." },
+      "kind": "message",
+      "provider": "slack",
+      "external_id": "1716213600.000100",
+      "fields": {
+        "kind": "message",
+        "body": "We agreed on three tiers: Starter at $29, Pro at $79, Enterprise at $199.",
+        "author": "alice",
+        "thread_id": "1716213600.000100",
+        "created_at": "2026-05-20T10:00:00Z"
+      },
       "tenant_metadata": { "channel": "product", "status": "finalized" },
-      "document_metadata": { "slack_ts": "1715012345.000100" }
+      "additional_metadata": { "slack_ts": "1716213600.000100" }
     }
   ]'
 ```
 </CodeGroup>
 
 <Info>
-Both paths are available. We *recommend* storing the content as a markdown file and using Path A (file upload via `POST /source/ingest`) for better parsing and chunking.
+Both paths are available. Use Path A for original documents that need parsing. Use Path B for app objects when you already have structured fields and want app-aware query behavior.
 </Info>
 
 **Response (both paths):**
@@ -315,17 +342,22 @@ The full schema lives on [`POST /source/ingest`](/api-reference/v2/endpoint/inge
 
 | Field | Description |
 |---|---|
-| <Field name="id" type="string" recommended /> | Unique identifier for the source. Upsert key. |
-| <Field name="title" type="string" recommended /> | Short title or subject. |
-| <Field name="type" type="string" recommended /> | Source category, such as `slack`, `notion`, `gmail`, or `webpage`. |
-| <Field name="description" type="string" /> | Optional long-form description. |
+| <Field name="id" type="string" recommended /> | Stable source ID. Used as the upsert/delete/status key. |
+| <Field name="tenant_id" type="string" recommended /> | Tenant that owns the item. Must match form-level `tenant_id` when present. |
+| <Field name="sub_tenant_id" type="string" recommended /> | Logical partition. Must match form-level `sub_tenant_id` when present. |
+| <Field name="title" type="string" recommended /> | Short title, subject, ticket title, or page name. |
+| <Field name="type" type="string" recommended /> | Source category for display/analytics, such as `slack`, `notion`, `gmail`, or `jira`. |
+| <Field name="kind" type="email, message, ticket, knowledge_base, comment, custom" recommended /> | App object kind. Selects the app parser for `fields`. |
+| <Field name="provider" type="string" recommended /> | App namespace such as `slack`, `gmail`, `jira`, `notion`, `salesforce`, or `linear`. |
+| <Field name="external_id" type="string" recommended /> | Stable provider ID for this exact item. Enables exact lookup and relation resolution. |
+| <Field name="fields" type="object" required /> | App-native content and structure. Put primary text here (`body`, `description`, `title`, or `data` depending on `kind`). |
 | <Field name="url" type="string" /> | Canonical URL or reference link. |
-| <Field name="timestamp" type="ISO-8601 datetime" /> | Creation or last-updated time. |
-| <Field name="content" type="object" required /> | Content payload. Use `{ "text": "..." }` for plain text or `{ "markdown": "..." }` for Markdown. |
+| <Field name="timestamp" type="ISO-8601 datetime" /> | Creation, sent, or last-updated time. |
 | <Field name="tenant_metadata" type="object" /> | Filterable fields matching the tenant schema. Also accepted as `metadata`. |
-| <Field name="document_metadata" type="object" /> | Free-form fields. Filterable only when nested under `document_metadata` in `metadata_filters`. Also accepted as `additional_metadata`. |
-| <Field name="attachments" type="array" /> | Optional related attachments. |
-| <Field name="relations" type="object" /> | Forcefully connect this source to others. |
+| <Field name="additional_metadata" type="object" /> | Free-form fields. Filterable only when nested under `additional_metadata` in `metadata_filters`. Also accepted as `document_metadata`. |
+| <Field name="attachments" type="array" /> | Optional related attachments. Include extracted text in `attachments[].content.text` or `.markdown`. |
+| <Field name="comments" type="array" /> | Optional embedded snapshot comments. For live incremental comments, prefer a first-class `kind: "comment"` source. |
+| <Field name="relations" type="array" /> | App-native relation array: `[{ "predicate": "linked_to", "target": { "external_id": "AUTH-123", "provider": "jira" } }]`. |
 
 ### Request-level fields
 
@@ -343,13 +375,25 @@ Forceful relations let you **declare** links between Knowledge sources at ingest
 
 This is separate from the entity and relationship [context graph](/essentials/v2/context-graphs) HydraDB builds automatically. Graph extraction is *derived* from content; forceful relations are *declared* by you  -  useful when you know two documents belong together (a contract and its addendum, a runbook and its troubleshooting guide) but the text doesn't make the connection explicit.
 
-Set the `relations` field on any item in `file_metadata` or `app_knowledge`:
+For file uploads, set `relations.source_ids` on the matching `file_metadata` item. For app sources, prefer the app-native `relations[]` shape so each link can carry a predicate and provider-aware target:
 
 ```json
 {
-  "relations": {
-    "source_ids": ["source-id-1", "source-id-2"]
-  }
+  "relations": [
+    {
+      "predicate": "linked_to",
+      "target": {
+        "source_id": "auth-troubleshooting"
+      }
+    },
+    {
+      "predicate": "related_to",
+      "target": {
+        "external_id": "AUTH-FAQ",
+        "provider": "notion"
+      }
+    }
+  ]
 }
 ```
 
@@ -364,8 +408,15 @@ client.source.ingest(
             "sub_tenant_id": "default",
             "id": "auth-guide",
             "title": "Authentication Guide",
-            "content": {"text": "..."},
-            "relations": {"source_ids": ["auth-troubleshooting", "auth-faq"]},
+            "type": "notion",
+            "kind": "knowledge_base",
+            "provider": "notion",
+            "external_id": "AUTH-GUIDE",
+            "fields": {"kind": "knowledge_base", "title": "Authentication Guide", "body": "..."},
+            "relations": [
+                {"predicate": "linked_to", "target": {"source_id": "auth-troubleshooting"}},
+                {"predicate": "related_to", "target": {"external_id": "AUTH-FAQ", "provider": "notion"}},
+            ],
         }
     ]),
 )
@@ -378,8 +429,15 @@ await client.source.ingest({
     {
       id: "auth-guide",
       title: "Authentication Guide",
-      content: { text: "..." },
-      relations: { source_ids: ["auth-troubleshooting", "auth-faq"] },
+      type: "notion",
+      kind: "knowledge_base",
+      provider: "notion",
+      external_id: "AUTH-GUIDE",
+      fields: { kind: "knowledge_base", title: "Authentication Guide", body: "..." },
+      relations: [
+        { predicate: "linked_to", target: { source_id: "auth-troubleshooting" } },
+        { predicate: "related_to", target: { external_id: "AUTH-FAQ", provider: "notion" } },
+      ],
     },
   ]),
 });
@@ -394,8 +452,15 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
     {
       "id": "auth-guide",
       "title": "Authentication Guide",
-      "content": { "text": "..." },
-      "relations": { "source_ids": ["auth-troubleshooting", "auth-faq"] }
+      "type": "notion",
+      "kind": "knowledge_base",
+      "provider": "notion",
+      "external_id": "AUTH-GUIDE",
+      "fields": { "kind": "knowledge_base", "title": "Authentication Guide", "body": "..." },
+      "relations": [
+        { "predicate": "linked_to", "target": { "source_id": "auth-troubleshooting" } },
+        { "predicate": "related_to", "target": { "external_id": "AUTH-FAQ", "provider": "notion" } }
+      ]
     }
   ]'
 ```

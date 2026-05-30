@@ -34,17 +34,26 @@ with open("/path/to/policy.pdf", "rb") as policy:
             }
         ]),
 
-        # Use app_knowledge when your app already extracted the source text/metadata.
+        # Use app_knowledge when your app already extracted app-native fields.
         app_knowledge=json.dumps([
             {
-                "id": "slack_thread_001",
+                "id": "slack_C01_1716213600_000100",
                 "tenant_id": "acme_corp",
                 "sub_tenant_id": "team_docs",
                 "title": "Pricing discussion",
                 "type": "slack",
-                "content": {"text": "We agreed on three tiers..."},
-                "tenant_metadata": {"department": "product"},
-                "document_metadata": {"channel": "pricing"},
+                "kind": "message",
+                "provider": "slack",
+                "external_id": "1716213600.000100",
+                "fields": {
+                    "kind": "message",
+                    "body": "We agreed on three tiers...",
+                    "author": "alice",
+                    "thread_id": "1716213600.000100",
+                    "created_at": "2026-05-20T10:00:00Z",
+                },
+                "tenant_metadata": {"department": "product", "channel": "pricing"},
+                "additional_metadata": {"slack_ts": "1716213600.000100"},
             }
         ]),
     )
@@ -100,17 +109,26 @@ const knowledgeResult = await client.source.ingest({
     },
   ]),
 
-  // Use app_knowledge when your app already extracted the source text/metadata.
+  // Use app_knowledge when your app already extracted app-native fields.
   app_knowledge: JSON.stringify([
     {
-      id: "slack_thread_001",
+      id: "slack_C01_1716213600_000100",
       tenant_id: "acme_corp",
       sub_tenant_id: "team_docs",
       title: "Pricing discussion",
       type: "slack",
-      content: { text: "We agreed on three tiers..." },
-      tenant_metadata: { department: "product" },
-      document_metadata: { channel: "pricing" },
+      kind: "message",
+      provider: "slack",
+      external_id: "1716213600.000100",
+      fields: {
+        kind: "message",
+        body: "We agreed on three tiers...",
+        author: "alice",
+        thread_id: "1716213600.000100",
+        created_at: "2026-05-20T10:00:00Z",
+      },
+      tenant_metadata: { department: "product", channel: "pricing" },
+      additional_metadata: { slack_ts: "1716213600.000100" },
     },
   ]),
 });
@@ -164,14 +182,23 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   ]' \
   -F 'app_knowledge=[
     {
-      "id": "slack_thread_001",
+      "id": "slack_C01_1716213600_000100",
       "tenant_id": "acme_corp",
       "sub_tenant_id": "team_docs",
       "title": "Pricing discussion",
       "type": "slack",
-      "content": { "text": "We agreed on three tiers..." },
-      "tenant_metadata": { "department": "product" },
-      "document_metadata": { "channel": "pricing" }
+      "kind": "message",
+      "provider": "slack",
+      "external_id": "1716213600.000100",
+      "fields": {
+        "kind": "message",
+        "body": "We agreed on three tiers...",
+        "author": "alice",
+        "thread_id": "1716213600.000100",
+        "created_at": "2026-05-20T10:00:00Z"
+      },
+      "tenant_metadata": { "department": "product", "channel": "pricing" },
+      "additional_metadata": { "slack_ts": "1716213600.000100" }
     }
   ]'
 
@@ -301,12 +328,21 @@ client.source.ingest(
     sub_tenant_id="team_docs",
     app_knowledge=json.dumps([
         {
-            "id": "slack_thread_001",
+            "id": "slack_C01_1716213600_000100",
             "tenant_id": "acme_corp",
             "sub_tenant_id": "team_docs",
             "title": "Pricing discussion",
             "type": "slack",
-            "content": {"text": "We agreed on three tiers..."},
+            "kind": "message",
+            "provider": "slack",
+            "external_id": "1716213600.000100",
+            "fields": {
+                "kind": "message",
+                "body": "We agreed on three tiers...",
+                "author": "alice",
+                "thread_id": "1716213600.000100",
+                "created_at": "2026-05-20T10:00:00Z",
+            },
             "tenant_metadata": {"channel": "product"},
         }
     ]),
@@ -320,12 +356,21 @@ await client.source.ingest({
   sub_tenant_id: "team_docs",
   app_knowledge: JSON.stringify([
     {
-      id: "slack_thread_001",
+      id: "slack_C01_1716213600_000100",
       tenant_id: "acme_corp",
       sub_tenant_id: "team_docs",
       title: "Pricing discussion",
       type: "slack",
-      content: { text: "We agreed on three tiers..." },
+      kind: "message",
+      provider: "slack",
+      external_id: "1716213600.000100",
+      fields: {
+        kind: "message",
+        body: "We agreed on three tiers...",
+        author: "alice",
+        thread_id: "1716213600.000100",
+        created_at: "2026-05-20T10:00:00Z",
+      },
       tenant_metadata: { channel: "product" },
     },
   ]),
@@ -341,12 +386,21 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "sub_tenant_id=team_docs" \
   -F 'app_knowledge=[
     {
-      "id": "slack_thread_001",
+      "id": "slack_C01_1716213600_000100",
       "tenant_id": "acme_corp",
       "sub_tenant_id": "team_docs",
       "title": "Pricing discussion",
       "type": "slack",
-      "content": { "text": "We agreed on three tiers..." },
+      "kind": "message",
+      "provider": "slack",
+      "external_id": "1716213600.000100",
+      "fields": {
+        "kind": "message",
+        "body": "We agreed on three tiers...",
+        "author": "alice",
+        "thread_id": "1716213600.000100",
+        "created_at": "2026-05-20T10:00:00Z"
+      },
       "tenant_metadata": { "channel": "product" }
     }
   ]'
@@ -504,19 +558,22 @@ After ingestion, save every returned `results[].source_id`. Use these IDs for st
 
 | Field | Description |
 | --- | --- |
-| <Field name="id" type="string" required /> | Source ID. Treated as the upsert key. Send an empty string to have one generated upstream. |
+| <Field name="id" type="string" required /> | Stable HydraDB source ID for this app item. Treated as the upsert key. |
 | <Field name="tenant_id" type="string" required /> | Target tenant. Must match the form-level `tenant_id`. |
 | <Field name="sub_tenant_id" type="string" required /> | Logical partition inside the tenant. Must match the form-level `sub_tenant_id`. |
-| <Field name="title" type="string" /> | Short title or subject shown in query results. |
-| <Field name="type" type="string" /> | Source category (`slack`, `notion`, `gmail`, `webpage`, etc.). Used for filtering and display. |
-| <Field name="description" type="string" /> | Optional long-form description. |
+| <Field name="title" type="string" /> | Short title, subject, ticket title, page name, or message label shown in results. |
+| <Field name="type" type="string" /> | Source category for display/analytics (`slack`, `notion`, `gmail`, `jira`, etc.). Not the app discriminator. |
+| <Field name="kind" type="email, message, ticket, knowledge_base, comment, custom" recommended /> | App object kind. Tells HydraDB how to interpret `fields`. |
+| <Field name="provider" type="string" recommended /> | App namespace such as `slack`, `gmail`, `jira`, `notion`, `salesforce`, or `linear`. |
+| <Field name="external_id" type="string" recommended /> | Stable provider ID for this exact item. Used for exact lookup and relation resolution. |
+| <Field name="fields" type="object" required /> | App-native structured fields. Put primary text here (`body`, `description`, `title`, or `data` depending on `kind`). |
 | <Field name="url" type="string" /> | Canonical URL or reference link. |
-| <Field name="timestamp" type="string" /> | ISO-8601 timestamp (creation or last-updated). |
-| <Field name="content" type="object" required /> | Content payload. Use `{ "text": "..." }` for plain text. Required for app sources. |
-| <Field name="tenant_metadata" type="object" /> | Tenant-schema fields. (default=`{}`) |
-| <Field name="document_metadata" type="object" /> | Free-form per-document fields. (default=`{}`) |
-| <Field name="attachments" type="array" /> | Optional related attachments. (default=`[]`) |
-| <Field name="relations" type="object" /> | Forceful relations, same shape as on `file_metadata`. |
+| <Field name="timestamp" type="string" /> | ISO-8601 timestamp (creation, sent, or last-updated). |
+| <Field name="tenant_metadata" type="object" /> | Tenant-schema fields for filtering. Alias: `metadata`. (default=`{}`) |
+| <Field name="additional_metadata" type="object" /> | Free-form per-document fields. Alias: `document_metadata`. (default=`{}`) |
+| <Field name="attachments" type="array" /> | Optional related attachments. Include extracted text in `attachments[].content.text` or `.markdown`. (default=`[]`) |
+| <Field name="comments" type="array" /> | Optional embedded snapshot comments. For live incremental comments, prefer a first-class `kind: "comment"` source. |
+| <Field name="relations" type="array" /> | App-native relations: `[{ "predicate": "linked_to", "target": { "external_id": "AUTH-123", "provider": "jira" } }]`. |
 
 ### `memories` item shape
 
