@@ -5,7 +5,7 @@ description: "Quick reference for query modes, type selection, and when to call 
 
 import { Field } from "/snippets/field.jsx";
 
-Use this page to choose the right search shape before opening the full [Query](/api-reference/v2/endpoint/query) endpoint reference. Query has three main decisions: what to query (`type`), how to match (`query_by`), and how much retrieval work to spend (`mode`).
+Use this page to choose the right query shape before opening the full [Query](/api-reference/v2/endpoint/query) endpoint reference. Query has three main decisions: what to query (`type`), how to match (`query_by`), and how much retrieval work to spend (`mode`).
 
 ```mermaid
 flowchart LR
@@ -14,7 +14,7 @@ classDef standard fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc;
 classDef innovation fill:#4c1d95,stroke:#8b5cf6,stroke-width:3px,color:#ffffff,font-weight:bold;
 
 Q([I want to retrieve context])
-S([What should I search?])
+S([What should I query?])
 M([What kind of match?])
 H([query_by: hybrid])
 T([query_by: text])
@@ -39,10 +39,10 @@ linkStyle default stroke:#64748b,stroke-width:2px;
 | <Field name="query_by" /> | `"hybrid"`, `"text"` | Choose the matching method. Use `"hybrid"` by default and `"text"` for exact terms or phrases. |
 | <Field name="mode" /> | `"fast"`, `"thinking"` | Choose latency vs quality. Use `"fast"` for low-latency paths and `"thinking"` for multi-query retrieval, reranking, and forceful-relation context. |
 | <Field name="max_results" /> | integer | Control prompt size. Start with `10`, reduce for tight context windows, increase only when you rerank or summarize downstream. |
-| <Field name="alpha" /> | `0.0`-`1.0` or `"auto"` | Tune hybrid search. Lower values favor BM25 keywords; higher values favor semantic similarity. |
+| <Field name="alpha" /> | `0.0`-`1.0` or `"auto"` | Tune hybrid query. Lower values favor BM25 keywords; higher values favor semantic similarity. |
 | <Field name="metadata_filters" /> | object | Narrow candidates before ranking. Top-level keys match `tenant_metadata`; nested `document_metadata` filters free-form per-source fields. |
 | <Field name="graph_context" /> | boolean | Include entity/relation context with the chunks. On by default; set `false` for chunk-only responses. |
-| <Field name="search_apps" /> | boolean | Adds app-aware retrieval while still searching the full selected knowledge scope. Use it for better app-source matching; it does not restrict retrieval to app sources only. |
+| <Field name="search_apps" /> | boolean | Adds app-aware retrieval while still querying the full selected knowledge scope. Use it for better app-source matching; it does not restrict retrieval to app sources only. |
 
 <Tip>
 For filter design, read [Usage - Metadata](/essentials/v2/metadata) before creating tenant schemas. For exact request fields, defaults, and response shape, use [Query](/api-reference/v2/endpoint/query).
@@ -97,7 +97,7 @@ Use this when the answer should combine shared knowledge with user-specific cont
 
   </Accordion>
 
-  <Accordion title="Filtered search for a specific slice">
+  <Accordion title="Filtered query for a specific slice">
 
 Use `metadata_filters` when you already know the slice you want. Top-level keys must be declared in `tenant_metadata_schema` with `enable_match: true`; free-form per-source fields go under `document_metadata`.
 
@@ -120,7 +120,7 @@ Use `metadata_filters` when you already know the slice you want. Top-level keys 
 
   <Accordion title="Exact phrase lookup">
 
-Use text search when literal wording matters: legal clauses, SKUs, error codes, IDs, or compliance references.
+Use text query when literal wording matters: legal clauses, SKUs, error codes, IDs, or compliance references.
 
 ```json
 {

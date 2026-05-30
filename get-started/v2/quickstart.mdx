@@ -38,9 +38,9 @@ curl 'https://api.hydradb.com/tenants' \
 
 ---
 
-## Fast path: create, ingest, search
+## Fast path: create, ingest, query
 
-Create a tenant, add one memory to the default sub-tenant, wait for indexing, then search it.
+Create a tenant, add one memory to the default sub-tenant, wait for indexing, then query it.
 
 <CodeGroup>
 ```python Python SDK
@@ -206,13 +206,13 @@ EOF
 
 ## What you have built
 
-You have built the full retrieval loop: create an isolated workspace, ingest context, wait for indexing, search it, and pass the returned context to an LLM. HydraDB handles parsing, chunking, embedding, graph construction, and hybrid retrieval; your application sends the query and gets back the right slice of context.
+You have built the full retrieval loop: create an isolated workspace, ingest context, wait for indexing, query it, and pass the returned context to an LLM. HydraDB handles parsing, chunking, embedding, graph construction, and hybrid retrieval; your application sends the query and gets back the right slice of context.
 
 ```mermaid
 flowchart LR
   A([1. Create Tenant]) --> B([2. Ingest Data])
   B --> C([3. Verify Processing])
-  C --> D([4. Search Context])
+  C --> D([4. Query Context])
   D --> E([5. Pass to LLM])
 
   style A fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
@@ -236,7 +236,7 @@ That's the full HydraDB v2 loop: [create a tenant](/api-reference/v2/endpoint/cr
 | If you want to… | Read… |
 |---|---|
 | Understand how content gets stored and retrieved | [Architecture](/essentials/v2/architecture) |
-| Tune search behavior (`alpha`, `mode`, `recency_bias`) | [Query](/essentials/v2/query) |
+| Tune query behavior (`alpha`, `mode`, `recency_bias`) | [Query](/essentials/v2/query) |
 | Design a filterable metadata schema | [Metadata](/essentials/v2/metadata) |
 | Scope data per user or workspace | [Multi-Tenant](/essentials/v2/multi-tenant) |
 | Format the LLM prompt from `RetrievalResult` | [How to Use API Results](/essentials/v2/api-results) |

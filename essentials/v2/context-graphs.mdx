@@ -1,6 +1,6 @@
 ---
 title: "Context Graphs"
-description: "How HydraDB models relationships between chunks using triplets to improve search quality."
+description: "How HydraDB models relationships between chunks using triplets to improve query quality."
 ---
 
 ## 1. What it is
@@ -15,9 +15,9 @@ Context graphs augment retrieval. They do not replace it.
 
 ## 2. What it does
 
-When `graph_context: true` is set on a search call (the default), HydraDB returns relationship data alongside the retrieved chunks - showing how those chunks connect to each other and to your query. Set `graph_context: false` to drop the graph slice when you only need ranked chunks.
+When `graph_context: true` is set on a query call (the default), HydraDB returns relationship data alongside the retrieved chunks - showing how those chunks connect to each other and to your query. Set `graph_context: false` to drop the graph slice when you only need ranked chunks.
 
-This helps your LLM reason about questions that require connecting information across multiple chunks or sources. Similarity search returns relevant content; the context graph surfaces how that content fits together.
+This helps your LLM reason about questions that require connecting information across multiple chunks or sources. Similarity query returns relevant content; the context graph surfaces how that content fits together.
 
 ---
 
@@ -35,11 +35,11 @@ Skip them for direct factual lookups. Graph traversal adds response size and can
 
 ## 4. How it works
 
-Context graphs are hybrid: relationships are extracted at ingestion time and traversed at search time.
+Context graphs are hybrid: relationships are extracted at ingestion time and traversed at query time.
 
 **At ingestion**, HydraDB extracts relationships from your data and stores them in the graph. Sources can also declare explicit relationships to other sources via a `relations` payload at ingestion.
 
-**At search**, when `graph_context: true` is set (the default):
+**At query**, when `graph_context: true` is set (the default):
 
 1. HydraDB runs hybrid retrieval to find relevant chunks.
 2. It traverses the graph to discover relevant relationships between retrieved context.

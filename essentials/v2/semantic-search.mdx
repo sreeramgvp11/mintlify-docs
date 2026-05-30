@@ -1,15 +1,15 @@
 ---
 title: "Semantic Search & Retrieval"
-description: "How semantic, keyword bm25, graph, and metadata signals work together in HydraDB search."
+description: "How semantic, keyword bm25, graph, and metadata signals work together in HydraDB query."
 ---
 
-Semantic search is useful because it retrieves by meaning instead of exact wording. It is also incomplete on its own: production agents need exact matches, freshness, scope, tenant isolation, metadata filters, and graph relationships. HydraDB search combines those signals so you can retrieve context that is useful, not just similar.
+Semantic search is useful because it retrieves by meaning instead of exact wording. It is also incomplete on its own: production agents need exact matches, freshness, scope, tenant isolation, metadata filters, and graph relationships. HydraDB query combines those signals so you can retrieve context that is useful, not just similar.
 
 ---
 
 ## Semantic vs Keyword BM25
 
-| Search Type | Finds | Best For |
+| Query Type | Finds | Best For |
 |---|---|---|
 | Semantic | Text with similar meaning | Natural-language questions, paraphrases, conceptual lookup |
 | Keyword BM25 | Text with matching tokens | Error codes, identifiers, names, SKUs, exact phrases |
@@ -43,16 +43,16 @@ That is why HydraDB exposes semantic retrieval through `query_by: "hybrid"` insi
 | `alpha` | Behavior | Use When |
 |---|---|---|
 | `1.0` | Semantic-heavy | Conceptual questions and paraphrases |
-| `0.8` | Default semantic-leaning hybrid | Most agent search workflows |
+| `0.8` | Default semantic-leaning hybrid | Most agent query workflows |
 | `0.5` | Balanced | Mixed natural language and exact terms |
 | `0.2` | Keyword BM25-leaning | Queries with product names, error strings, or IDs |
 | `0.0` | Keyword BM25-heavy | Debugging exact-match behavior |
 
-Start with the API default (`0.8`) and tune from observed results. If users search for exact IDs and get loosely related content, lower `alpha`. If they ask broad conceptual questions and get sparse results, raise it. `alpha` applies only to `query_by: "hybrid"`; it is ignored for `"text"`.
+Start with the API default (`0.8`) and tune from observed results. If users query for exact IDs and get loosely related content, lower `alpha`. If they ask broad conceptual questions and get sparse results, raise it. `alpha` applies only to `query_by: "hybrid"`; it is ignored for `"text"`.
 
 ---
 
-## Search Request Example
+## Query Request Example
 
 <CodeGroup>
 
@@ -255,7 +255,7 @@ result = client.query(
 
 </CodeGroup>
 
-### Exact Phrase Search
+### Exact Phrase Query
 
 Switch to `query_by: "text"` with `operator: "phrase"` when a literal match is the point of the query.
 
@@ -317,13 +317,13 @@ See [How to Use API Results](/essentials/v2/api-results) for complete context-bu
 
 ## Mental Model
 
-Semantic search finds text that means the same thing. Keyword BM25 search finds text that says the same thing. Graph context finds connected entities. Metadata filters decide what is allowed to be searched. `POST /query` combines all four behind one endpoint via `type`, `query_by`, `metadata_filters`, and `graph_context` so your agents get context that is scoped, relevant, and explainable.
+Semantic search finds text that means the same thing. Keyword BM25 search finds text that says the same thing. Graph context finds connected entities. Metadata filters decide what is allowed to be queried. `POST /query` combines all four behind one endpoint via `type`, `query_by`, `metadata_filters`, and `graph_context` so your agents get context that is scoped, relevant, and explainable.
 
 ---
 
 ## Related
 
-- [Query](/essentials/v2/query) - full parameter reference and parallel search patterns
+- [Query](/essentials/v2/query) - full parameter reference and parallel query patterns
 - [Context Graphs](/essentials/v2/context-graphs) - how graph context enriches retrieval
 - [Metadata](/essentials/v2/metadata) - designing filterable schemas
 - [How to Use API Results](/essentials/v2/api-results) - turning the response into an LLM prompt

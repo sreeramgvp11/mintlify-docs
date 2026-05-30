@@ -68,7 +68,7 @@ curl -X DELETE 'https://api.hydradb.com/tenants?tenant_id=my_first_tenant' \
 
 Deletion is asynchronous. Treat deletion as complete when the tenant no longer appears in `GET /tenants`, or when `GET /tenants/status?tenant_id=...` returns `TENANT_NOT_FOUND`.
 
-After deletion completes, the same `tenant_id` can be used in a new `POST /tenants` request. Until then, avoid recreating the tenant or retrying ingestion/search against it.
+After deletion completes, the same `tenant_id` can be used in a new `POST /tenants` request. Until then, avoid recreating the tenant or retrying ingestion/query against it.
 
 ## Behavior notes
 
@@ -76,7 +76,7 @@ After deletion completes, the same `tenant_id` can be used in a new `POST /tenan
 **Irreversible action.** Ingested documents, memories, embeddings, graph nodes, metadata schema, and storage objects are permanently removed. There is no recovery window  -  ensure you have a backup if the content matters.
 </Warning>
 
-- **Stop in-flight work first:** Stop all ingestion, polling, search, and background jobs targeting this tenant before deleting. Calls made after deregistration can fail with `TENANT_NOT_FOUND` even while infrastructure cleanup is still running.
+- **Stop in-flight work first:** Stop all ingestion, polling, query, and background jobs targeting this tenant before deleting. Calls made after deregistration can fail with `TENANT_NOT_FOUND` even while infrastructure cleanup is still running.
 - **Async cleanup:** The endpoint returns immediately after deregistering the tenant. Infrastructure cleanup of vector stores, graphs, and storage objects runs in the background and may take a few minutes to complete.
 - **Repeat calls:** Deleting an already-deleted tenant returns `404 TENANT_NOT_FOUND`. Deleting a tenant that is still provisioning or deleting is treated as a request to tear down that tenant.
 

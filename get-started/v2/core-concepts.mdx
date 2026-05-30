@@ -27,7 +27,7 @@ To create a unified context substrate, a company brain, for your AI you need con
 
 Memories are user-scoped preferences, conversation history, and inferred behavioral traits. They ensure retrieval is personalized to the person asking, not just the query itself.
 
-The same person searching "Project Acme changelog" might expect different results than a colleague working on the same project but with a different title. If they have previously engaged with backend architecture decisions over release notes, or flagged interest in a specific workstream, HydraDB helps you factor that in.
+The same person querying "Project Acme changelog" might expect different results than a colleague working on the same project but with a different title. If they have previously engaged with backend architecture decisions over release notes, or flagged interest in a specific workstream, HydraDB helps you factor that in.
 
 Memories are not set once at onboarding. They compound with every interaction, so your agent becomes more accurate and feels more familiar to the end user over time. When you ingest a memory with `infer: true`, HydraDB extracts the underlying preference. You can ship raw behavioral logs (interaction events, UI actions, dialogue), and HydraDB derives the structured insight. 
 
@@ -43,7 +43,7 @@ Read More: [Usage → Memories](/essentials/v2/memories)
 
 Knowledge in HydraDB represents the entire working context you want your agents to access: PDFs, DOCX, Markdown, Slack threads, Notion pages, CSVs, emails.
 
-HydraDB parses, relates, and stores each source into the graph. At search time, the graph traversal step surfaces structurally connected materials that vanilla search alone would miss.
+HydraDB parses, relates, and stores each source into the graph. At query time, the graph traversal step surfaces structurally connected materials that vanilla query alone would miss.
 
 Knowledge is retrieved by calling [`POST /query`](/api-reference/v2/endpoint/query) with `type: "knowledge"`. Combine memories and knowledge in one call with `type: "all"`.
 
@@ -61,18 +61,18 @@ Memories and Knowledge are distinct at the storage layer, not just conceptually:
 | **Content** | User preferences, conversation history, inferred traits | Documents, files, app-generated content |
 | **Scope** | Per-user (scoped by `sub_tenant_id`) | Can be shared across all users in a tenant |
 | **Mutability** | Dynamic - evolves with every interaction | Versioned - replaced or deleted explicitly |
-| **Search `type`** | `"memory"` | `"knowledge"` |
+| **Query `type`** | `"memory"` | `"knowledge"` |
 | **Inference** | `infer` flag extracts traits automatically | Not applicable - content is parsed and chunked |
 
 For personalized answers grounded in shared documents, call `POST /query` with `type: "all"` to merge both stores in a single request. See [How to Use API Results](/essentials/v2/api-results).
 
 ---
 
-## Search
+## Query
 
-Search is how agents read from HydraDB. Storing data is easy; knowing _what_ to retrieve, _when_, and _why_ is the hard part.
+Query is how agents read from HydraDB. Storing data is easy; knowing _what_ to retrieve, _when_, and _why_ is the hard part.
 
-HydraDB's search is a multi-stage pipeline that combines metadata filtering, semantic and keyword retrieval, and [context-graph](/essentials/v2/context-graphs) traversal - all in a single API call.
+HydraDB's query is a multi-stage pipeline that combines metadata filtering, semantic and keyword retrieval, and [context-graph](/essentials/v2/context-graphs) traversal - all in a single API call.
 
 Vector search asks _"what's similar to my query?"_ Graph traversal asks _"What's structurally connected to it?"_ HydraDB does both, then weights the results by usefulness for the current task.
 
@@ -101,7 +101,7 @@ Metadata makes querying deterministic. Sometimes production systems need hard fi
 
 Two tiers:
 
-- `metadata` - filterable fields defined in the tenant schema. Plan these fields before ingestion and pass them through `metadata_filters` at search time.
+- `metadata` - filterable fields defined in the tenant schema. Plan these fields before ingestion and pass them through `metadata_filters` at query time.
 - `additional_metadata` - free-form fields attached per document at ingestion. Flexible. Useful for passing additional context to your agents if needed.
 
 At ingestion:

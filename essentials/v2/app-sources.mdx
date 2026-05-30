@@ -10,7 +10,7 @@ App sources are pre-parsed records from business applications  -  emails, chat m
 Every app item becomes one [Knowledge](/essentials/v2/knowledge) source under a flat shape. There are no typed `kind`/`provider`/`fields` discriminators. Threads, replies, and comments are modeled as **separate sources** linked together with [`relations.source_ids`](#7-forceful-relations).
 
 <Info>
-  App sources land in the [Knowledge](/essentials/v2/knowledge) store and are searchable through [`POST /query`](/api-reference/v2/endpoint/query) with **`search_apps: true`** and `type: "knowledge"` (or `type: "all"` to merge with [Memories](/essentials/v2/memories)).
+  App sources land in the [Knowledge](/essentials/v2/knowledge) store and are queryable through [`POST /query`](/api-reference/v2/endpoint/query) with **`search_apps: true`** and `type: "knowledge"` (or `type: "all"` to merge with [Memories](/essentials/v2/memories)).
 </Info>
 
 ## 1. What it is
@@ -47,7 +47,7 @@ Every app-source item maps to one HydraDB source with the fields below. The shap
 | `attachments` | Pre-extracted files attached to this item. |
 | `relations` | Forceful links to other HydraDB sources by `source_ids`. |
 
-Top-level identifiers like `kind`, `provider`, and `external_id` along with the structured `fields` payload are normalized for indexing and graph creation. Put the main searchable item text in `fields` (e.g. `fields.body` or `fields.description`). Top-level generic `content` remains supported for legacy untyped payloads.
+Top-level identifiers like `kind`, `provider`, and `external_id` along with the structured `fields` payload are normalized for indexing and graph creation. Put the main queryable item text in `fields` (e.g. `fields.body` or `fields.description`). Top-level generic `content` remains supported for legacy untyped payloads.
 
 ---
 
@@ -146,7 +146,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 }
 ```
 
-The call returns `202 Accepted`; the source is not searchable until [`GET /source/status`](/api-reference/v2/endpoint/source-status) reports `indexing_status: "completed"` (or at least `graph_creation` for partial availability). See [Knowledge - Verifying processing](/essentials/v2/knowledge#5-verifying-processing) for the polling loop.
+The call returns `202 Accepted`; the source is not queryable until [`GET /source/status`](/api-reference/v2/endpoint/source-status) reports `indexing_status: "completed"` (or at least `graph_creation` for partial availability). See [Knowledge - Verifying processing](/essentials/v2/knowledge#5-verifying-processing) for the polling loop.
 
 <Info>
   **Multipart, not JSON.** [`POST /source/ingest`](/api-reference/v2/endpoint/ingest-content) is one of the few endpoints that uses `multipart/form-data`. Stringify `app_knowledge` before sending it in the form field.
@@ -420,7 +420,7 @@ Use forceful relations for connections the text alone can't express:
 ```
 
 <Warning>
-- Forceful relations work **within the same store**  -  Knowledge → Knowledge or Memory → Memory. Pointing a Knowledge source at a Memory source ID (or vice versa) silently returns nothing at search.
+- Forceful relations work **within the same store**  -  Knowledge → Knowledge or Memory → Memory. Pointing a Knowledge source at a Memory source ID (or vice versa) silently returns nothing at query.
 - Forceful-relation context is only fetched when `mode: "thinking"` is set on the [query request](/api-reference/v2/endpoint/query). In `fast` mode, `search_forceful_relations` is ignored.
 </Warning>
 
@@ -430,7 +430,7 @@ See [Knowledge - Forceful relations](/essentials/v2/knowledge#7-forceful-relatio
 
 ## 8. Attachments
 
-Use `attachments` when you've already extracted file text and want it indexed alongside the parent source. Each attachment is preserved with the source and surfaced in search results.
+Use `attachments` when you've already extracted file text and want it indexed alongside the parent source. Each attachment is preserved with the source and surfaced in query results.
 
 ```json
 {
@@ -449,7 +449,7 @@ Use `attachments` when you've already extracted file text and want it indexed al
 
 | Attachment field | Effect |
 |---|---|
-| `content.text` / `content.markdown` | Indexed as searchable text linked to the parent source. |
+| `content.text` / `content.markdown` | Indexed as queryable text linked to the parent source. |
 | `url`, `title`, `content_type` | Preserved for display and citations. |
 | `content_url` | Direct content URL distinct from the reference URL. |
 | `misc` | Free-form metadata (provider IDs, comment IDs, etc.). |
@@ -464,11 +464,11 @@ Two fields, two jobs.
 
 | Use `tenant_metadata` when | Use `document_metadata` when |
 |---|---|
-| You want to **filter** at search time (`metadata_filters`) | The field is for display, citation, or bookkeeping only |
+| You want to **filter** at query time (`metadata_filters`) | The field is for display, citation, or bookkeeping only |
 | The field is declared in the [tenant metadata schema](/api-reference/v2/endpoint/create-tenant) | The field is free-form and changes per source |
 | Examples: `channel`, `project`, `space`, `pipeline`, `environment`, `region`, `doc_type` | Examples: `slack_ts`, `author`, `ticket_key`, `comment_id`, `gmail_message_id`, `stage`, `amount` |
 
-Filterable keys must be declared in `tenant_metadata_schema` with `enable_match: true` at tenant creation. Undeclared keys in `tenant_metadata` are silently ignored at search time. To filter on `document_metadata`, nest under `document_metadata` in `metadata_filters`:
+Filterable keys must be declared in `tenant_metadata_schema` with `enable_match: true` at tenant creation. Undeclared keys in `tenant_metadata` are silently ignored at query time. To filter on `document_metadata`, nest under `document_metadata` in `metadata_filters`:
 
 ```json
 {
@@ -484,13 +484,13 @@ See [Scoping using metadata](/essentials/v2/metadata) for the full schema design
 
 ---
 
-## 10. How app sources affect search
+## 10. How app sources affect query
 
-When `search_apps: true` is passed to the [`POST /query`](/api-reference/v2/endpoint/query) endpoint, HydraDB runs an app-aware search lane alongside normal semantic and lexical retrieval. The query still searches the full selected knowledge scope; `search_apps: true` does **not** limit results to only app sources. It improves app-source matching and expansion while preserving regular knowledge-base retrieval.
+When `search_apps: true` is passed to the [`POST /query`](/api-reference/v2/endpoint/query) endpoint, HydraDB runs an app-aware query lane alongside normal semantic and lexical retrieval. The query still queries the full selected knowledge scope; `search_apps: true` does **not** limit results to only app sources. It improves app-source matching and expansion while preserving regular knowledge-base retrieval.
 
-The app-aware lane does more than search raw text. It parses the query for app-specific hints (e.g., provider names, object types, exact external IDs, authors, thread keywords, or relationship terms like "linked to", "blocked by", "reply", or "parent") and uses these clues to build candidate sets and expand context around matching sources.
+The app-aware lane does more than Query raw text. It parses the query for app-specific hints (e.g., provider names, object types, exact external IDs, authors, thread keywords, or relationship terms like "linked to", "blocked by", "reply", or "parent") and uses these clues to build candidate sets and expand context around matching sources.
 
-| Search signal | Uses |
+| Query signal | Uses |
 | :--- | :--- |
 | `kind`, `provider` | Routes queries to specific types, such as "Slack messages" or "Jira tickets". |
 | `external_id` | Performs exact ID lookups like `AUTH-123` or page IDs. |
@@ -501,9 +501,9 @@ The app-aware lane does more than search raw text. It parses the query for app-s
 
 This means a query like *"show me Slack replies from Alice about AUTH-123"* combines text relevance with Slack scoping, actor matching, exact ticket ID matching, and thread/reply expansion.
 
-### Parent and child search
+### Parent and child query
 
-Parent/child and hierarchical search is based on provider-scoped external IDs and relationships. When HydraDB ingests a source with a parent relation or `parent_id` hierarchy link, it indexes that connection in the context graph.
+Parent/child and hierarchical query is based on provider-scoped external IDs and relationships. When HydraDB ingests a source with a parent relation or `parent_id` hierarchy link, it indexes that connection in the context graph.
 
 At recall time, `search_apps: true` lets the app-aware lane find an initial source. In `thinking` mode, if the query asks for parents, children, ancestors, descendants, epics, subtasks, accounts, deals, or similar hierarchy wording, HydraDB automatically expands around the matched source:
 
@@ -535,19 +535,19 @@ Use this as the compact contract for `app_knowledge` ingestion in API v2. Unlike
 
 ### Top-level app source fields
 
-| Field | Why send it | Search / ingestion effect |
+| Field | Why send it | Query / ingestion effect |
 |---|---|---|
 | <Field name="id" type="string" recommended /> | Stable HydraDB source ID for this app item. Compose it from provider IDs, such as `slack_<channel>_<ts>` or `jira_<key>`. | Used as the `source_id`, upsert key, status/deletion ID, and forceful-relation target. If omitted, HydraDB generates one. |
 | <Field name="title" type="string" recommended /> | Human-readable title, subject, page name, ticket title, or message label. | Improves source display, snippets, citations, and semantic matching. |
 | <Field name="type" type="string" recommended /> | Source category tag, such as `slack`, `gmail`, `jira`, `notion`, `salesforce`, `linear_comment`, or `custom`. | Preserved for display/filtering and useful for app-level scoping. This is not a discriminator; any stable string is allowed. |
-| <Field name="description" type="string" /> | Optional long-form summary or context. | Adds additional searchable/display context. |
+| <Field name="description" type="string" /> | Optional long-form summary or context. | Adds additional queryable/display context. |
 | <Field name="url" type="string" /> | Canonical link back to the provider item. | Improves citations and source navigation. |
 | <Field name="timestamp" type="ISO-8601 datetime" /> | Creation, sent, or last-updated time. | Helps chronology, freshness, and display. |
-| <Field name="content" type="object" required /> | Searchable body. Use `content.text` for plain text or `content.markdown` for Markdown. | Primary text that HydraDB chunks, embeds, graphs, and indexes. |
-| <Field name="tenant_metadata" type="object" /> | Schema-aligned, filterable fields such as channel, project, space, mailbox, pipeline, region, or environment. | Searchable via `metadata_filters` when keys are declared in `tenant_metadata_schema`. |
-| <Field name="document_metadata" type="object" /> | Free-form display/bookkeeping fields such as author, ticket key, provider IDs, status, assignee, thread ID, or stage. | Preserved on the source and searchable/filterable under `metadata_filters.document_metadata`. |
-| <Field name="kind" type="string" recommended /> | App-source object kind, such as `email`, `message`, `ticket`, `knowledge_base`, `comment`, or `custom`. | Used by `search_apps: true` to route queries and enable specialized app search behavior. |
-| <Field name="provider" type="string" recommended /> | App system/namespace the source came from (e.g., `slack`, `gmail`, `jira`, `notion`, `salesforce`, `linear`). | Prevents ID collisions across different systems and scopes searches to specific providers. |
+| <Field name="content" type="object" required /> | Queryable body. Use `content.text` for plain text or `content.markdown` for Markdown. | Primary text that HydraDB chunks, embeds, graphs, and indexes. |
+| <Field name="tenant_metadata" type="object" /> | Schema-aligned, filterable fields such as channel, project, space, mailbox, pipeline, region, or environment. | Queryable via `metadata_filters` when keys are declared in `tenant_metadata_schema`. |
+| <Field name="document_metadata" type="object" /> | Free-form display/bookkeeping fields such as author, ticket key, provider IDs, status, assignee, thread ID, or stage. | Preserved on the source and queryable/filterable under `metadata_filters.document_metadata`. |
+| <Field name="kind" type="string" recommended /> | App-source object kind, such as `email`, `message`, `ticket`, `knowledge_base`, `comment`, or `custom`. | Used by `search_apps: true` to route queries and enable specialized app query behavior. |
+| <Field name="provider" type="string" recommended /> | App system/namespace the source came from (e.g., `slack`, `gmail`, `jira`, `notion`, `salesforce`, `linear`). | Prevents ID collisions across different systems and scopes queries to specific providers. |
 | <Field name="external_id" type="string" recommended /> | Stable provider ID for this exact item in the external system. | Used for exact ID matching, resolving relations, and thread/hierarchy traversal. |
 | <Field name="fields" type="object" recommended /> | Structured kind-specific fields. | Houses author, body, thread and parent identifiers. Put primary text inside `fields` instead of raw top-level `content`. |
 | <Field name="attachments" type="array" /> | Pre-extracted files attached to this item. | Attachment text is indexed alongside the source. |
@@ -555,7 +555,7 @@ Use this as the compact contract for `app_knowledge` ingestion in API v2. Unlike
 
 ### Content fields
 
-| Field | Why send it | Search / ingestion effect |
+| Field | Why send it | Query / ingestion effect |
 |---|---|---|
 | <Field name="content.text" type="string" recommended /> | Plain-text body. | Indexed as the main source text. |
 | <Field name="content.markdown" type="string" recommended /> | Markdown body when you have structure, headings, lists, or tables. | Indexed as the main source text with Markdown-aware structure. |
@@ -564,7 +564,7 @@ Send at least one of `content.text` or `content.markdown`. If you have both, kee
 
 ### Attachment fields
 
-| Field | Why send it | Search / ingestion effect |
+| Field | Why send it | Query / ingestion effect |
 |---|---|---|
 | <Field name="id" type="string" /> | Stable attachment ID. | Helps identify and deduplicate attachments. |
 | <Field name="title" type="string" /> | File name or display title. | Improves attachment display and matching. |
@@ -577,7 +577,7 @@ Send at least one of `content.text` or `content.markdown`. If you have both, kee
 
 ### Relation fields
 
-| Field | Why send it | Search / ingestion effect |
+| Field | Why send it | Query / ingestion effect |
 |---|---|---|
 | <Field name="relations.source_ids" type="string[]" required /> | Source IDs of related Knowledge sources. | Enables forceful relation expansion in `mode: "thinking"`. |
 | <Field name="relations.properties" type="object" /> | Optional metadata about the relationship, such as reason, relation type, or confidence. | Preserved with the declared relation. |
@@ -610,7 +610,7 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 | Field | Where to put it | Why |
 |---|---|---|
 | `subject` | `title` and/or `content.text` | Improves snippets and matching. |
-| `body` | `content.text` or `content.markdown` | Primary searchable text. |
+| `body` | `content.text` or `content.markdown` | Primary queryable text. |
 | `from`, `to`, `cc`, `bcc` | `document_metadata` | Preserves actors for display and filtering. |
 | `message_id`, `thread_id`, `reply_to_id`, `forwarded_from_id` | `document_metadata`; use related source IDs in `relations` when available | Keeps provider structure and enables forceful relation expansion. |
 | `mailbox` | `tenant_metadata` | Enables mailbox/team scoping. |
@@ -619,7 +619,7 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 
 | Field | Where to put it | Why |
 |---|---|---|
-| `body` | `content.text` | Primary searchable text. |
+| `body` | `content.text` | Primary queryable text. |
 | `author`, `mentions` | `document_metadata` | Preserves actor context. |
 | `channel`, `workspace`, `team` | `tenant_metadata` | Enables channel/workspace filters. |
 | `message_ts`, `thread_ts`, `parent_message_id` | `document_metadata`; put parent source IDs in `relations.source_ids` | Reconstructs threads and replies. |
@@ -629,7 +629,7 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 | Field | Where to put it | Why |
 |---|---|---|
 | `title` | `title` | Display title and snippets. |
-| `description` | `content.text` or `content.markdown` | Primary searchable text. |
+| `description` | `content.text` or `content.markdown` | Primary queryable text. |
 | `status`, `priority`, `assignee`, `reporter` | `document_metadata` unless you need schema-level filtering | Preserves workflow state and ownership. |
 | `project`, `queue`, `environment` | `tenant_metadata` | Enables common ticket filters. |
 | `ticket_key`, `parent_id`, `linked_issue_ids` | `document_metadata`; put known source IDs in `relations.source_ids` | Keeps provider IDs and connected-ticket retrieval. |
@@ -639,7 +639,7 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 | Field | Where to put it | Why |
 |---|---|---|
 | `title` | `title` | Display title and matching. |
-| `body` | `content.markdown` or `content.text` | Primary searchable text. |
+| `body` | `content.markdown` or `content.text` | Primary queryable text. |
 | `space`, `database`, `collection`, `doc_type` | `tenant_metadata` | Enables docs scoping. |
 | `page_id`, `parent_page_id`, `created_by`, `updated_by` | `document_metadata` | Preserves provider and author/editor context. |
 
@@ -647,15 +647,15 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 
 | Field | Where to put it | Why |
 |---|---|---|
-| `body` | `content.text` | Primary searchable text. |
+| `body` | `content.text` | Primary queryable text. |
 | `author`, `comment_id`, `parent_id`, `thread_id` | `document_metadata` | Preserves comment identity and parent/thread context. |
-| Parent ticket/page/source | `relations.source_ids` | Pulls the parent source into `additional_context` in thinking-mode search. |
+| Parent ticket/page/source | `relations.source_ids` | Pulls the parent source into `additional_context` in thinking-mode query. |
 
 #### Custom / CRM
 
 | Field | Where to put it | Why |
 |---|---|---|
-| Important record summary | `content.text` | Makes the business object searchable. |
+| Important record summary | `content.text` | Makes the business object queryable. |
 | `record_type`, `record_id`, `stage`, `amount`, `owner`, `account_id` | `document_metadata` unless you need schema-level filtering | Preserves provider-specific CRM fields. |
 | `pipeline`, `region`, `segment`, `team` | `tenant_metadata` | Enables operational filters. |
 | Related account/deal/contact/support ticket | `relations.source_ids` | Connects cross-app context. |
@@ -671,8 +671,8 @@ Only link to source IDs in the same store. For app sources, that means Knowledge
 | Re-ingesting a Slack thread on every new reply | Loses message-level authorship and timestamps; wastes indexing | Ingest each reply as a new source; link via `relations.source_ids` |
 | Mutating a ticket source to add a comment | `upsert` replaces the whole snapshot | Ingest the comment as its own source with a link back to the ticket |
 | Using a non-stable string for `id` | Re-ingests create duplicate sources instead of upserting | Compose `id` from stable provider IDs (e.g. `slack_<channel>_<ts>`, `jira_<key>`) |
-| Pointing `relations.source_ids` at memory IDs from a Knowledge source | Silently returns nothing at search | Forceful relations stay within one store - Knowledge ↔ Knowledge, Memory ↔ Memory |
-| Skipping [`/source/status`](/api-reference/v2/endpoint/source-status) before searching | Source not indexed yet; empty results | Poll until `indexing_status: "completed"` (or `graph_creation` for partial availability) |
+| Pointing `relations.source_ids` at memory IDs from a Knowledge source | Silently returns nothing at query | Forceful relations stay within one store - Knowledge ↔ Knowledge, Memory ↔ Memory |
+| Skipping [`/source/status`](/api-reference/v2/endpoint/source-status) before querying | Source not indexed yet; empty results | Poll until `indexing_status: "completed"` (or `graph_creation` for partial availability) |
 | Forgetting to set `search_apps: true` on [`POST /query`](/api-reference/v2/endpoint/query) | Returns only text/vector matches without the app-aware lane expansion | Always set `search_apps: true` (and use `mode: "thinking"`) when querying app-source data |
 
 ---

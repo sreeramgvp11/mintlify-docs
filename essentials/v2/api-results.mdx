@@ -1,6 +1,6 @@
 ---
 title: "How to Use API Results"
-description: "Turn a search response into an LLM prompt."
+description: "Turn a query response into an LLM prompt."
 ---
 
 `POST /query` returns structured JSON. Before you can pass it to an LLM, you need to convert the retrieval payload into a plain string. This page shows how.
@@ -264,7 +264,7 @@ print(completion.choices[0].message.content)
 
 ## 4. Combining Knowledge and Memories
 
-The simplest path is one `POST /query` with `type: "all"` - HydraDB searches both stores in parallel and returns one merged, ranked result set.
+The simplest path is one `POST /query` with `type: "all"` - HydraDB queries both stores in parallel and returns one merged, ranked result set.
 
 <CodeGroup>
 ```python Python SDK
@@ -420,7 +420,7 @@ const prompt =
 ```
 </CodeGroup>
 
-If memory search fails or times out, fall back to the knowledge-only prompt.
+If memory query fails or times out, fall back to the knowledge-only prompt.
 
 ---
 
@@ -440,7 +440,7 @@ If memory search fails or times out, fall back to the knowledge-only prompt.
 | Mistake | What goes wrong | Fix |
 |---|---|---|
 | Passing the raw result object to the LLM | Wastes tokens on IDs and metadata | Use `build_string` / `buildString`. |
-| Not including `sub_tenant_id` when searching memories | Searches the default sub-tenant instead of the user's | Always pass the same `sub_tenant_id` used at ingestion. |
+| Not including `sub_tenant_id` when querying memories | Queries the default sub-tenant instead of the user's | Always pass the same `sub_tenant_id` used at ingestion. |
 | Including too many chunks | Token overflow or answer quality drops | Start at `max_results: 10`; reduce if needed. |
 | Re-sorting chunks client-side | Overrides HydraDB's ranking | Preserve the server-returned order. |
 | Missing a grounding instruction | The model invents answers when retrieval is thin | System prompt: answer only from the provided context. |
@@ -453,8 +453,8 @@ If memory search fails or times out, fall back to the knowledge-only prompt.
 ## Related
 
 - [Query](/essentials/v2/query) - request parameters and response shape
-- [Memories](/essentials/v2/memories) - what `POST /query` with `type: "memory"` searches
-- [Knowledge](/essentials/v2/knowledge) - what `POST /query` with `type: "knowledge"` searches
+- [Memories](/essentials/v2/memories) - what `POST /query` with `type: "memory"` queries
+- [Knowledge](/essentials/v2/knowledge) - what `POST /query` with `type: "knowledge"` queries
 - [Context Graphs](/essentials/v2/context-graphs) - what `graph_context` fields contain
 
 ---

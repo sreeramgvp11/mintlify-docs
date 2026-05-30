@@ -5,7 +5,7 @@ description: "Response envelope, HTTP status codes, error codes, and retry patte
 
 ### Response envelope
 
-HydraDB core v2 endpoints (`/tenants`, `/source/*`, and `/search`) use the same top-level envelope for successful and failed requests. Webhook management endpoints (`/webhooks/indexing*`) return their documented response object directly and do not include this envelope.
+HydraDB core endpoints (`/tenants`, `/source/*`, and `/query`) use the same top-level envelope for successful and failed requests. Webhook management endpoints (`/webhooks/indexing*`) return their documented response object directly and do not include this envelope.
 
 ```json
 {
@@ -227,7 +227,7 @@ Common causes:
 - A memory item has neither `text` nor `user_assistant_pairs`.
 - A typed `tenant_metadata` value does not match the tenant metadata schema.
 
-### Empty search results
+### Empty query results
 
 Empty results are not always errors. Check these first:
 

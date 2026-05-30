@@ -5,7 +5,7 @@ description: "Quick reference for all Tenants endpoints, their lifecycle, and wh
 
 import { Field } from "/snippets/field.jsx";
 
-Tenants are isolated workspaces. In most integrations you create a tenant once, wait for provisioning, then ingest and search inside it.
+Tenants are isolated workspaces. In most integrations you create a tenant once, wait for provisioning, then ingest and query inside it.
 
 ## Endpoint reference
 
@@ -25,7 +25,7 @@ For a new tenant from scratch:
 1. Create the tenant: `POST /tenants`
 2. Wait for provisioning: `GET /tenants/status` until `scheduler_status`, `graph_status`, `vectorstore_status.knowledge`, and `vectorstore_status.memory` are all `true`
 3. Ingest content: `POST /source/ingest`
-4. Wait for indexing: `GET /source/status` until sources are searchable
+4. Wait for indexing: `GET /source/status` until sources are queryable
 5. Retrieve context: `POST /query`
 6. Inspect usage or clean up: `GET /tenants/stats` or `DELETE /tenants`
 
@@ -47,7 +47,7 @@ DELETE /tenants -> schedule deletion (irreversible)
 
 - **Tenant** - A top-level isolated workspace. Usually one per organization.
 - **Sub-tenant** - Partitions within a tenant for B2C/per-user separation. They are created implicitly at ingestion.
-- **Tenant Metadata & Schema** - Structured fields defined at tenant creation to enable search-time filtering.
+- **Tenant Metadata & Schema** - Structured fields defined at tenant creation to enable query-time filtering.
 
 For detailed concepts, see the [Multi-Tenant Support](/essentials/v2/multi-tenant) and [Scoping using metadata](/essentials/v2/metadata) essentials guides.
 

@@ -7,7 +7,7 @@ openapi: "api-reference/v2/openapi.json GET /source/status"
 import { Field } from "/snippets/field.jsx";
 
 
-Since ingestion is asynchronous, use this endpoint to determine when content is ready to be searched.
+Since ingestion is asynchronous, use this endpoint to determine when content is ready to be queried.
 
 <Tip>
 Prefer not to poll this endpoint? Hydra DB can notify you automatically when a source finishes processing. See [Webhooks](/essentials/v2/webhooks) to get started.
@@ -134,11 +134,11 @@ flowchart LR
     linkStyle default stroke:#64748b,stroke-width:2px;
 ```
 
-| Status | Searchable? | Meaning |
+| Status | queryable? | Meaning |
 |---|---|---|
 | `queued` | No | Accepted by the server, not yet picked up by a worker. |
 | `processing` | No | Content is being parsed, chunked, and embedded. |
-| `graph_creation` | **Yes** | Indexed and retrievable; the knowledge graph is still being built. Already searchable via `/query`, but graph context may still be incomplete. |
+| `graph_creation` | **Yes** | Indexed and retrievable; the knowledge graph is still being built. Already queryable via `/query`, but graph context may still be incomplete. |
 | `completed` | Yes | Fully indexed and graphed. Ready for all retrieval modes. |
 | `errored` | No | Processing failed. Inspect `error_code` and `message`. |
 
@@ -146,9 +146,9 @@ The normal progression is `queued` → `processing` → `graph_creation` → `co
 
 ## Polling patterns
 
-### Stop when content is searchable
+### Stop when content is queryable
 
-Use this for normal RAG/search flows. `graph_creation` means chunks are indexed and can be retrieved.
+Use this for normal RAG/query flows. `graph_creation` means chunks are indexed and can be retrieved.
 
 <CodeGroup>
 ```python Python
@@ -220,7 +220,7 @@ Typical processing time:
 ## Behavior notes
 
 <Info>
-**`graph_creation` is searchable.** Items in this state are already retrievable via `/query`. Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
+**`graph_creation` is queryable.** Items in this state are already retrievable via `/query`. Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
 </Info>
 
 - **Unknown IDs return as `errored`:** If you pass an ID that does not exist (e.g., a typo), HydraDB returns an entry with `indexing_status: "errored"` rather than silently dropping it.

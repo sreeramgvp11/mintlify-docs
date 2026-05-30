@@ -1,6 +1,6 @@
 ---
 title: "Tenants & sub-tenants"
-description: "How HydraDB scopes data using tenants and sub-tenants, and how scoping affects writes and search."
+description: "How HydraDB scopes data using tenants and sub-tenants, and how scoping affects writes and query."
 ---
 
 ## 1. What it is
@@ -10,9 +10,9 @@ HydraDB scopes data using two identifiers:
 - **`tenant_id`** - the top-level scoping identifier. Use it for customers, environments, or other primary data boundaries.
 - **`sub_tenant_id`** - an optional scoping identifier within a tenant. Use it for users, workspaces, teams, or other logical partitions.
 
-HydraDB write and search operations are scoped by `tenant_id`. When `sub_tenant_id` is provided, it further narrows the scope for that operation. If you omit `sub_tenant_id`, HydraDB uses the tenant's default sub-tenant.
+HydraDB write and query operations are scoped by `tenant_id`. When `sub_tenant_id` is provided, it further narrows the scope for that operation. If you omit `sub_tenant_id`, HydraDB uses the tenant's default sub-tenant.
 
-Use the same scoping values consistently across writes and reads. If you write data with one `sub_tenant_id` and later search with a different one, that data may not appear in the search results.
+Use the same scoping values consistently across writes and reads. If you write data with one `sub_tenant_id` and later query with a different one, that data may not appear in the query results.
 
 ---
 
@@ -51,7 +51,7 @@ Use this when each user has private Memories, preferences, or conversation histo
 Typical flow:
 
 - Write user Memories with `sub_tenant_id = user_id`.
-- Search user Memories with the same `sub_tenant_id`.
+- Query user Memories with the same `sub_tenant_id`.
 - Keep shared Knowledge outside the user-specific scope.
 
 ### B2B SaaS
@@ -93,15 +93,15 @@ Examples:
 
 - A memory about John's preferences should be written with John's `sub_tenant_id`.
 - Workspace-specific runbooks should be written with that workspace's `sub_tenant_id`.
-- Broadly shared Knowledge should use the same scope you plan to use when searching it.
+- Broadly shared Knowledge should use the same scope you plan to use when querying it.
 
 ### Reads
 
-Search requests include `tenant_id`, and may include `sub_tenant_id`. If `sub_tenant_id` is omitted, search uses the tenant's default sub-tenant.
+Query requests include `tenant_id`, and may include `sub_tenant_id`. If `sub_tenant_id` is omitted, query uses the tenant's default sub-tenant.
 
-Use the same scoping values on search that you used when writing the data. A search request with one `sub_tenant_id` should not be expected to retrieve data written under a different `sub_tenant_id`.
+Use the same scoping values on query that you used when writing the data. A query request with one `sub_tenant_id` should not be expected to retrieve data written under a different `sub_tenant_id`.
 
-If your application needs to combine data from multiple scopes, make separate search calls and merge the results in your application.
+If your application needs to combine data from multiple scopes, make separate query calls and merge the results in your application.
 
 Use `sub_tenant_id` for partitioning data. Use `metadata_filters` for narrowing results within that scope.
 
@@ -117,14 +117,14 @@ For a personalized answer, the common pattern is one `POST /query` with `type: "
 
 <Warning>
   <strong>Use the same <code>sub_tenant_id</code> on writes and reads for the same logical scope.</strong>
-  <p>Data written under one sub-tenant should not be expected to appear when searching from another. Keep scope identifiers stable and consistent in your application.</p>
+  <p>Data written under one sub-tenant should not be expected to appear when querying from another. Keep scope identifiers stable and consistent in your application.</p>
 </Warning>
 
 ---
 
 ## 5. Minimal working example
 
-The example below shows a common personalized-answer flow: write a user Memory, search that user's preferences, search shared Knowledge, and merge the two contexts in your application.
+The example below shows a common personalized-answer flow: write a user Memory, query that user's preferences, query shared Knowledge, and merge the two contexts in your application.
 
 <CodeGroup>
 
@@ -233,7 +233,7 @@ result = client.query(
 ## 6. Common mistakes
 
 **Mismatched `sub_tenant_id` between write and read.**
-Data written under one sub-tenant should not be expected to surface when searched under another. Use the same `sub_tenant_id` consistently for the same logical scope.
+Data written under one sub-tenant should not be expected to surface when queried under another. Use the same `sub_tenant_id` consistently for the same logical scope.
 
 **Sharing a `tenant_id` across environments.**
 Do not use one tenant for both production and staging. Create separate tenants for separate environments.
@@ -241,11 +241,11 @@ Do not use one tenant for both production and staging. Create separate tenants f
 **Confusing `tenant_id` with `sub_tenant_id`.**
 Use `tenant_id` for primary boundaries such as customers or environments. Use `sub_tenant_id` for partitions inside a tenant, such as users or workspaces.
 
-**Assuming search automatically merges scopes.**
-A search call uses the scope you provide. If your application needs data from multiple scopes, make multiple calls and merge the results yourself.
+**Assuming query automatically merges scopes.**
+A query call uses the scope you provide. If your application needs data from multiple scopes, make multiple calls and merge the results yourself.
 
 **Writing shared Knowledge under a user scope by accident.**
-If broadly shared Knowledge is written with a user-specific `sub_tenant_id`, it may not appear where other users expect it. Choose the write scope based on where the content should be searched later.
+If broadly shared Knowledge is written with a user-specific `sub_tenant_id`, it may not appear where other users expect it. Choose the write scope based on where the content should be queried later.
 
 **Using metadata filters as a substitute for sub-tenants.**
 Metadata filters narrow results inside a scope. They are not a replacement for choosing the right `tenant_id` and `sub_tenant_id`.
@@ -260,5 +260,5 @@ Avoid display names, emails that may change, or user-provided labels as long-ter
 - [Memories](/essentials/v2/memories) - user-scoped context
 - [Knowledge](/essentials/v2/knowledge) - shared document context
 - [Query](/essentials/v2/query) - how scoping is applied at query time
-- [How to Use API Results](/essentials/v2/api-results) - merging search results into a prompt
+- [How to Use API Results](/essentials/v2/api-results) - merging query results into a prompt
 - [Create Tenant](/api-reference/v2/endpoint/tenants-overview) - defining tenants and their metadata schema

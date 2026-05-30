@@ -88,7 +88,7 @@ A tenant with no indexed content can return an empty list, as shown in the **Emp
 </Info>
 
 - **Default sub-tenant included:** HydraDB assigns an auto-generated default sub-tenant ID for calls that omit `sub_tenant_id`. That default is created once and reused. It appears here once any data is written without an explicit `sub_tenant_id`.
-- **Only sub-tenants with data are listed:** A sub-tenant that has been referenced in a search but never received an ingest will not show up here.
+- **Only sub-tenants with data are listed:** A sub-tenant that has been referenced in a query but never received an ingest will not show up here.
 
 ## Errors
 

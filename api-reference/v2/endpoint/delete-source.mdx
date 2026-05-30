@@ -145,7 +145,7 @@ The body wraps two fields together.
 </Warning>
 
 - **Partial-success semantics:** For `type=knowledge`, each ID is reported independently in `results[]`. A failure on one ID does not stop the rest. For `type=memory`, the response reports an aggregate `user_memory_deleted` reflecting *all* listed IDs.
-- **Search drops the source immediately:** Even before background cleanup finishes, deleted IDs disappear from `/query` and `/source/list` responses.
+- **Query drops the source immediately:** Even before background cleanup finishes, deleted IDs disappear from `/query` and `/source/list` responses.
 - **Mixed deletes need two calls:** To delete both knowledge and memory items, send two requests  -  one with `type=knowledge`, one with `type=memory`. A single call cannot mix the two buckets.
 
 ## Errors
@@ -158,7 +158,7 @@ Common codes: `400 INVALID_PARAMETERS`, `404 SOURCE_NOT_FOUND`, `422 VALIDATION_
 **Related Resources**
 
 - **Find IDs:** [List Documents](/api-reference/v2/endpoint/list-documents)
-- **Perform a search:** [Query](/api-reference/v2/endpoint/query)
+- **Query content:** [Query](/api-reference/v2/endpoint/query)
 - **Re-add content:** [Ingest Content](/api-reference/v2/endpoint/ingest-content)
 - **Bigger hammer:** [Delete Tenant](/api-reference/v2/endpoint/delete-tenant) - removes the entire workspace
 - **Read more:** [Sources - Overview](/api-reference/v2/endpoint/sources-overview)
