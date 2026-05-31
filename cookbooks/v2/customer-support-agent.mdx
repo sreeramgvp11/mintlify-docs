@@ -569,8 +569,8 @@ def recall_customer_context(
     # Merge: personal memory first (higher personalization weight),
     # then knowledge base chunks, then combined graph context
     return {
-        "chunks":        (mem_data.chunks or []) + (kb_data.chunks or []),
-        "graph_context": kb_data.graph_context or {},
+        "chunks":        (mem_data.data.chunks or []) + (kb_data.data.chunks or []),
+        "graph_context": kb_data.data.graph_context or {},
     }
     # chunks[n]["chunk_content"]   - the actual text
     # chunks[n]["source_title"]    - which doc or memory it came from
@@ -621,8 +621,8 @@ async function recallCustomerContext(
     // Merge: personal memory first (higher personalization weight),
     // then knowledge base chunks, then combined graph context
     return {
-        chunks:        (memData.chunks || []).concat(kbData.chunks || []),
-        graphContext: kbData.graph_context || {},
+        chunks:        (memData.data?.chunks || []).concat(kbData.data?.chunks || []),
+        graphContext: kbData.data?.graphContext || {},
     };
     // chunks[n].chunk_content   - the actual text
     // chunks[n].source_title    - which doc or memory it came from
@@ -655,8 +655,8 @@ def handle_ticket(
     """
     # Step 1: Search
     context_data = recall_customer_context(customer_id, customer_msg)
-    chunks       = context_data.chunks or []
-    graph_ctx    = context_data.graph_context
+    chunks       = context_data["chunks"] or []
+    graph_ctx    = context_data["graph_context"]
 
     # Build context string for the LLM - ranked chunks, most useful first
     context_text = "\n\n".join(
@@ -721,7 +721,7 @@ async function handleTicket(
     // Step 1: Search
     const contextData = await recallCustomerContext(customerId, customerMsg);
     const chunks      = contextData.chunks || [];
-    const graphCtx    = contextData.graph_context || {};
+    const graphCtx    = contextData.graphContext || {};
 
     // Build context string for the LLM - ranked chunks, most useful first
     const contextText = chunks
@@ -729,7 +729,7 @@ async function handleTicket(
         .join("\n\n");
 
     // Include entity relationship paths if available
-    const entityPaths = (graphCtx.query_paths || []).slice(0, 3);
+    const entityPaths = (graphCtx.queryPaths || []).slice(0, 3);
     const entityText  = entityPaths.map((p: any) => String(p)).join("\n");
 
     // Step 2: Generate response
@@ -801,7 +801,7 @@ def escalate_to_human(
         query=f"{customer_msg} resolved escalated human agent",
         max_results=5,
     )
-    similar_tickets = similar_data.chunks or []
+    similar_tickets = similar_data.data.chunks or []
 
     escalation = {
         "ticket_id":    ticket_id,
@@ -864,7 +864,7 @@ async function escalateToHuman(
         query:       `${customerMsg} resolved escalated human agent`,
         maxResults: 5,
     });
-    const similarTickets = similarData.chunks || [];
+    const similarTickets = similarData.data?.chunks || [];
 
     const escalation = {
         ticket_id:    ticketId,
