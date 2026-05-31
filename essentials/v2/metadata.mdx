@@ -112,11 +112,11 @@ curl -X POST 'https://api.hydradb.com/tenants' \
 ```typescript TypeScript SDK
 await client.tenants.create({
   tenantId: "acme_corp",
-  tenant_metadata_schema: [
+  tenantMetadataSchema: [
     {
       name: "compliance_framework",
-      data_type: "VARCHAR",
-      enable_match: true,
+      dataType: "VARCHAR",
+      enableMatch: true,
     },
   ],
 });
