@@ -32,7 +32,7 @@ with open("/path/to/policy.pdf", "rb") as policy:
         documents=[("policy.pdf", policy, "application/pdf")],
         document_metadata=json.dumps([
             {
-                "source_id": "policy_main",
+                "id": "policy_main",
                 "metadata": {"department": "legal"},
                 "additional_metadata": {"source": "policy"},
             }
@@ -98,7 +98,7 @@ const knowledgeResult = await client.source.ingest({
   ],
   documentMetadata: JSON.stringify([
     {
-      source_id: "policy_main",
+      id: "policy_main",
       metadata: { department: "legal" },
       additional_metadata: { source: "policy" },
     },
@@ -161,7 +161,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "documents=@/path/to/policy.pdf" \
   -F 'document_metadata=[
     {
-      "source_id": "policy_main",
+      "id": "policy_main",
       "metadata": { "department": "legal" },
       "additional_metadata": { "source": "policy" }
     }
@@ -231,7 +231,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
 ### Document metadata
 
-Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, etc.) can be passed alongside each uploaded document to control indexing, filtering, and display. See the field reference below.
+Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) can be passed alongside each uploaded document to control indexing, filtering, and display. See the field reference below.
 
 <Accordion title="Knowledge documents - upload PDFs, DOCX, CSV, markdown, or text">
   <CodeGroup>
@@ -248,8 +248,8 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
               ("runbook.pdf", f2, "application/pdf"),
           ],
           document_metadata=json.dumps([
-              {"source_id": "policy_main", "metadata": {"department": "legal"}},
-              {"source_id": "runbook_deploy", "metadata": {"department": "ops"}},
+              {"id": "policy_main", "metadata": {"department": "legal"}},
+              {"id": "runbook_deploy", "metadata": {"department": "ops"}},
           ]),
       )
   ```
@@ -263,8 +263,8 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
       { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
     ],
     documentMetadata: JSON.stringify([
-      { source_id: "policy_main", metadata: { department: "legal" } },
-      { source_id: "runbook_deploy", metadata: { department: "ops" } },
+      { id: "policy_main", metadata: { department: "legal" } },
+      { id: "runbook_deploy", metadata: { department: "ops" } },
     ]),
   });
   ```
@@ -278,8 +278,8 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
     -F "documents=@/path/to/policy.pdf" \
     -F "documents=@/path/to/runbook.pdf" \
     -F 'document_metadata=[
-      { "source_id": "policy_main", "metadata": { "department": "legal" } },
-      { "source_id": "runbook_deploy", "metadata": { "department": "ops" } }
+      { "id": "policy_main", "metadata": { "department": "legal" } },
+      { "id": "runbook_deploy", "metadata": { "department": "ops" } }
     ]'
   ```
 
@@ -287,14 +287,14 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
 
   | Field | Description |
   | --- | --- |
-  | <Field name="source_id" type="string" /> | Optional source ID. If set, becomes the `source_id` for this file (use your app's document ID for parity). |
+  | <Field name="id" type="string" /> | Optional source ID. If set, becomes the `id` for this file (use your app's document ID for parity). |
   | <Field name="metadata" type="object" /> | Tenant-schema fields for filtering and search. Keys must be declared in `tenant_metadata_schema`. (default=`{}`) |
   | <Field name="additional_metadata" type="object" /> | Free-form per-document fields for display or bookkeeping. To filter on these at search time, nest under `metadata_filters.additional_metadata`. (default=`{}`) |
   | <Field name="title" type="string" /> | Override the source title shown in search results. (default=filename) |
   | <Field name="type" type="string" /> | Override the source type shown in search results. (default=inferred) |
   | <Field name="url" type="string" /> | Override the canonical URL. |
   | <Field name="timestamp" type="string" /> | ISO-8601 timestamp override. (default=upload time) |
-  | <Field name="relations" type="object" /> | Declare forceful relations to other sources. Shape: `{ "source_ids": ["...", "..."] }` (legacy alias `cortex_source_ids` still accepted). Surfaced via `additional_context` in `mode: "thinking"` search. |
+  | <Field name="relations" type="object" /> | Declare forceful relations to other sources. Shape: `{ "ids": ["...", "..."] }` (legacy alias `cortex_source_ids` still accepted). Surfaced via `additional_context` in `mode: "thinking"` search. |
 </Accordion>
 
 <Accordion title="App knowledge - index text your workspace or personal apps">
@@ -434,7 +434,7 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
 
   | Field | Description |
   | --- | --- |
-  | <Field name="source_id" type="string" /> | Optional unique ID. Acts as the upsert key. (default=auto-generated) |
+  | <Field name="id" type="string" /> | Optional unique ID. Acts as the upsert key. (default=auto-generated) |
   | <Field name="title" type="string" /> | Short label for display in `/source/list` and search hits as `source.title`. (default=truncated `text`) |
   | <Field name="text" type="string" recommended /> | Raw text or markdown content. Required unless `user_assistant_pairs` is provided. |
   | <Field name="user_assistant_pairs" type="array" recommended /> | Conversation pairs `{ user, assistant }`. Required unless `text` is provided. |
@@ -445,7 +445,7 @@ Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, 
   | <Field name="expiry_time" type="integer" /> | TTL in seconds. Memory stops surfacing after expiry. |
   | <Field name="metadata" type="string (JSON object)" /> | Tenant-schema fields as a **JSON-stringified** object (e.g. `"{\"department\":\"legal\"}"`). Unlike `metadata` and `app_knowledge`, memory items take this as a string, not an object. (default=`""`) |
   | <Field name="additional_metadata" type="string (JSON object)" /> | Free-form per-document fields as a **JSON-stringified** object. Same string-vs-object difference as `metadata` above. (default=`""`) |
-  | <Field name="relations" type="object" /> | Forceful relations within the Memories store. Shape: `{ "source_ids": ["...", "..."] }` (legacy alias `cortex_source_ids` still accepted). |
+  | <Field name="relations" type="object" /> | Forceful relations within the Memories store. Shape: `{ "ids": ["...", "..."] }` (legacy alias `cortex_source_ids` still accepted). |
 </Accordion>
 
 <Accordion title="4. Chat/LLM conversation pairs - store chat history or support context ">

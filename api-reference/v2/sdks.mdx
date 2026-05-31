@@ -131,7 +131,7 @@ The v2 SDKs are a deliberate consolidation. A few common v1 → v2 method swaps:
 | `client.search.booleanRecall(...)` | `client.query(query_by="text", ...)` |
 | `client.fetch.listData(...)` | `client.source.list(...)` |
 | `client.fetch.graphRelationsBySourceId(...)` | `client.source.relations(...)` |
-| `client.fetch.content(...)` | `client.source.fetch(...)` |
+| `client.fetch.content(...)` | `client.context.inspect(...)` |
 | `client.data.delete(...)` | `client.source.delete(type="knowledge", ...)` |
 | `client.upload.deleteMemory(...)` | `client.source.delete(type="memory", ...)` |
 | `client.tenant.create(...)` | `client.tenants.create(...)` |
@@ -222,14 +222,14 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
             ("contract.pdf", f1, "application/pdf"),
             ("policy.pdf", f2, "application/pdf"),
         ],
-        file_metadata=json.dumps([
+        document_metadata=json.dumps([
             {
-                "source_id": "contract_q4",
+                "id": "contract_q4",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"author": "Alice"},
             },
             {
-                "source_id": "policy_2025",
+                "id": "policy_2025",
                 "tenant_metadata": {"department": "legal"},
                 "document_metadata": {"author": "Bob"},
             },
@@ -246,12 +246,12 @@ const result = await client.source.ingest({
   ],
   fileMetadata: JSON.stringify([
     {
-      source_id: "contract_q4",
+      id: "contract_q4",
       tenant_metadata: { department: "legal" },
       document_metadata: { author: "Alice" },
     },
     {
-      source_id: "policy_2025",
+      id: "policy_2025",
       tenant_metadata: { department: "legal" },
       document_metadata: { author: "Bob" },
     },
@@ -309,19 +309,19 @@ const result = await client.source.ingest({
 
 ### Verify processing
 
-Poll `source.status` with the `source_id`s from the ingest response:
+Poll `context.status` with the IDs from the ingest response:
 
 <CodeGroup>
 ```python Python SDK
-status = client.source.status(
+status = client.context.status(
     tenant_id="my_first_tenant",
-    source_ids=["contract_q4", "policy_2025"],
+    ids=["contract_q4", "policy_2025"],
 )
 ```
 ```typescript TypeScript SDK
-const status = await client.source.status({
+const status = await client.context.status({
   tenantId: "my_first_tenant",
-  sourceIds: ["contract_q4", "policy_2025"],
+  ids: ["contract_q4", "policy_2025"],
 });
 ```
 </CodeGroup>
@@ -402,7 +402,7 @@ For the full parameter reference, see [Query – Overview](/api-reference/v2/end
 <CodeGroup>
 ```python Python SDK
 # List knowledge sources with pagination
-sources = client.source.list(
+sources = client.context.list(
     tenant_id="my_first_tenant",
     type="knowledge",
     page=1,
@@ -410,20 +410,20 @@ sources = client.source.list(
 )
 
 # Inspect graph relationships for a specific source
-relations = client.source.relations(
+relations = client.context.relations(
     tenant_id="my_first_tenant",
-    source_id="doc_12345",
+    id="doc_12345",
 )
 
-# Fetch original file content or get a presigned URL
-file = client.source.fetch(
+# Inspect original source content or get a presigned URL
+file = client.context.inspect(
     tenant_id="my_first_tenant",
-    source_id="doc_12345",
+    id="doc_12345",
     mode="url",
 )
 
 # Delete a knowledge source
-client.source.delete(
+client.context.delete(
     type="knowledge",
     request={
         "tenant_id": "my_first_tenant",
@@ -433,7 +433,7 @@ client.source.delete(
 ```
 ```typescript TypeScript SDK
 // List knowledge sources with pagination
-const sources = await client.source.list({
+const sources = await client.context.list({
   tenantId: "my_first_tenant",
   type: "knowledge",
   page: 1,
@@ -441,20 +441,20 @@ const sources = await client.source.list({
 });
 
 // Inspect graph relationships for a specific source
-const relations = await client.source.relations({
+const relations = await client.context.relations({
   tenantId: "my_first_tenant",
-  sourceId: "doc_12345",
+  id: "doc_12345",
 });
 
-// Fetch original file content or get a presigned URL
-const file = await client.source.fetch({
+// Inspect original source content or get a presigned URL
+const file = await client.context.inspect({
   tenantId: "my_first_tenant",
-  sourceId: "doc_12345",
+  id: "doc_12345",
   mode: "url",
 });
 
 // Delete a knowledge source
-await client.source.delete({
+await client.context.delete({
   type: "knowledge",
   request: {
     tenantId: "my_first_tenant",
