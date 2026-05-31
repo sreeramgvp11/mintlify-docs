@@ -100,7 +100,7 @@ def _poll_until_ready(timeout=180, interval=4):
     print("Polling for readiness...")
     deadline = time.time() + timeout
     while time.time() < deadline:
-        status = client.tenants.status(tenant_id=TENANT_ID)
+        status = client.tenants.status(tenant_id=TENANT_ID).data
         infra = status.infra
         if infra.scheduler_status and infra.graph_status and infra.vectorstore_status.knowledge and infra.vectorstore_status.memories:
             print("✓ Tenant ready."); return
@@ -222,7 +222,7 @@ def verify_item(id: str, timeout: int = 120, interval: int = 3):
         )
         print("STATUS:", status)
 
-        items = status.statuses or []
+        items = status.data.statuses or []
         if items:
             s = items[0].indexing_status
             if   s == "completed": print(f"✓ '{id}' ready."); return
@@ -404,7 +404,7 @@ def upload_batch(batch: list) -> list:
         tenant_id=TENANT_ID,
         app_knowledge=json.dumps(batch),
     )
-    ids = [r.id for r in (result.results or []) if r.id]
+    ids = [r.id for r in (result.data.results or []) if r.id]
     print(f"  Uploaded {len(ids)} items")
     return ids
 
@@ -1412,7 +1412,7 @@ client.context.ingest(
     { "id": "<id>", "indexing_status": "completed" }
   ]
 }
-// indexing_status: "processing" | "completed" | "errored"
+// indexingStatus: "processing" | "completed" | "errored"
 ```
 
 ### Search - Validated Minimal Request
