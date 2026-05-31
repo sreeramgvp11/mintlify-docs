@@ -104,9 +104,9 @@ result = client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "default",
-  app_knowledge: JSON.stringify([
+  tenantId: "acme_corp",
+  subTenantId: "default",
+  appKnowledge: JSON.stringify([
     {
       id: "slack_C01_1716213600_000100",
       tenant_id: "acme_corp",
