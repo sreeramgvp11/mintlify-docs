@@ -7,7 +7,7 @@ description: "Quick reference for context management endpoints, their lifecycle,
 
 | Task | Endpoint |
 | :-- | :-- |
-| Upload PDFs, DOCX, CSVs, and other documents HydraDB should parse | `/context/ingest` with `type=knowledge` and `files` |
+| Upload PDFs, DOCX, CSVs, and other documents HydraDB should parse | `/context/ingest` with `type=knowledge` and `documents` |
 | Upload Slack messages, Notion pages, Gmail threads, or webpages with pre-extracted text | `/context/ingest` with `type=knowledge` and `app_knowledge` |
 | Upload user preferences, conversation history, or inline notes | `/context/ingest` with `type=memory` and `memories` |
 | Poll indexing progress | `/context/status` |
@@ -57,19 +57,19 @@ flowchart LR
   **Why both** `type=knowledge `**and** `app_knowledge`**?** They have a theoretical differentiation.
 
   - `type` picks the **bucket**: `knowledge` (shared documents) or `memory` (per-user context). It routes the ingest to the right store.
-  - Within `type=knowledge`, you pick the **payload shape**: `files` (binary documents HydraDB will parse  -  PDFs, DOCX, CSV) or `app_knowledge` (a JSON array of already-extracted content from your app  -  Slack messages, Notion pages, web pages). You can send both in the same request.
+  - Within `type=knowledge`, you pick the **payload shape**: `documents` (binary documents HydraDB will parse  -  PDFs, DOCX, CSV) or `app_knowledge` (a JSON array of already-extracted content from your app  -  Slack messages, Notion pages, web pages). You can send both in the same request.
 </Note>
 
 ## Core Ingestion Concepts
 
 - **Knowledge vs. Memories**: [Knowledge](/essentials/v2/knowledge) is shared, tenant-wide content (documents, app pages, Slack messages). [Memories](/essentials/v2/memories) are user-specific preferences and conversational traits scoped by `sub_tenant_id`. Both can be searched together via `type: "all"` on `POST /query`.
-- **Source IDs**: Unique identifiers returned by `/context/ingest`. You can assign custom IDs using `id` in metadata or `id` in app knowledge. Use them for polling status, inspecting content, and deleting sources.
+- **IDs**: Unique identifiers returned by `/context/ingest`. You can assign custom IDs using `id` in metadata or `id` in `app_knowledge` items. Use them for polling status, inspecting content, and deleting context.
 - **Metadata Filtering**: You can scope queries using `metadata` (structured fields defined in your tenant schema) or `additional_metadata` (free-form per-document JSON). For detailed guidelines on structuring metadata, see the [Scoping using metadata](/essentials/v2/metadata) guide.
 - **Forceful Relations**: Relationships between sources can be declared at ingestion time to construct a robust knowledge graph. For more details on the graph layer, see the [Context Graphs](/essentials/v2/context-graphs) guide.
 
 ## Forceful relations and metadata
 
-Forceful relations let you pre-wire document relationships at ingestion time so that relevant documents surface together during retrieval — even before the graph layer discovers connections organically. Think of them as explicit "see also" links between your documents.
+Forceful relations let you pre-wire document relationships at ingestion time so that relevant documents surface together during retrieval - even before the graph layer discovers connections organically. Think of them as explicit "see also" links between your documents.
 
 Paired with document-level metadata, you get deterministic control over how results are filtered and ranked.
 
@@ -77,7 +77,7 @@ Paired with document-level metadata, you get deterministic control over how resu
 result = client.context.ingest(
     type="knowledge",
     tenant_id="acme_corp",
-    files=[("runbook.pdf", f, "application/pdf")],
+    documents=[("runbook.pdf", f, "application/pdf")],
     document_metadata=json.dumps([{
         "id": "runbook_deploy",
         "metadata": {"department": "ops"},

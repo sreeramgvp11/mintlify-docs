@@ -3613,9 +3613,9 @@
     },
     "/context/ingest": {
       "post": {
-        "tags": ["Source"],
+        "tags": ["Context"],
         "summary": "Ingest content",
-        "description": "Unified ingestion endpoint for both knowledge and memory.\n\n    Use `type` to specify what you're ingesting:\n    - \"knowledge\" (default): Upload files or app-generated sources for indexing\n    - \"memory\": Add memories (text, conversations) for indexing and retrieval\n\n    **For knowledge (type=\"knowledge\"):**\n    Provide `documents` (multipart uploads) and/or `app_knowledge` (JSON sources).\n\n    **For memory (type=\"memory\"):**\n    Provide `memories` as a JSON array of memory items in the `memories` field.",
+        "description": "Unified ingestion endpoint for both knowledge and memory.\n\n    Use `type` to specify what you're ingesting:\n    - \"knowledge\" (default): Upload documents or app-generated sources for indexing\n    - \"memory\": Add memories (text, conversations) for indexing and retrieval\n\n    **For knowledge (type=\"knowledge\"):**\n    Provide `documents` (multipart uploads) and/or `app_knowledge` (JSON sources).\n\n    **For memory (type=\"memory\"):**\n    Provide `memories` as a JSON array of memory items in the `memories` field.",
         "operationId": "ingest_context_ingest_post",
         "requestBody": {
           "content": {
@@ -3721,7 +3721,7 @@
     },
     "/context/status": {
       "get": {
-        "tags": ["Source"],
+        "tags": ["Context"],
         "summary": "Check processing status",
         "description": "Check the processing status of ingested documents or memories by their IDs.",
         "operationId": "get_status_context_status_get",
@@ -3744,10 +3744,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Single source ID.",
+              "description": "Single context item ID.",
               "title": "Id"
             },
-            "description": "Single source ID."
+            "description": "Single context item ID."
           },
           {
             "name": "ids",
@@ -3758,11 +3758,11 @@
               "items": {
                 "type": "string"
               },
-              "description": "One or more source IDs to check.",
+              "description": "One or more context item IDs to check.",
               "default": [],
               "title": "Ids"
             },
-            "description": "One or more source IDs to check."
+            "description": "One or more context item IDs to check."
           },
           {
             "name": "tenant_id",
@@ -3884,7 +3884,7 @@
     },
     "/context/inspect": {
       "get": {
-        "tags": ["Source"],
+        "tags": ["Context"],
         "summary": "Fetch document content",
         "description": "Retrieve the content of a previously ingested document or memory.",
         "operationId": "fetch_context_inspect_get",
@@ -4050,9 +4050,9 @@
     },
     "/context/list": {
       "post": {
-        "tags": ["Source"],
-        "summary": "List documents",
-        "description": "List knowledge sources or memories with pagination and optional filters.",
+        "tags": ["Context"],
+        "summary": "List context",
+        "description": "List knowledge or memories with pagination and optional filters.",
         "operationId": "list_documents_context_list_post",
         "requestBody": {
           "content": {
@@ -4158,7 +4158,7 @@
     },
     "/context": {
       "delete": {
-        "tags": ["Source"],
+        "tags": ["Context"],
         "summary": "Delete documents or memories",
         "description": "Unified deletion endpoint for both knowledge documents and memories.\n\n    Use `type` to specify what to delete:\n    - \"knowledge\" (default): Delete knowledge documents by their IDs\n    - \"memory\": Delete memories by their IDs\n\n    Provide one or more IDs in the `ids` field.",
         "operationId": "delete_documents_context_delete",
@@ -4266,9 +4266,9 @@
     },
     "/context/relations": {
       "get": {
-        "tags": ["Source"],
+        "tags": ["Context"],
         "summary": "Get graph relations",
-        "description": "Retrieve knowledge graph relations for a specific source or across an entire sub-tenant.\n\n    If `id` is provided, returns relations for that specific document.\n    If omitted, returns all relations in the sub-tenant scope.\n\n    Supports cursor-based pagination for large result sets.",
+        "description": "Retrieve knowledge graph relations for a specific context item or across an entire sub-tenant.\n\n    If `id` is provided, returns relations for that specific document.\n    If omitted, returns all relations in the sub-tenant scope.\n\n    Supports cursor-based pagination for large result sets.",
         "operationId": "get_relations_context_relations_get",
         "security": [
           {
@@ -5725,7 +5725,7 @@
           "upsert": {
             "type": "boolean",
             "title": "Upsert",
-            "description": "If true, update existing sources with the same id.",
+            "description": "If true, update existing context items with the same id.",
             "default": true
           },
           "documents": {
@@ -5748,7 +5748,7 @@
               }
             ],
             "title": "Document Metadata",
-            "description": "JSON array of per-file metadata objects (knowledge only). Each object may include: id (optional), metadata, additional_metadata, infer, and relations."
+            "description": "JSON array of per-document metadata objects (knowledge only). Each object may include: id (optional), metadata, additional_metadata, infer, and relations."
           },
           "app_knowledge": {
             "anyOf": [
@@ -8009,7 +8009,7 @@
           },
           "type": {
             "$ref": "#/components/schemas/SourceType",
-            "description": "What to search: 'knowledge', 'memory', or 'all' (both merged). Mirrors the same values used by /source/ingest's `type` field.",
+            "description": "What to search: 'knowledge', 'memory', or 'all' (both merged). Mirrors the same values used by /context/ingest's `type` field.",
             "default": "knowledge"
           },
           "query_by": {
@@ -8026,7 +8026,7 @@
         "type": "object",
         "required": ["tenant_id", "query"],
         "title": "QueryRequest",
-        "description": "Unified query request with query_by and source selection.\n\nOverrides ``graph_context`` to default ``True`` ."
+        "description": "Unified query request with query_by and type selection.\n\nOverrides ``graph_context`` to default ``True`` ."
       },
       "RawEmbeddingDocument": {
         "properties": {
@@ -8557,13 +8557,13 @@
             "type": "array",
             "minItems": 1,
             "title": "Ids",
-            "description": "List of source IDs to delete."
+            "description": "List of IDs to delete."
           }
         },
         "type": "object",
         "required": ["tenant_id", "ids"],
         "title": "SourceDeleteRequest",
-        "description": "Request to delete sources by their IDs."
+        "description": "Request to delete context items by their IDs."
       },
       "SourceDeleteResponse": {
         "properties": {
@@ -10222,7 +10222,7 @@
           },
           "type": {
             "$ref": "#/components/schemas/IngestType",
-            "description": "Whether to list normal sources or user memories.",
+            "description": "Whether to list knowledge or user memories.",
             "default": "knowledge"
           },
           "ids": {
@@ -10280,7 +10280,7 @@
               }
             ],
             "title": "Include Fields",
-            "description": "Optional list of source fields to include in the response. Allowed values: attachments, content, description, document_metadata, note, relations, tenant_metadata, timestamp, title, type, url."
+            "description": "Optional list of fields to include in the response. Allowed values: attachments, content, description, document_metadata, note, relations, tenant_metadata, timestamp, title, type, url."
           }
         },
         "type": "object",

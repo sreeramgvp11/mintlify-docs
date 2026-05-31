@@ -48,8 +48,8 @@ curl -G 'https://api.hydradb.com/context/status' \
 
 | Name | Description |
 | --- | --- |
-| <Field name="ids" type="string[]" required /> | One or more `id` values returned at ingestion. Accepts IDs of any source  -  documents, app sources, memories. |
-| <Field name="tenant_id" type="string" required /> | Tenant the items belong to. Provide at least ID. |
+| <Field name="ids" type="string[]" required /> | One or more `id` values returned at ingestion. Accepts IDs for documents, app sources, or memories. |
+| <Field name="tenant_id" type="string" required /> | Tenant the items belong to. |
 | <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
 
 <ResponseExample>
@@ -163,7 +163,7 @@ while True:
     if all(s in ("graph_creation", "completed") for s in statuses):
         break
     if any(s == "errored" for s in statuses):
-        raise RuntimeError("Source processing failed")
+        raise RuntimeError("Context processing failed")
 
     time.sleep(5)
 ```
@@ -180,7 +180,7 @@ while (true) {
 
   const statuses = response.statuses.map((s) => s.indexing_status);
   if (statuses.every((s) => s === "graph_creation" || s === "completed")) break;
-  if (statuses.some((s) => s === "errored")) throw new Error("Source processing failed");
+  if (statuses.some((s) => s === "errored")) throw new Error("Context processing failed");
 
   await new Promise((r) => setTimeout(r, 5000));
 }
@@ -235,7 +235,7 @@ Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_
   - **Before this:** [Ingest Context](/api-reference/v2/endpoint/ingest-context) - to get the IDs
   - **After completion:** [Query](/api-reference/v2/endpoint/query)
   - **After completion:** [Fetch Content](/api-reference/v2/endpoint/fetch-content)
-  - **After completion:** [Source Relations](/api-reference/v2/endpoint/source-relations)
+  - **After completion:** [Context Relations](/api-reference/v2/endpoint/source-relations)
   - **Read more:** [Usage → Knowledge](/essentials/v2/knowledge)
   - **Read more:** [Usage → Memories](/essentials/v2/memories)
 </Tip>

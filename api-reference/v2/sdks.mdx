@@ -54,18 +54,18 @@ You can verify which version your client is using by inspecting the response hea
 
 ## Naming conventions
 
-The REST API uses **snake_case** for all request and response fields on the wire. The SDKs adapt this to native idioms:
+The REST API uses **snake_case** for all request and response fields, and both SDKs preserve those field names for request/response objects. TypeScript only camelCases multi-word **method names**.
 
 | | Method naming | Parameter field naming | Example |
 |---|---|---|---|
 | **Raw HTTP / cURL** |  -  | snake_case | `tenant_id`, `sub_tenant_id` |
 | **Python SDK** | snake_case | snake_case | method: `query()`, params: `tenant_id`, `query_by` |
-| **TypeScript SDK** | camelCase | camelCase | method: `query()`, params: `tenantId`, `queryBy` |
+| **TypeScript SDK** | camelCase for multi-word methods | snake_case | method: `query()`, params: `tenant_id`, `query_by` |
 
 <Info>
-**The TypeScript SDK uses camelCase for both method names and parameter field names** (e.g., `client.context.list({ tenantId: "...", pageSize: 50 })`). The SDK serializes these to snake_case on the wire automatically  -  you write camelCase in your code, and the API receives snake_case.
+**Use snake_case request fields in TypeScript examples too** (e.g., `client.context.list({ tenant_id: "...", page_size: 50 })`). The SDK sends the same names on the wire, matching the OpenAPI schema.
 
-The Python SDK uses snake_case throughout (e.g., `client.context.list(tenant_id="...", page_size=50)`).
+The Python SDK also uses snake_case throughout (e.g., `client.context.list(tenant_id="...", page_size=50)`).
 </Info>
 
 Your IDE's autocomplete and type checking work directly off the API contract  -  if a field is optional in the API, it's optional in the SDK.
@@ -83,9 +83,9 @@ SDK methods are grouped under three top-level namespaces  -  one per `/api-refer
 
 ## Method reference
 
-### Sources
+### Context
 
-`client.context.*` covers every flow around content lifecycle  -  file uploads, app sources, memories, polling, fetching, listing, deletion, and graph inspection.
+`client.context.*` covers every flow around content lifecycle  -  document uploads, app sources, memories, polling, fetching, listing, deletion, and graph inspection.
 
 | Method | Endpoint |
 |---|---|
@@ -163,9 +163,9 @@ response = await async_client.tenants.create(tenant_id="my_first_tenant")
 ```
 ```typescript TypeScript SDK
 const response = await client.tenants.create({
-  tenantId: "my_first_tenant",
-  tenantMetadataSchema: [
-    { name: "department", dataType: "VARCHAR", enableMatch: true },
+  tenant_id: "my_first_tenant",
+  tenant_metadata_schema: [
+    { name: "department", data_type: "VARCHAR", enable_match: true },
   ],
 });
 ```
@@ -192,14 +192,14 @@ while True:
 ```typescript TypeScript SDK
 while (true) {
   const status = await client.tenants.status({
-    tenantId: "my_first_tenant",
+    tenant_id: "my_first_tenant",
   });
-  const { schedulerStatus, graphStatus, vectorstoreStatus } = status.data.infra;
+  const { scheduler_status, graph_status, vectorstore_status } = status.data.infra;
   if (
-    schedulerStatus &&
-    graphStatus &&
-    vectorstoreStatus.knowledge &&
-    vectorstoreStatus.memories
+    scheduler_status &&
+    graph_status &&
+    vectorstore_status.knowledge &&
+    vectorstore_status.memories
   ) break;
   await new Promise((r) => setTimeout(r, 2000));
 }
@@ -218,7 +218,7 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
     result = client.context.ingest(
         type="knowledge",
         tenant_id="my_first_tenant",
-        files=[
+        documents=[
             ("contract.pdf", f1, "application/pdf"),
             ("policy.pdf", f2, "application/pdf"),
         ],
@@ -239,12 +239,12 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenantId: "my_first_tenant",
-  files: [
+  tenant_id: "my_first_tenant",
+  documents: [
     { path: "contract.pdf", filename: "contract.pdf", contentType: "application/pdf" },
     { path: "policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
   ],
-  documentMetadata: JSON.stringify([
+  document_metadata: JSON.stringify([
     {
       id: "contract_q4",
       metadata: { department: "legal" },
@@ -260,7 +260,7 @@ const result = await client.context.ingest({
 ```
 </CodeGroup>
 
-For app sources (Slack, Notion, Gmail, webpages), pass `app_knowledge` instead of `files`. You can combine both in a single request.
+For app sources (Slack, Notion, Gmail, webpages), pass `app_knowledge` instead of `documents`. You can combine both in a single request.
 
 ### Add user memories
 
@@ -288,8 +288,8 @@ result = client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "memory",
-  tenantId: "my_first_tenant",
-  subTenantId: "user_alex",
+  tenant_id: "my_first_tenant",
+  sub_tenant_id: "user_alex",
   memories: JSON.stringify([
     {
       text: "User prefers detailed technical explanations and dark mode",
@@ -320,13 +320,13 @@ status = client.context.status(
 ```
 ```typescript TypeScript SDK
 const status = await client.context.status({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   ids: ["contract_q4", "policy_2025"],
 });
 ```
 </CodeGroup>
 
-Wait until each `indexing_status` is `completed` (or `graph_creation` if you don't need full graph traversal). See [Sources – Overview](/api-reference/v2/endpoint/sources-overview) for the full status pipeline.
+Wait until each `indexing_status` is `completed` (or `graph_creation` if you don't need full graph traversal). See [Context Overview](/api-reference/v2/endpoint/sources-overview) for the full status pipeline.
 
 ### Query
 
@@ -366,30 +366,30 @@ exact = client.query(
 ```typescript TypeScript SDK
 // Knowledge over documents
 const knowledge = await client.query({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   query: "What are the pricing tiers?",
   type: "knowledge",
-  queryBy: "hybrid",
+  query_by: "hybrid",
   mode: "thinking",
-  graphContext: true,
+  graph_context: true,
 });
 
 // Personalized — searches knowledge AND user memories together
 const personalized = await client.query({
-  tenantId: "my_first_tenant",
-  subTenantId: "user_alex",
+  tenant_id: "my_first_tenant",
+  sub_tenant_id: "user_alex",
   query: "What are the pricing tiers, and how should I explain them to this user?",
   type: "all",
-  queryBy: "hybrid",
+  query_by: "hybrid",
   mode: "thinking",
 });
 
 // Exact-phrase BM25 search
 const exact = await client.query({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   query: "ERROR_429 rate limit",
   type: "knowledge",
-  queryBy: "text",
+  query_by: "text",
   operator: "phrase",
 });
 ```
@@ -434,21 +434,21 @@ client.context.delete(
 ```typescript TypeScript SDK
 // List knowledge sources with pagination
 const sources = await client.context.list({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   type: "knowledge",
   page: 1,
-  pageSize: 50,
+  page_size: 50,
 });
 
 // Inspect graph relationships for a specific source
 const relations = await client.context.relations({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   id: "doc_12345",
 });
 
 // Inspect original source content or get a presigned URL
 const file = await client.context.inspect({
-  tenantId: "my_first_tenant",
+  tenant_id: "my_first_tenant",
   id: "doc_12345",
   mode: "url",
 });
@@ -457,7 +457,7 @@ const file = await client.context.inspect({
 await client.context.delete({
   type: "knowledge",
   request: {
-    tenantId: "my_first_tenant",
+    tenant_id: "my_first_tenant",
     ids: ["doc_12345"],
   },
 });
@@ -533,7 +533,7 @@ import { HydraDBError } from "@hydradb/sdk";
 
 try {
   const result = await client.query({
-    tenantId: "my_first_tenant",
+    tenant_id: "my_first_tenant",
     query: "...",
     type: "knowledge",
   });
