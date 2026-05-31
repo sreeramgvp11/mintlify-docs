@@ -164,8 +164,8 @@ response = await async_client.tenants.create(tenant_id="my_first_tenant")
 ```typescript TypeScript SDK
 const response = await client.tenants.create({
   tenantId: "my_first_tenant",
-  tenant_metadata_schema: [
-    { name: "department", data_type: "VARCHAR", enable_match: true },
+  tenantMetadataSchema: [
+    { name: "department", dataType: "VARCHAR", enableMatch: true },
   ],
 });
 ```
@@ -194,12 +194,12 @@ while (true) {
   const status = await client.tenants.status({
     tenantId: "my_first_tenant",
   });
-  const { scheduler_status, graph_status, vectorstore_status } = status.data.infra;
+  const { schedulerStatus, graphStatus, vectorstoreStatus } = status.data.infra;
   if (
-    scheduler_status &&
-    graph_status &&
-    vectorstore_status.knowledge &&
-    vectorstore_status.memories
+    schedulerStatus &&
+    graphStatus &&
+    vectorstoreStatus.knowledge &&
+    vectorstoreStatus.memories
   ) break;
   await new Promise((r) => setTimeout(r, 2000));
 }
