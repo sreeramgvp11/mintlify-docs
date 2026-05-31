@@ -354,7 +354,7 @@ context = recall_context(
     "Why did we migrate from MySQL to Postgres?",
     sub_tenant_id="workspace",
 )
-for chunk in (context.chunks or []):
+for chunk in (context.data.chunks or []):
     print(f"[{chunk.relevancy_score or 0:.2f}] {chunk.source_title or ''}")
     print((chunk.chunk_content or "")[:200])
 ```
@@ -400,7 +400,7 @@ def ask_workspace(
 def build_context(result) -> str:
     return "\n\n".join(
         chunk.chunk_content or ""
-        for chunk in (result.chunks or [])
+        for chunk in (result.data.chunks or [])
     )
 
 
@@ -454,9 +454,9 @@ def handle_mention(event, client):
     session_id = get_session(slack_user)
     result     = ask_workspace(question)
 
-    chunks = result.chunks or []
+    chunks = result.data.chunks or []
     answer = "\n\n".join(c.chunk_content or "" for c in chunks[:3]) or "No results found."
-    sources = result.sources or []
+    sources = result.data.sources or []
 
     if sources:
         links  = "\n".join(f"• {s.title or ''}" for s in sources[:3])
