@@ -177,8 +177,8 @@ Create a unified data format for all sources:
 // Unified data structure for HydraDB app upload
 const normalizedData = {
   id: 'unique_id',
-  tenant_id: 'your_tenant_id',
-  sub_tenant_id: 'your_sub_tenant_id',
+  tenantId: 'your_tenant_id',
+  subTenantId: 'your_sub_tenant_id',
   title: 'Document/Message Title',
   type: 'slack_message', // Source category: gmail, slack_message, notion_page, document, etc.
   timestamp: '2024-01-01T00:00:00Z', // ISO timestamp
@@ -232,14 +232,14 @@ def upload_batch(sources: list, tenant_id: str, sub_tenant_id: str = None):
 def upload_with_verification(sources: list, tenant_id: str, sub_tenant_id: str = None):
     upload_result = upload_batch(sources, tenant_id, sub_tenant_id)
 
-    if upload_result.results:
-        for item in upload_result.results:
+    if upload_result.data.results:
+        for item in upload_result.data.results:
             id = item.id
             status = client.context.status(
                 tenant_id=tenant_id,
                 ids=[id]
             )
-            items = status.statuses or []
+            items = status.data.statuses or []
             if items and items[0].indexing_status == "errored":
                 raise Exception(f"Processing failed for source {id}")
 
@@ -254,13 +254,13 @@ const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const uploadBatch = async (sources: any[], tenantId: string, subTenantId?: string) => {
   const appKnowledge = sources.map(source => ({
     ...source,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId || tenantId
+    tenantId: tenantId,
+    subTenantId: subTenantId || tenantId
   }));
 
   const result = await client.context.ingest({
-    tenant_id: tenantId,
-    app_knowledge: JSON.stringify(appKnowledge)
+    tenantId: tenantId,
+    appKnowledge: JSON.stringify(appKnowledge)
   });
 
   return result;
@@ -270,15 +270,16 @@ const uploadBatch = async (sources: any[], tenantId: string, subTenantId?: strin
 const uploadWithVerification = async (sources: any[], tenantId: string, subTenantId?: string) => {
   const uploadResult = await uploadBatch(sources, tenantId, subTenantId);
 
-  if (uploadResult.ids) {
-    for (const id of uploadResult.ids) {
-      const status = await client.context.status({
-        tenant_id: tenantId,
-        ids: [id]
-      });
-      if (status.indexing_status === "errored") {
-        throw new Error(`Processing failed for source ${id}`);
-      }
+  const items = uploadResult.data?.results ?? [];
+  for (const item of items) {
+    const id = item.id;
+    const status = await client.context.status({
+      tenantId: tenantId,
+      ids: [id]
+    });
+    const statusItem = status.data.statuses[0];
+    if (statusItem?.indexingStatus === "errored") {
+      throw new Error(`Processing failed for source ${id}`);
     }
   }
 
@@ -348,12 +349,12 @@ const search = async (query: string, tenantId: string, options: SearchOptions = 
 
   return await client.query({
     query,
-    tenant_id: tenantId,
+    tenantId: tenantId,
     sub_tenant_id,
     max_results,
     mode,
     alpha: 0.5,         // Balance semantic vs keyword search (0.0 to 1.0)
-    recency_bias: 0.3,  // Recency preference (0.0 to 1.0)
+    recencyBias: 0.3,  // Recency preference (0.0 to 1.0)
     ...(metadata && { metadata }),
   });
 };
@@ -450,11 +451,11 @@ const searchWithFilters = async (
 
   return await client.query({
     query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
     ...(Object.keys(metadata).length > 0 && { metadata })
   });
 };
@@ -463,11 +464,11 @@ const searchWithFilters = async (
 const searchWithContext = async (query: string, tenantId: string, context: string) =>
   client.query({
     query: context ? `${context}\n\n${query}` : query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
   });
 
 // Conversational search — fold prior conversation turns into the query
@@ -480,11 +481,11 @@ const conversationalSearch = async (
     query: conversationHistory.length
       ? `Previous conversation context: ${JSON.stringify(conversationHistory)}\n\n${query}`
       : query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
   });
 ```
 </CodeGroup>
@@ -636,12 +637,12 @@ const searchWithMemory = async (query: string, tenantId: string, userId: string)
 
   const searchResults = await client.query({
     query: enrichedQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: userId,
-    max_results: 10,
+    tenantId: tenantId,
+    subTenantId: userId,
+    maxResults: 10,
     mode: userProfile.preferredMode || "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
     ...(userProfile.preferredSourceTypes?.length > 0 && {
       metadata: { source_type: userProfile.preferredSourceTypes }
     })
@@ -1207,8 +1208,8 @@ app.post("/webhooks/slack", async (req, res) => {
   if (event.type === "message") {
     const normalizedData = {
       id: `slack_${event.ts}`,
-      tenant_id: process.env.TENANT_ID!,
-      sub_tenant_id: process.env.SUB_TENANT_ID!,
+      tenantId: process.env.TENANT_ID!,
+      subTenantId: process.env.SUB_TENANT_ID!,
       title: `Message in ${event.channel}`,
       type: "slack_message",
       content: { text: event.text },
@@ -1222,8 +1223,8 @@ app.post("/webhooks/slack", async (req, res) => {
     };
 
     await client.context.ingest({
-      tenant_id: process.env.TENANT_ID!,
-      app_knowledge: JSON.stringify([normalizedData])
+      tenantId: process.env.TENANT_ID!,
+      appKnowledge: JSON.stringify([normalizedData])
     });
   }
 
@@ -1284,7 +1285,7 @@ class TenantManager {
       tenantId,
       subTenantId,
       metadata: {
-        tenant_id: tenantId
+        tenantId: tenantId
       }
     };
 
@@ -1326,7 +1327,7 @@ class DataPrivacyManager {
 
   async deleteOldData(tenantId, memoryId, subTenantId = null) {
     // Use HydraDB's context deletion endpoint for memory deletion.
-    const request = { tenant_id: tenantId, ids: [memoryId] };
+    const request = { tenantId: tenantId, ids: [memoryId] };
     if (subTenantId) {
       request.sub_tenant_id = subTenantId;
     }
