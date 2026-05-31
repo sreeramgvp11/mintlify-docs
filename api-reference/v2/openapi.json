@@ -7959,9 +7959,9 @@
             "description": "Enable graph context for query results (on by default on v2; set to false to omit).",
             "default": true
           },
-          "search_forceful_relations": {
+          "query_forceful_relations": {
             "type": "boolean",
-            "title": "Search Forceful Relations",
+            "title": "Query Forceful Relations",
             "description": "Whether to search for forceful relations in thinking mode to augment context",
             "default": true
           },
