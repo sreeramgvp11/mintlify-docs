@@ -350,8 +350,8 @@ const search = async (query: string, tenantId: string, options: SearchOptions = 
   return await client.query({
     query,
     tenantId: tenantId,
-    sub_tenant_id,
-    max_results,
+    subTenantId: sub_tenant_id,
+    maxResults: max_results,
     mode,
     alpha: 0.5,         // Balance semantic vs keyword search (0.0 to 1.0)
     recencyBias: 0.3,  // Recency preference (0.0 to 1.0)
@@ -573,14 +573,14 @@ def search_with_memory(query: str, tenant_id: str, user_id: str):
     profile["search_history"].append({
         "query": query,
         "timestamp": datetime.utcnow().isoformat(),
-        "result_count": len(search_results.chunks or [])
+        "result_count": len(search_results.data.chunks or [])
     })
     profile["search_history"] = profile["search_history"][-50:]
 
     if not any(query.lower() in q.lower() for q in profile["frequent_queries"]):
         profile["frequent_queries"] = ([query] + profile["frequent_queries"])[:10]
 
-    for chunk in (search_results.chunks or []):
+    for chunk in (search_results.data.chunks or []):
         if chunk.source_title and chunk.source_title not in profile["favorite_sources"]:
             profile["favorite_sources"].append(chunk.source_title)
     profile["favorite_sources"] = profile["favorite_sources"][:5]
@@ -649,7 +649,7 @@ const searchWithMemory = async (query: string, tenantId: string, userId: string)
   });
 
   // Update local profile history
-  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.chunks?.length || 0 });
+  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.data.chunks?.length || 0 });
   if (userProfile.searchHistory.length > 50) userProfile.searchHistory = userProfile.searchHistory.slice(-50);
 
   const queryLower = query.toLowerCase();
@@ -657,8 +657,8 @@ const searchWithMemory = async (query: string, tenantId: string, userId: string)
     userProfile.frequentQueries = [query, ...userProfile.frequentQueries].slice(0, 10);
   }
 
-  if (searchResults.chunks) {
-    for (const chunk of searchResults.chunks) {
+  if (searchResults.data.chunks) {
+    for (const chunk of searchResults.data.chunks) {
       if (chunk.source && !userProfile.favoriteSources.includes(chunk.source)) {
         userProfile.favoriteSources.push(chunk.source);
       }
@@ -1019,7 +1019,7 @@ const GleanSearchInterface = () => {
 
 ```javascript
 const SearchResults = ({ results }) => {
-  const { chunks, graph_context } = results;
+  const { chunks, graphContext } = results.data ?? {};
 
   return (
     <div className="search-results">
@@ -1032,10 +1032,10 @@ const SearchResults = ({ results }) => {
         </div>
       )}
 
-      {graph_context && graph_context.query_paths && (
+      {graphContext && graphContext.queryPaths && (
         <div className="graph-context">
           <h3>Related Knowledge Graph Paths</h3>
-          <pre>{JSON.stringify(graph_context.query_paths, null, 2)}</pre>
+          <pre>{JSON.stringify(graphContext.queryPaths, null, 2)}</pre>
         </div>
       )}
     </div>
@@ -1327,7 +1327,8 @@ class DataPrivacyManager {
 
   async deleteOldData(tenantId, memoryId, subTenantId = null) {
     // Use HydraDB's context deletion endpoint for memory deletion.
-    const request = { tenantId: tenantId, ids: [memoryId] };
+    // Raw fetch to the REST API: the JSON body uses snake_case wire keys.
+    const request = { tenant_id: tenantId, ids: [memoryId] };
     if (subTenantId) {
       request.sub_tenant_id = subTenantId;
     }
@@ -1495,8 +1496,8 @@ class SearchAnalytics {
     );
 
     // Track source type usage
-    if (results && results.chunks) {
-      results.chunks.forEach(chunk => {
+    if (results && results.data?.chunks) {
+      results.data.chunks.forEach(chunk => {
         const sourceType = chunk.source;
         this.metrics.sourceTypeUsage.set(
           sourceType,
