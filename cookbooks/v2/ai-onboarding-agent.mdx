@@ -113,7 +113,7 @@ def create_tenant():
             raise
 
     # Confirm tenant is ready
-    status = client.tenants.status(tenant_id=TENANT_ID)
+    status = client.tenants.status(tenant_id=TENANT_ID).data
     print(f"Status: {status.message}")
     print(f"  scheduler={status.infra.scheduler_status}")
     print(f"  graph={status.infra.graph_status}")
