@@ -63,9 +63,9 @@ The REST API uses **snake_case** for all request and response fields on the wire
 | **TypeScript SDK** | camelCase | camelCase | method: `query()`, params: `tenantId`, `queryBy` |
 
 <Info>
-**The TypeScript SDK uses camelCase for both method names and parameter field names** (e.g., `client.source.list({ tenantId: "...", pageSize: 50 })`). The SDK serializes these to snake_case on the wire automatically  -  you write camelCase in your code, and the API receives snake_case.
+**The TypeScript SDK uses camelCase for both method names and parameter field names** (e.g., `client.context.list({ tenantId: "...", pageSize: 50 })`). The SDK serializes these to snake_case on the wire automatically  -  you write camelCase in your code, and the API receives snake_case.
 
-The Python SDK uses snake_case throughout (e.g., `client.source.list(tenant_id="...", page_size=50)`).
+The Python SDK uses snake_case throughout (e.g., `client.context.list(tenant_id="...", page_size=50)`).
 </Info>
 
 Your IDE's autocomplete and type checking work directly off the API contract  -  if a field is optional in the API, it's optional in the SDK.
@@ -76,7 +76,7 @@ SDK methods are grouped under three top-level namespaces  -  one per `/api-refer
 
 | URL prefix | SDK group | Purpose |
 |---|---|---|
-| `/source/*` and `/source` | `client.source` | Ingest, status, fetch, list, delete, graph relations |
+| `/context/*` and `/context` | `client.context` | Ingest, status, fetch, list, delete, graph relations |
 | `/query` | `client.query` | Unified retrieval over knowledge, memories, or both |
 | `/tenants/*` and `/tenants` | `client.tenants` | Create, list, delete, status, sub-tenants, stats |
 
@@ -85,16 +85,16 @@ SDK methods are grouped under three top-level namespaces  -  one per `/api-refer
 
 ### Sources
 
-`client.source.*` covers every flow around content lifecycle  -  file uploads, app sources, memories, polling, fetching, listing, deletion, and graph inspection.
+`client.context.*` covers every flow around content lifecycle  -  file uploads, app sources, memories, polling, fetching, listing, deletion, and graph inspection.
 
 | Method | Endpoint |
 |---|---|
-| `client.source.ingest()` | `POST /source/ingest` |
-| `client.source.status()` | `GET /source/status` |
-| `client.source.fetch()` | `GET /source/fetch` |
-| `client.source.list()` | `POST /source/list` |
-| `client.source.delete()` | `DELETE /source` |
-| `client.source.relations()` | `GET /source/relations` |
+| `client.context.ingest()` | `POST /context/ingest` |
+| `client.context.status()` | `GET /context/status` |
+| `client.context.inspect()` | `GET /context/inspect` |
+| `client.context.list()` | `POST /context/list` |
+| `client.context.delete()` | `DELETE /context` |
+| `client.context.relations()` | `GET /context/relations` |
 
 ### Query
 
@@ -123,17 +123,17 @@ The v2 SDKs are a deliberate consolidation. A few common v1 → v2 method swaps:
 
 | v1 | v2 |
 |---|---|
-| `client.upload.knowledge(...)` | `client.source.ingest(type="knowledge", ...)` |
-| `client.upload.addMemory(...)` | `client.source.ingest(type="memory", ...)` |
-| `client.upload.verifyProcessing(...)` | `client.source.status(...)` |
+| `client.upload.knowledge(...)` | `client.context.ingest(type="knowledge", ...)` |
+| `client.upload.addMemory(...)` | `client.context.ingest(type="memory", ...)` |
+| `client.upload.verifyProcessing(...)` | `client.context.status(...)` |
 | `client.search.fullRecall(...)` | `client.query(type="knowledge", ...)` |
 | `client.search.recallPreferences(...)` | `client.query(type="memory", ...)` |
 | `client.search.booleanRecall(...)` | `client.query(query_by="text", ...)` |
-| `client.fetch.listData(...)` | `client.source.list(...)` |
-| `client.fetch.graphRelationsBySourceId(...)` | `client.source.relations(...)` |
+| `client.fetch.listData(...)` | `client.context.list(...)` |
+| `client.fetch.graphRelationsBySourceId(...)` | `client.context.relations(...)` |
 | `client.fetch.content(...)` | `client.context.inspect(...)` |
-| `client.data.delete(...)` | `client.source.delete(type="knowledge", ...)` |
-| `client.upload.deleteMemory(...)` | `client.source.delete(type="memory", ...)` |
+| `client.data.delete(...)` | `client.context.delete(type="knowledge", ...)` |
+| `client.upload.deleteMemory(...)` | `client.context.delete(type="memory", ...)` |
 | `client.tenant.create(...)` | `client.tenants.create(...)` |
 | `client.tenant.getTenantIds(...)` | `client.tenants.list(...)` |
 | `client.tenant.deleteTenant(...)` | `client.tenants.delete(...)` |
@@ -215,7 +215,7 @@ Upload documents, app sources, or both in one call:
 import json
 
 with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
-    result = client.source.ingest(
+    result = client.context.ingest(
         type="knowledge",
         tenant_id="my_first_tenant",
         files=[
@@ -225,35 +225,35 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
         document_metadata=json.dumps([
             {
                 "id": "contract_q4",
-                "tenant_metadata": {"department": "legal"},
-                "document_metadata": {"author": "Alice"},
+                "metadata": {"department": "legal"},
+                "additional_metadata": {"author": "Alice"},
             },
             {
                 "id": "policy_2025",
-                "tenant_metadata": {"department": "legal"},
-                "document_metadata": {"author": "Bob"},
+                "metadata": {"department": "legal"},
+                "additional_metadata": {"author": "Bob"},
             },
         ]),
     )
 ```
 ```typescript TypeScript SDK
-const result = await client.source.ingest({
+const result = await client.context.ingest({
   type: "knowledge",
   tenantId: "my_first_tenant",
   files: [
     { path: "contract.pdf", filename: "contract.pdf", contentType: "application/pdf" },
     { path: "policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
   ],
-  fileMetadata: JSON.stringify([
+  documentMetadata: JSON.stringify([
     {
       id: "contract_q4",
-      tenant_metadata: { department: "legal" },
-      document_metadata: { author: "Alice" },
+      metadata: { department: "legal" },
+      additional_metadata: { author: "Alice" },
     },
     {
       id: "policy_2025",
-      tenant_metadata: { department: "legal" },
-      document_metadata: { author: "Bob" },
+      metadata: { department: "legal" },
+      additional_metadata: { author: "Bob" },
     },
   ]),
 });
@@ -270,7 +270,7 @@ Use the same `ingest` method with `type: "memory"`:
 ```python Python SDK
 import json
 
-result = client.source.ingest(
+result = client.context.ingest(
     type="memory",
     tenant_id="my_first_tenant",
     sub_tenant_id="user_alex",
@@ -279,14 +279,14 @@ result = client.source.ingest(
             "text": "User prefers detailed technical explanations and dark mode",
             "infer": True,
             "user_name": "Alex",
-            "tenant_metadata": {"team": "engineering"},
-            "document_metadata": {"source": "onboarding"},
+            "metadata": {"team": "engineering"},
+            "additional_metadata": {"source": "onboarding"},
         }
     ]),
 )
 ```
 ```typescript TypeScript SDK
-const result = await client.source.ingest({
+const result = await client.context.ingest({
   type: "memory",
   tenantId: "my_first_tenant",
   subTenantId: "user_alex",
@@ -295,8 +295,8 @@ const result = await client.source.ingest({
       text: "User prefers detailed technical explanations and dark mode",
       infer: true,
       user_name: "Alex",
-      tenant_metadata: { team: "engineering" },
-      document_metadata: { source: "onboarding" },
+      metadata: { team: "engineering" },
+      additional_metadata: { source: "onboarding" },
     },
   ]),
 });

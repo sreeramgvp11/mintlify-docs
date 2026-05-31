@@ -1,7 +1,7 @@
 ---
 title: "Ingest Context"
 description: "Ingestion endpoint for knowledge (files, app sources) and user memories."
-openapi: "api-reference/v2/openapi.json POST /source/ingest"
+openapi: "api-reference/v2/openapi.json POST /context/ingest"
 ---
 
 import { Field } from "/snippets/field.jsx";
@@ -21,7 +21,7 @@ Use `memories` for per-user content, scoped with `sub_tenant_id`. Set `infer: tr
 import json
 
 with open("/path/to/policy.pdf", "rb") as policy:
-    knowledge_result = client.source.ingest(
+    knowledge_result = client.context.ingest(
         # Knowledge requests can include documents, app_knowledge, or both.
         type="knowledge",
         tenant_id="acme_corp",
@@ -53,7 +53,7 @@ with open("/path/to/policy.pdf", "rb") as policy:
         ]),
     )
 
-text_memory_result = client.source.ingest(
+text_memory_result = client.context.ingest(
     type="memory",
     tenant_id="acme_corp",
     sub_tenant_id="user_alex",
@@ -67,7 +67,7 @@ text_memory_result = client.source.ingest(
     ]),
 )
 
-conversation_memory_result = client.source.ingest(
+conversation_memory_result = client.context.ingest(
     type="memory",
     tenant_id="acme_corp",
     sub_tenant_id="user_alex",
@@ -85,7 +85,7 @@ conversation_memory_result = client.source.ingest(
 ```
 
 ```typescript TypeScript SDK
-const knowledgeResult = await client.source.ingest({
+const knowledgeResult = await client.context.ingest({
   // Knowledge requests can include documents, app_knowledge, or both.
   type: "knowledge",
   tenant_id: "acme_corp",
@@ -119,7 +119,7 @@ const knowledgeResult = await client.source.ingest({
   ]),
 });
 
-const textMemoryResult = await client.source.ingest({
+const textMemoryResult = await client.context.ingest({
   type: "memory",
   tenant_id: "acme_corp",
   sub_tenant_id: "user_alex",
@@ -133,7 +133,7 @@ const textMemoryResult = await client.source.ingest({
   ]),
 });
 
-const conversationMemoryResult = await client.source.ingest({
+const conversationMemoryResult = await client.context.ingest({
   type: "memory",
   tenant_id: "acme_corp",
   sub_tenant_id: "user_alex",
@@ -151,7 +151,7 @@ const conversationMemoryResult = await client.source.ingest({
 ```
 
 ```bash cURL
-curl -X POST 'https://api.hydradb.com/source/ingest' \
+curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   -F "type=knowledge" \
@@ -180,7 +180,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   ]'
 
 # OR: memory from raw text.
-curl -X POST 'https://api.hydradb.com/source/ingest' \
+curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   -F "type=memory" \
@@ -195,7 +195,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   ]'
 
 # OR: memory from conversation pairs.
-curl -X POST 'https://api.hydradb.com/source/ingest' \
+curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   -F "type=memory" \
@@ -240,7 +240,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   import json
 
   with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb") as f2:
-      result = client.source.ingest(
+      result = client.context.ingest(
           type="knowledge",
           tenant_id="acme_corp",
           documents=[
@@ -255,7 +255,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```typescript TypeScript SDK
-  const result = await client.source.ingest({
+  const result = await client.context.ingest({
     type: "knowledge",
     tenant_id: "acme_corp",
     documents: [
@@ -270,7 +270,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```bash cURL
-  curl -X POST 'https://api.hydradb.com/source/ingest' \
+  curl -X POST 'https://api.hydradb.com/context/ingest' \
     -H "Authorization: Bearer <your_api_key>" \
     -H "API-Version: 2" \
     -F "type=knowledge" \
@@ -303,7 +303,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```python Python SDK
   import json
 
-  client.source.ingest(
+  client.context.ingest(
       type="knowledge",
       tenant_id="acme_corp",
       sub_tenant_id="team_docs",
@@ -322,7 +322,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```typescript TypeScript SDK
-  await client.source.ingest({
+  await client.context.ingest({
     type: "knowledge",
     tenant_id: "acme_corp",
     sub_tenant_id: "team_docs",
@@ -341,7 +341,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```bash cURL
-  curl -X POST 'https://api.hydradb.com/source/ingest' \
+  curl -X POST 'https://api.hydradb.com/context/ingest' \
     -H "Authorization: Bearer <your_api_key>" \
     -H "API-Version: 2" \
     -F "type=knowledge" \
@@ -385,7 +385,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```python Python SDK
   import json
 
-  client.source.ingest(
+  client.context.ingest(
       type="memory",
       tenant_id="acme_corp",
       sub_tenant_id="user_alex",
@@ -400,7 +400,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```typescript TypeScript SDK
-  await client.source.ingest({
+  await client.context.ingest({
     type: "memory",
     tenant_id: "acme_corp",
     sub_tenant_id: "user_alex",
@@ -415,7 +415,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```bash cURL
-  curl -X POST 'https://api.hydradb.com/source/ingest' \
+  curl -X POST 'https://api.hydradb.com/context/ingest' \
     -H "Authorization: Bearer <your_api_key>" \
     -H "API-Version: 2" \
     -F "type=memory" \
@@ -435,7 +435,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   | Field | Description |
   | --- | --- |
   | <Field name="id" type="string" /> | Optional unique ID. Acts as the upsert key. (default=auto-generated) |
-  | <Field name="title" type="string" /> | Short label for display in `/source/list` and search hits as `source.title`. (default=truncated `text`) |
+  | <Field name="title" type="string" /> | Short label for display in `/context/list` and search hits as `source.title`. (default=truncated `text`) |
   | <Field name="text" type="string" recommended /> | Raw text or markdown content. Required unless `user_assistant_pairs` is provided. |
   | <Field name="user_assistant_pairs" type="array" recommended /> | Conversation pairs `{ user, assistant }`. Required unless `text` is provided. |
   | <Field name="is_markdown" type="boolean" /> | Treat `text` as markdown for chunking. (default=`false`) |
@@ -454,7 +454,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```python Python SDK
   import json
 
-  client.source.ingest(
+  client.context.ingest(
       type="memory",
       tenant_id="acme_corp",
       sub_tenant_id="user_alex",
@@ -471,7 +471,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```typescript TypeScript SDK
-  await client.source.ingest({
+  await client.context.ingest({
     type: "memory",
     tenant_id: "acme_corp",
     sub_tenant_id: "user_alex",
@@ -488,7 +488,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```
 
   ```bash cURL
-  curl -X POST 'https://api.hydradb.com/source/ingest' \
+  curl -X POST 'https://api.hydradb.com/context/ingest' \
     -H "Authorization: Bearer <your_api_key>" \
     -H "API-Version: 2" \
     -F "type=memory" \

@@ -64,7 +64,7 @@ flowchart LR
 
 - **Knowledge vs. Memories**: [Knowledge](/essentials/v2/knowledge) is shared, tenant-wide content (documents, app pages, Slack messages). [Memories](/essentials/v2/memories) are user-specific preferences and conversational traits scoped by `sub_tenant_id`. Both can be searched together via `type: "all"` on `POST /query`.
 - **Source IDs**: Unique identifiers returned by `/context/ingest`. You can assign custom IDs using `id` in metadata or `id` in app knowledge. Use them for polling status, inspecting content, and deleting sources.
-- **Metadata Filtering**: You can scope queries using `tenant_metadata` (structured fields defined in your tenant schema) or `additional_metadata` (free-form per-document JSON). For detailed guidelines on structuring metadata, see the [Scoping using metadata](/essentials/v2/metadata) guide.
+- **Metadata Filtering**: You can scope queries using `metadata` (structured fields defined in your tenant schema) or `additional_metadata` (free-form per-document JSON). For detailed guidelines on structuring metadata, see the [Scoping using metadata](/essentials/v2/metadata) guide.
 - **Forceful Relations**: Relationships between sources can be declared at ingestion time to construct a robust knowledge graph. For more details on the graph layer, see the [Context Graphs](/essentials/v2/context-graphs) guide.
 
 ## Forceful relations and metadata
@@ -80,8 +80,8 @@ result = client.context.ingest(
     files=[("runbook.pdf", f, "application/pdf")],
     document_metadata=json.dumps([{
         "id": "runbook_deploy",
-        "tenant_metadata": {"department": "ops"},
-        "document_metadata": {"owner": "platform-team"},
+        "metadata": {"department": "ops"},
+        "additional_metadata": {"owner": "platform-team"},
         "relations": {"ids": ["monitoring_guide"]},
     }]),
 )

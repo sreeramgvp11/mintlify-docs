@@ -1,7 +1,7 @@
 ---
 title: "Delete Context"
 description: "Delete knowledge or memories by their IDs."
-openapi: "api-reference/v2/openapi.json DELETE /source"
+openapi: "api-reference/v2/openapi.json DELETE /context"
 ---
 
 import { Field } from "/snippets/field.jsx";
@@ -22,7 +22,7 @@ Use `type: "knowledge"` and pass knowledge `ids` in the same `request.ids` array
 <RequestExample>
 
 ```python Python SDK
-client.source.delete(
+client.context.delete(
     type="knowledge",
     request={
         "tenant_id": "acme_corp",
@@ -33,7 +33,7 @@ client.source.delete(
 ```
 
 ```typescript TypeScript SDK
-await client.source.delete({
+await client.context.delete({
   type: "knowledge",
   request: {
     tenant_id: "acme_corp",
@@ -44,7 +44,7 @@ await client.source.delete({
 ```
 
 ```bash cURL
-curl -X DELETE 'https://api.hydradb.com/source' \
+curl -X DELETE 'https://api.hydradb.com/context' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
@@ -91,7 +91,7 @@ Use `type: "memory"` and pass memory `ids` in the same `request.ids` array. Incl
 <RequestExample>
 
 ```python Python SDK
-client.source.delete(
+client.context.delete(
     type="memory",
     request={
         "tenant_id": "acme_corp",
@@ -102,7 +102,7 @@ client.source.delete(
 ```
 
 ```typescript TypeScript SDK
-await client.source.delete({
+await client.context.delete({
   type: "memory",
   request: {
     tenant_id: "acme_corp",
@@ -113,7 +113,7 @@ await client.source.delete({
 ```
 
 ```bash cURL
-curl -X DELETE 'https://api.hydradb.com/source' \
+curl -X DELETE 'https://api.hydradb.com/context' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
@@ -166,7 +166,7 @@ curl -X DELETE 'https://api.hydradb.com/source' \
 ## Some additional notes
 
 - **Partial-success semantics:** For `type=knowledge`, each ID is reported independently in `results[]`. A failure on one ID does not stop the rest. For `type=memory`, the response reports an aggregate `user_memory_deleted` reflecting _all_ listed IDs.
-- **Retrieval drops the source immediately:** Even before background cleanup finishes, deleted IDs disappear from `/query` and `/source/list` responses.
+- **Retrieval drops the source immediately:** Even before background cleanup finishes, deleted IDs disappear from `/query` and `/context/list` responses.
 - **Mixed deletes need two calls:** To delete both knowledge and memory items, send two requests  -  one with `type=knowledge`, one with `type=memory`.
 
 <div className="api-before-related-resources" />

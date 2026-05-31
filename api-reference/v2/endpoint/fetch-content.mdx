@@ -1,7 +1,7 @@
 ---
 title: "Inspect Context"
 description: "Inspect the content of a knowledge or memory source."
-openapi: "api-reference/v2/openapi.json GET /source/fetch"
+openapi: "api-reference/v2/openapi.json GET /context/inspect"
 ---
 
 import { Field } from "/snippets/field.jsx";
@@ -11,7 +11,7 @@ Specify the `id` of the knowledge or memory you want to retrieve.
 <RequestExample>
 
 ```python Python SDK
-file = client.source.inspect(
+file = client.context.inspect(
     id="policy_main",
     tenant_id="acme_corp",
     mode="both",
@@ -20,7 +20,7 @@ file = client.source.inspect(
 ```
 
 ```typescript TypeScript SDK
-const file = await client.source.inspect({
+const file = await client.context.inspect({
   id: "policy_main",
   tenant_id: "acme_corp",
   mode: "both",
@@ -29,7 +29,7 @@ const file = await client.source.inspect({
 ```
 
 ```bash cURL
-curl -G 'https://api.hydradb.com/source/fetch' \
+curl -G 'https://api.hydradb.com/context/inspect' \
   -H "Authorization: Bearer <your_api_key>" \
   -H "API-Version: 2" \
   --data-urlencode "id=policy_main" \
