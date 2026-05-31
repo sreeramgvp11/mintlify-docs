@@ -94,12 +94,12 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenant_id: "acme_corp",
+  tenantId: "acme_corp",
   documents: [
     { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
   ],
-  document_metadata: JSON.stringify([
+  documentMetadata: JSON.stringify([
     { id: "policy_v2", metadata: { document_type: "policy", status: "approved" } },
     { id: "runbook_deploy", metadata: { document_type: "runbook" } },
   ]),
@@ -157,8 +157,8 @@ result = client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
+  tenantId: "acme_corp",
+  appKnowledge: JSON.stringify([
     {
       tenant_id: "acme_corp",
       sub_tenant_id: "default",
@@ -258,7 +258,7 @@ while True:
         sub_tenant_id="default",
         ids=ids,
     )
-    if all(s.indexing_status in terminal for s in status.statuses):
+    if all(s.indexing_status in terminal for s in status.data.statuses):
         break
     time.sleep(5)
 ```
@@ -269,12 +269,12 @@ const terminal = new Set(["completed", "errored"]);
 let status;
 while (true) {
   status = await client.context.status({
-    tenant_id: "acme_corp",
-    sub_tenant_id: "default",
+    tenantId: "acme_corp",
+    subTenantId: "default",
     ids: ids,
   });
 
-  const allDone = status.statuses.every((s) => terminal.has(s.indexing_status));
+  const allDone = status.data.statuses.every((s) => terminal.has(s.indexingStatus));
   if (allDone) break;
 
   await new Promise((r) => setTimeout(r, 5_000));
@@ -424,8 +424,8 @@ client.context.ingest(
 ```typescript TypeScript SDK
 await client.context.ingest({
   type: "knowledge",
-  tenant_id: "acme_corp",
-  app_knowledge: JSON.stringify([
+  tenantId: "acme_corp",
+  appKnowledge: JSON.stringify([
     {
       id: "auth-guide",
       title: "Authentication Guide",
