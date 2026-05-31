@@ -78,8 +78,8 @@ const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY });
 const uploadHotelData = async (hotels, tenantId, subTenantId) => {
   const hotelSources = hotels.map(hotel => ({
     id: `hotel_${hotel.id}`,
-    tenantId: tenantId,
-    subTenantId: subTenantId,
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
     title: hotel.name,
     type: "accommodation",
     description: hotel.description,
@@ -119,8 +119,8 @@ Upload flight schedules, routes, and transportation options:
 const uploadFlightData = async (flights, tenantId, subTenantId) => {
   const flightSources = flights.map(flight => ({
     id: `flight_${flight.id}`,
-    tenantId: tenantId,
-    subTenantId: subTenantId,
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
     title: `${flight.airline} ${flight.flightNumber}`,
     type: "transportation",
     description: `Flight from ${flight.origin} to ${flight.destination}`,
@@ -161,8 +161,8 @@ Upload restaurant information with cuisine types and reviews:
 const uploadRestaurantData = async (restaurants, tenantId, subTenantId) => {
   const restaurantSources = restaurants.map(restaurant => ({
     id: `restaurant_${restaurant.id}`,
-    tenantId: tenantId,
-    subTenantId: subTenantId,
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
     title: restaurant.name,
     type: "dining",
     description: restaurant.description,
@@ -203,8 +203,8 @@ Upload tourist attractions, activities, and experiences:
 const uploadActivityData = async (activities, tenantId, subTenantId) => {
   const activitySources = activities.map(activity => ({
     id: `activity_${activity.id}`,
-    tenantId: tenantId,
-    subTenantId: subTenantId,
+    tenant_id: tenantId,
+    sub_tenant_id: subTenantId,
     title: activity.name,
     type: "activity",
     description: activity.description,
