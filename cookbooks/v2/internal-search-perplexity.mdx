@@ -967,7 +967,7 @@ def search(
 
 
 def print_results(result) -> None:
-    chunks = result.chunks or []
+    chunks = result.data.chunks or []
     print(f"\n{len(chunks)} chunks retrieved:\n")
     for chunk in chunks:
         fname = chunk.additional_metadata or {}
@@ -1013,13 +1013,13 @@ async function search(
     alpha: 0.5,
     recencyBias: recencyBias,
   };
-  if (subTenant) payload["sub_tenant_id"] = subTenant;
+  if (subTenant) payload["subTenantId"] = subTenant;
 
   return await client.query(payload);
 }
 
 function printResults(result: any): void {
-  const chunks = result?.chunks ?? [];
+  const chunks = result?.data?.chunks ?? [];
   console.log(`\n${chunks.length} chunks retrieved:\n`);
   for (const chunk of chunks) {
     const fname = chunk?.additional_metadata?.filename ?? "memory";
@@ -1064,7 +1064,7 @@ def get_user_profile(user_id: str) -> str:
         query="expertise background role preferences",
         mode="thinking",
     )
-    chunks = result.chunks or []
+    chunks = result.data.chunks or []
     if chunks:
         return chunks[0].chunk_content or ""
     return ""
@@ -1086,8 +1086,8 @@ def explain_decision(question: str, user_id: str) -> str:
         mode="thinking",
         recency_bias=0.4,   # low = surfaces both old and recent for decision trails
     )
-    chunks          = data.chunks or []
-    chunk_relations = (data.graph_context.chunk_relations if data.graph_context else [])
+    chunks          = data.data.chunks or []
+    chunk_relations = (data.data.graph_context.chunk_relations if data.data.graph_context else [])
 
     # Build context with source attribution
     ctx_parts = []
@@ -1162,7 +1162,7 @@ async function getUserProfile(userId: string): Promise<string> {
     query: "expertise background role preferences",
     mode: "thinking",
   });
-  const chunks = (resp as any).chunks ?? [];
+  const chunks = resp.data?.chunks ?? [];
   return chunks[0]?.chunk_content ?? "";
 }
 
@@ -1185,9 +1185,9 @@ async function explainDecision(
     mode: "thinking",
     recencyBias: 0.4,
   });
-  const chunks = (data as any).chunks ?? [];
+  const chunks = data.data?.chunks ?? [];
   const chunkRelations =
-    (data as any).graph_context?.chunk_relations ?? [];
+    data.data?.graphContext?.chunkRelations ?? [];
 
   // Build context with source attribution
   const ctxParts: string[] = [];
@@ -1265,7 +1265,7 @@ def smart_search(question: str, user_id: str) -> dict:
     recency_bias  = 0.3 if any(s in question.lower() for s in TREND_SIGNALS) else 0.5
 
     result = search(question, user_id, recency_bias=recency_bias)
-    return {"chunks": result.chunks or [], "type": "search"}
+    return {"chunks": result.data.chunks or [], "type": "search"}
 ```
 
 ---
