@@ -4,11 +4,11 @@ description: "Ingestion endpoint for knowledge (files, app sources) and user mem
 openapi: "api-reference/v2/openapi.json POST /source/ingest"
 ---
 
+import { Field } from "/snippets/field.jsx";
+
 When context is of `type=knowledge:`
 
-\[todo\]: change files to documents internally
-
-1. **Documents** - Use `documennts` for binary uploads (PDF, DOCX, CSV, MD, TXT) that HydraDB should parse.
+1. **Documents** - Use the `documents` field for binary uploads (PDF, DOCX, CSV, MD, TXT) that HydraDB should parse.
 2. **App Sources** - Use `app_knowledge` for pre-extracted JSON content (Slack threads, Notion pages, emails, tickets). Read more about [ingesting knowledge from your apps](/essentials/v2/app-sources).
 
 When context is of `type=memory`
@@ -22,19 +22,19 @@ import json
 
 with open("/path/to/policy.pdf", "rb") as policy:
     knowledge_result = client.source.ingest(
-        # Knowledge requests can include files, app_knowledge, or both.
+        # Knowledge requests can include documents, app_knowledge, or both.
         type="knowledge",
         tenant_id="acme_corp",
         sub_tenant_id="team_docs",
         upsert=True,
 
-        # Use files when HydraDB should parse PDFs, DOCX, CSV, Markdown, or text files.
-        files=[("policy.pdf", policy, "application/pdf")],
-        file_metadata=json.dumps([
+        # Use documents when HydraDB should parse PDFs, DOCX, CSV, Markdown, or text files.
+        documents=[("policy.pdf", policy, "application/pdf")],
+        document_metadata=json.dumps([
             {
                 "source_id": "policy_main",
-                "tenant_metadata": {"department": "legal"},
-                "document_metadata": {"source": "policy"},
+                "metadata": {"department": "legal"},
+                "additional_metadata": {"source": "policy"},
             }
         ]),
 
@@ -47,8 +47,8 @@ with open("/path/to/policy.pdf", "rb") as policy:
                 "title": "Pricing discussion",
                 "type": "slack",
                 "content": {"text": "We agreed on three tiers..."},
-                "tenant_metadata": {"department": "product"},
-                "document_metadata": {"channel": "pricing"},
+                "metadata": {"department": "product"},
+                "additional_metadata": {"channel": "pricing"},
             }
         ]),
     )
@@ -86,21 +86,21 @@ conversation_memory_result = client.source.ingest(
 
 ```typescript TypeScript SDK
 const knowledgeResult = await client.source.ingest({
-  // Knowledge requests can include files, app_knowledge, or both.
+  // Knowledge requests can include documents, app_knowledge, or both.
   type: "knowledge",
   tenant_id: "acme_corp",
   sub_tenant_id: "team_docs",
   upsert: true,
 
-  // Use files when HydraDB should parse PDFs, DOCX, CSV, Markdown, or text files.
-  files: [
+  // Use documents when HydraDB should parse PDFs, DOCX, CSV, Markdown, or text files.
+  documents: [
     { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
   ],
-  file_metadata: JSON.stringify([
+  documentMetadata: JSON.stringify([
     {
       source_id: "policy_main",
-      tenant_metadata: { department: "legal" },
-      document_metadata: { source: "policy" },
+      metadata: { department: "legal" },
+      additional_metadata: { source: "policy" },
     },
   ]),
 
@@ -113,8 +113,8 @@ const knowledgeResult = await client.source.ingest({
       title: "Pricing discussion",
       type: "slack",
       content: { text: "We agreed on three tiers..." },
-      tenant_metadata: { department: "product" },
-      document_metadata: { channel: "pricing" },
+      metadata: { department: "product" },
+      additional_metadata: { channel: "pricing" },
     },
   ]),
 });
@@ -158,12 +158,12 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   -F "tenant_id=acme_corp" \
   -F "sub_tenant_id=team_docs" \
   -F "upsert=true" \
-  -F "files=@/path/to/policy.pdf" \
-  -F 'file_metadata=[
+  -F "documents=@/path/to/policy.pdf" \
+  -F 'document_metadata=[
     {
       "source_id": "policy_main",
-      "tenant_metadata": { "department": "legal" },
-      "document_metadata": { "source": "policy" }
+      "metadata": { "department": "legal" },
+      "additional_metadata": { "source": "policy" }
     }
   ]' \
   -F 'app_knowledge=[
@@ -174,8 +174,8 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
       "title": "Pricing discussion",
       "type": "slack",
       "content": { "text": "We agreed on three tiers..." },
-      "tenant_metadata": { "department": "product" },
-      "document_metadata": { "channel": "pricing" }
+      "metadata": { "department": "product" },
+      "additional_metadata": { "channel": "pricing" }
     }
   ]'
 
@@ -216,40 +216,40 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
 ## Important form fields
 
-\[todo\]:  the field could not be rendered. Please fix this 
-
 | Name | Description |
 | --- | --- |
 | <Field name="type" type="&#x22;knowledge&#x22; or &#x22;memory&#x22;" /> | Use singular `"memory"` when writing memories. (default=`"knowledge"`) |
 | <Field name="tenant_id" type="string" required /> | Target tenant. |
 | <Field name="sub_tenant_id" type="string" /> | Logical partition inside the tenant. (default=`""`  -  default sub-tenant) |
 | <Field name="upsert" type="boolean" /> | Replace existing sources with the same ID. Set to `false` to error on conflict. (default=`true`) |
-| <Field name="files" type="file[]" /> | Binary uploads, **knowledge only**. Required when `type=knowledge` and you want HydraDB to parse files. Omit when ingesting memories. (default=`[]`) |
-| <Field name="file_metadata" type="string (JSON array)" /> | One entry per file in `files`, in the same order. If omitted, files index with inferred defaults such as filename/title. See the `file_metadata` item shape below. |
+| <Field name="documents" type="file[]" /> | Binary uploads, **knowledge only**. Required when `type=knowledge` and you want HydraDB to parse documents. Omit when ingesting memories. (default=`[]`) |
+| <Field name="document_metadata" type="string (JSON array)" /> | One entry per file in `documents`, in the same order. If omitted, documents index with inferred defaults such as filename/title. See the item shape below. |
 | <Field name="app_knowledge" type="string (JSON object or array)" /> | Pre-extracted source objects (Slack, Notion, web pages, etc.), **knowledge only**. See the `app_knowledge` item shape below. |
 | <Field name="memories" type="string (JSON array)" /> | Memory items, **memory only**. Required and non-empty when `type=memory`. Use plural `memories` for the form field, even though `type` is singular `memory`. See the `memories` item shape below. |
 
-## Commmon use-cases and their configurations:
+## Common use-cases and their configurations
 
-\[todo\]:  Change File Metadata to Document Metadata 
+### Document metadata
 
-<Accordion title="Knowledge files - upload PDFs, DOCX, CSV, markdown, or text">
+Per-document metadata (`source_id`, `metadata`, `additional_metadata`, `title`, etc.) can be passed alongside each uploaded document to control indexing, filtering, and display. See the field reference below.
+
+<Accordion title="Knowledge documents - upload PDFs, DOCX, CSV, markdown, or text">
   <CodeGroup>
 
   ```python Python SDK
   import json
-  
+
   with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb") as f2:
       result = client.source.ingest(
           type="knowledge",
           tenant_id="acme_corp",
-          files=[
+          documents=[
               ("policy.pdf", f1, "application/pdf"),
               ("runbook.pdf", f2, "application/pdf"),
           ],
-          file_metadata=json.dumps([
-              {"source_id": "policy_main", "tenant_metadata": {"department": "legal"}},
-              {"source_id": "runbook_deploy", "tenant_metadata": {"department": "ops"}},
+          document_metadata=json.dumps([
+              {"source_id": "policy_main", "metadata": {"department": "legal"}},
+              {"source_id": "runbook_deploy", "metadata": {"department": "ops"}},
           ]),
       )
   ```
@@ -258,13 +258,13 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   const result = await client.source.ingest({
     type: "knowledge",
     tenant_id: "acme_corp",
-    files: [
+    documents: [
       { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
       { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
     ],
-    file_metadata: JSON.stringify([
-      { source_id: "policy_main", tenant_metadata: { department: "legal" } },
-      { source_id: "runbook_deploy", tenant_metadata: { department: "ops" } },
+    documentMetadata: JSON.stringify([
+      { source_id: "policy_main", metadata: { department: "legal" } },
+      { source_id: "runbook_deploy", metadata: { department: "ops" } },
     ]),
   });
   ```
@@ -275,11 +275,11 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
     -H "API-Version: 2" \
     -F "type=knowledge" \
     -F "tenant_id=acme_corp" \
-    -F "files=@/path/to/policy.pdf" \
-    -F "files=@/path/to/runbook.pdf" \
-    -F 'file_metadata=[
-      { "source_id": "policy_main", "tenant_metadata": { "department": "legal" } },
-      { "source_id": "runbook_deploy", "tenant_metadata": { "department": "ops" } }
+    -F "documents=@/path/to/policy.pdf" \
+    -F "documents=@/path/to/runbook.pdf" \
+    -F 'document_metadata=[
+      { "source_id": "policy_main", "metadata": { "department": "legal" } },
+      { "source_id": "runbook_deploy", "metadata": { "department": "ops" } }
     ]'
   ```
 
@@ -288,8 +288,8 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   | Field | Description |
   | --- | --- |
   | <Field name="source_id" type="string" /> | Optional source ID. If set, becomes the `source_id` for this file (use your app's document ID for parity). |
-  | <Field name="tenant_metadata" type="object" /> | Tenant-schema fields for filtering and search. Keys must be declared in `tenant_metadata_schema`. (default=`{}`) |
-  | <Field name="document_metadata" type="object" /> | Free-form per-document fields for display or bookkeeping. To filter on these at search time, nest under `metadata_filters.document_metadata`. (default=`{}`) |
+  | <Field name="metadata" type="object" /> | Tenant-schema fields for filtering and search. Keys must be declared in `tenant_metadata_schema`. (default=`{}`) |
+  | <Field name="additional_metadata" type="object" /> | Free-form per-document fields for display or bookkeeping. To filter on these at search time, nest under `metadata_filters.additional_metadata`. (default=`{}`) |
   | <Field name="title" type="string" /> | Override the source title shown in search results. (default=filename) |
   | <Field name="type" type="string" /> | Override the source type shown in search results. (default=inferred) |
   | <Field name="url" type="string" /> | Override the canonical URL. |
@@ -302,7 +302,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
   ```python Python SDK
   import json
-  
+
   client.source.ingest(
       type="knowledge",
       tenant_id="acme_corp",
@@ -315,7 +315,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
               "title": "Pricing discussion",
               "type": "slack",
               "content": {"text": "We agreed on three tiers..."},
-              "tenant_metadata": {"channel": "product"},
+              "metadata": {"channel": "product"},
           }
       ]),
   )
@@ -334,7 +334,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
         title: "Pricing discussion",
         type: "slack",
         content: { text: "We agreed on three tiers..." },
-        tenant_metadata: { channel: "product" },
+        metadata: { channel: "product" },
       },
     ]),
   });
@@ -355,7 +355,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
         "title": "Pricing discussion",
         "type": "slack",
         "content": { "text": "We agreed on three tiers..." },
-        "tenant_metadata": { "channel": "product" }
+        "metadata": { "channel": "product" }
       }
     ]'
   ```
@@ -373,10 +373,10 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   | <Field name="url" type="string" /> | Canonical URL or reference link. |
   | <Field name="timestamp" type="string" /> | ISO-8601 timestamp (creation or last-updated). |
   | <Field name="content" type="object" required /> | Content payload. Use `{ "text": "..." }` for plain text. Required for app sources. |
-  | <Field name="tenant_metadata" type="object" /> | Tenant-schema fields. (default=`{}`) |
-  | <Field name="document_metadata" type="object" /> | Free-form per-document fields. (default=`{}`) |
+  | <Field name="metadata" type="object" /> | Tenant-schema fields. (default=`{}`) |
+  | <Field name="additional_metadata" type="object" /> | Free-form per-document fields. (default=`{}`) |
   | <Field name="attachments" type="array" /> | Optional related attachments. (default=`[]`) |
-  | <Field name="relations" type="object" /> | Forceful relations, same shape as on `file_metadata`. |
+  | <Field name="relations" type="object" /> | Forceful relations, same shape as on `metadata`. |
 </Accordion>
 
 <Accordion title="3. User memories - store notes or infer user preferences">
@@ -384,7 +384,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
   ```python Python SDK
   import json
-  
+
   client.source.ingest(
       type="memory",
       tenant_id="acme_corp",
@@ -443,8 +443,8 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   | <Field name="custom_instructions" type="string" /> | Guides extraction when `infer: true`. Ignored when `infer: false`. |
   | <Field name="user_name" type="string" /> | The user's name. Feeds inference. (default=`"User"`) |
   | <Field name="expiry_time" type="integer" /> | TTL in seconds. Memory stops surfacing after expiry. |
-  | <Field name="tenant_metadata" type="string (JSON object)" /> | Tenant-schema fields as a **JSON-stringified** object (e.g. `"{\"department\":\"legal\"}"`). Unlike `file_metadata` and `app_knowledge`, memory items take this as a string, not an object. (default=`""`) |
-  | <Field name="document_metadata" type="string (JSON object)" /> | Free-form per-document fields as a **JSON-stringified** object. Same string-vs-object difference as `tenant_metadata` above. (default=`""`) |
+  | <Field name="metadata" type="string (JSON object)" /> | Tenant-schema fields as a **JSON-stringified** object (e.g. `"{\"department\":\"legal\"}"`). Unlike `metadata` and `app_knowledge`, memory items take this as a string, not an object. (default=`""`) |
+  | <Field name="additional_metadata" type="string (JSON object)" /> | Free-form per-document fields as a **JSON-stringified** object. Same string-vs-object difference as `metadata` above. (default=`""`) |
   | <Field name="relations" type="object" /> | Forceful relations within the Memories store. Shape: `{ "source_ids": ["...", "..."] }` (legacy alias `cortex_source_ids` still accepted). |
 </Accordion>
 
@@ -453,7 +453,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
   ```python Python SDK
   import json
-  
+
   client.source.ingest(
       type="memory",
       tenant_id="acme_corp",
@@ -514,12 +514,12 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
 
 \[todo\] : the following should throw an error at the api level
 
-- **Multipart, not JSON.** This endpoint uses `multipart/form-data`. Stringify all JSON arrays (`file_metadata`, `app_knowledge`, `memories`) before placing them in the form field.
+- **Multipart, not JSON.** This endpoint uses `multipart/form-data`. Stringify all JSON arrays (`metadata`, `app_knowledge`, `memories`) before placing them in the form field.
 
 \[todo\]: the folllowing should throw an error at the api level 
 
 - **Declare schema fields upfront.** Keys not in `tenant_metadata_schema` are silently ignored at query time. Define filterable fields when creating the tenant via [Create Tenant](/api-reference/v2/endpoint/create-tenant).
-- **Memory vs knowledge.** Use `type: "memory"` for memory ingestion, listing, and deletion. Use `type: "all"` on `POST /search` when results should combine both. The multipart field name for memories is always `memories`.
+- **Memory vs knowledge.** Use `type: "memory"` for memory ingestion, listing, and deletion. Use `type: "all"` on `POST /query` when results should combine both. The multipart field name for memories is always `memories`.
 - **Sub-tenant defaulting.** Omitting `sub_tenant_id` writes to the default sub-tenant. List available sub-tenants with [List Sub-Tenants](/api-reference/v2/endpoint/list-sub-tenants).
 
 <div className="api-before-related-resources" />
@@ -528,7 +528,7 @@ curl -X POST 'https://api.hydradb.com/source/ingest' \
   **Related Resources**
 
   - **Always check** [ingestion status](/api-reference/v2/endpoint/source-status) to ensure context is ready to be retrieved
-  - [Query](/api-reference/v2/endpoint/search) once context is ready 
+  - [Query](/api-reference/v2/endpoint/query) once context is ready
   - **Inspect:** [List Documents](/api-reference/v2/endpoint/list-documents) helps you fetch titles and descriptions of ingested context
   - **Inspect:** [Fetch Content](/api-reference/v2/endpoint/fetch-content) helps you fetch full context of a document, memory, knowledge item
   - **Cleanup:** [Delete Context](/api-reference/v2/endpoint/delete-source)
