@@ -140,7 +140,7 @@ def ingest_earnings_pdf(
     app_knowledge = json.dumps([{
         "id":           f"{ticker}-{doc_type}-{fiscal_year}-Q{fiscal_quarter}",
         "title":        f"{ticker} {period_label} {doc_type.replace('_', ' ').title()}",
-        "source":       "pdf",
+        "type":         "pdf",
         "timestamp":    period_end_date,   # drives recency ranking - must be accurate
         "tenant_id":    TENANT_ID,
         "sub_tenant_id": sub_tenant_id,
@@ -160,7 +160,7 @@ def ingest_earnings_pdf(
             tenant_id=TENANT_ID,
             sub_tenant_id=sub_tenant_id,
             app_knowledge=app_knowledge,
-            files=[(os.path.basename(file_path), f, "application/pdf")],
+            documents=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
     id = result.results[0].id if result.results else str(result)
@@ -410,7 +410,7 @@ def ingest_board_memo(
     app_knowledge = json.dumps([{
         "id":           f"{ticker}-{memo_type}-{meeting_date[:10]}",
         "title":        f"{ticker} {period_label} - {memo_type.replace('_', ' ').title()}",
-        "source":       "pdf",
+        "type":         "pdf",
         "timestamp":    meeting_date,
         "tenant_id":    TENANT_ID,
         "sub_tenant_id": sub_tenant_id,
@@ -428,7 +428,7 @@ def ingest_board_memo(
             tenant_id=TENANT_ID,
             sub_tenant_id=sub_tenant_id,
             app_knowledge=app_knowledge,
-            files=[(os.path.basename(file_path), f, "application/pdf")],
+            documents=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
     id = result.results[0].id if result.results else str(result)
@@ -703,7 +703,7 @@ def query_trend(
 
     # Retrieve analyst profile for answer personalization
     analyst_prefs = client.query(
-        source='memories',
+        type="memory",
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{user_id}",
         mode="thinking",
@@ -1209,7 +1209,7 @@ def generate_quarterly_briefing(
 
     # Search analyst profile
     analyst_prefs = client.query(
-        source='memories',
+        type="memory",
         tenant_id=TENANT_ID,
         sub_tenant_id=f"analyst-{analyst_user_id}",
         mode="thinking",
@@ -1394,7 +1394,7 @@ Content-Type: multipart/form-data
 [{
   "id":           "ACME-earnings_transcript-2023-Q2",
   "title":        "ACME Q2 2023 Earnings Transcript",
-  "source":       "pdf",
+  "type":         "pdf",
   "timestamp":    "2023-06-30T00:00:00Z",
   "tenant_id":    "financial-analyst",
   "sub_tenant_id":"earnings-acme",
@@ -1416,7 +1416,7 @@ Content-Type: multipart/form-data
 ```bash
 curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
-  -F "files=@ACME_Q2_2023_transcript.pdf" \
+  -F "documents=@ACME_Q2_2023_transcript.pdf" \
   -F "tenant_id=financial-analyst" \
   -F "sub_tenant_id=earnings-acme"
 ```
@@ -1424,7 +1424,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
 ### Verify Indexing
 
 ```http
-GET /context/status?ids=SOURCE_ID&tenant_id=financial-analyst
+GET /context/status?ids=ID&tenant_id=financial-analyst
 ```
 
 ### Store Metrics / Analyst Memory
@@ -1600,7 +1600,7 @@ Tested across 3 company corpora (4 quarters of earnings transcripts + internal m
 | Wrong `timestamp` on upload | Q1 and Q4 both surface for "most recent" queries | Use `period_end_date`, not upload date |
 | Too high `recency_bias` for trend queries | Only Q4 results returned for "how did X trend?" | Use `recency_bias: 0.3` for trend questions |
 | Missing `fiscal_quarter` in metadata | "Q2" filter returns all quarters | Add `fiscal_quarter: 2` to `meta` on upload |
-| `file=f` instead of `files=[f]` in SDK | `TypeError` on `context.ingest()` | SDK expects a **list**: `files=[f]` not `file=f` |
+| `file=f` instead of `documents=[f]` in SDK | `TypeError` on `context.ingest()` | SDK expects a **list**: `documents=[f]` not `file=f` |
 | Raw `requests` for PDF upload | 422 error on `/context/ingest` | Use the SDK: `pip install hydradb-sdk` |
 | No `/context/status` polling | Queries return empty results silently | Always poll status before querying |
 | `infer: false` on analyst profiles | No personalization applied | Leave `infer: true` (the default) for profiles |

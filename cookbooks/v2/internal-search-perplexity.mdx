@@ -198,7 +198,7 @@ def _upload_batch(batch: list, sub_tenant: str) -> list:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
             sub_tenant_id=sub_tenant,
-            files=[(filename, content.encode("utf-8"), "text/plain")],
+            documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
         items = result.results or []
         if items:
@@ -259,7 +259,7 @@ async function ingestSlackChannel(
       const result = await client.context.ingest({
         tenant_id: TENANT_ID,
         sub_tenant_id: "slack",
-        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
+        documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
@@ -339,7 +339,7 @@ def ingest_gmail_threads(credentials_path: str, query: str, max_threads: int = 2
         result = client.context.ingest(
             tenant_id=TENANT_ID,
             sub_tenant_id="email",
-            files=[(filename, content.encode("utf-8"), "text/plain")],
+            documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
         items = result.results or []
         if items:
@@ -415,7 +415,7 @@ async function ingestGmailThreads(
     const result = await client.context.ingest({
       tenant_id: TENANT_ID,
       sub_tenant_id: "email",
-      files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
+      documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
     });
     const results = (result as any).results ?? [];
     if (results[0]?.id) allIds.push(results[0].id);
@@ -481,7 +481,7 @@ def ingest_confluence_space(space_key: str):
             result = client.context.ingest(
                 tenant_id=TENANT_ID,
                 sub_tenant_id="docs",
-                files=[(filename, content.encode("utf-8"), "text/plain")],
+                documents=[(filename, content.encode("utf-8"), "text/plain")],
             )
             items = result.results or []
             if items:
@@ -540,7 +540,7 @@ async function ingestConfluenceSpace(spaceKey: string): Promise<string[]> {
       const result = await client.context.ingest({
         tenant_id: TENANT_ID,
         sub_tenant_id: "docs",
-        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
+        documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
@@ -607,7 +607,7 @@ def ingest_github_issues(repo_name: str, state: str = "all", limit: int = 500):
         result = client.context.ingest(
             tenant_id=TENANT_ID,
             sub_tenant_id="github",
-            files=[(filename, content.encode("utf-8"), "text/plain")],
+            documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
         items = result.results or []
         if items:
@@ -669,7 +669,7 @@ async function ingestGithubIssues(
       const result = await client.context.ingest({
         tenant_id: TENANT_ID,
         sub_tenant_id: "github",
-        files: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
+        documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
       const results = (result as any).results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
@@ -694,11 +694,11 @@ After uploading, poll `GET /context/status` until `indexing_status` is `complete
 > **Note**: [`GET /context/status`](/api-reference/v2/endpoint/source-status) takes `ids` and `tenant_id` as **query parameters**. Pass multiple `ids` to check a batch in one call.
 
 ```bash
-curl -X POST \
-  'https://api.hydradb.com/context/status?tenant_id=company-knowledge&ids=YOUR_SOURCE_ID' \
+curl -G \
+  'https://api.hydradb.com/context/status' \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{}'
+  --data-urlencode "tenant_id=company-knowledge" \
+  --data-urlencode "ids=YOUR_ID"
 ```
 
 **Response when indexed**:
@@ -1056,9 +1056,9 @@ openai_client = OpenAI()
 
 
 def get_user_profile(user_id: str) -> str:
-    """Retrieve a user's stored memory profile via /query with source: "memories"."""
+    """Retrieve a user's stored memory profile via /query with type: "memory"."""
     result = client.query(
-        source='memories',
+        type="memory",
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         query="expertise background role preferences",
@@ -1073,8 +1073,8 @@ def get_user_profile(user_id: str) -> str:
 def explain_decision(question: str, user_id: str) -> str:
     """
     Answer 'why' / 'what led to' questions with full provenance.
-    Step 1: search chunks + graph relations from /query (source="knowledge").
-    Step 2: retrieve user profile from /query (source="memories").
+    Step 1: search chunks + graph relations from /query (type="knowledge").
+    Step 2: retrieve user profile from /query (type="memory").
     Step 3: synthesize with citations via LLM.
     """
     # Step 1: Search with graph context
@@ -1156,7 +1156,7 @@ const openai = new OpenAI();
 async function getUserProfile(userId: string): Promise<string> {
   /** Retrieve a user's stored memory profile via recallPreferences. */
   const resp = await client.query({
-    source: 'memories',
+    type: "memory",
     tenant_id: TENANT_ID,
     sub_tenant_id: `user-${userId}`,
     query: "expertise background role preferences",
@@ -1303,7 +1303,7 @@ curl -X POST 'https://api.hydradb.com/query' \
 }
 ```
 
-> **Reading the response**: [`/query`](/api-reference/v2/endpoint/query) returns the same structure regardless of `source`  -  read the profile from `chunks[0].chunk_content`. `additional_metadata` will be `null` for memory entries; that's expected.
+> **Reading the response**: [`/query`](/api-reference/v2/endpoint/query) returns the same structure regardless of `type`  -  read the profile from `chunks[0].chunk_content`. `additional_metadata` will be `null` for memory entries; that's expected.
 
 ---
 
@@ -1441,7 +1441,7 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 |--------|----------|---------|
 | `POST` | `/tenants` | Create the company-knowledge tenant |
 | `POST` | `/context/ingest` | Upload a source file (multipart form-data) |
-| `POST` | `/context/status?tenant_id=...&ids=...` | Check indexing status |
+| `GET` | `/context/status?tenant_id=...&ids=...` | Check indexing status |
 | `POST` | `/context/ingest` | Store a user profile memory |
 | `POST` | `/query` | Retrieve user profile for personalization |
 | `POST` | `/query` | Query all indexed knowledge |
@@ -1459,12 +1459,11 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 |---|---|---|
 | `tenant_id` | Text | `company-knowledge` |
 | `sub_tenant_id` | Text | `slack` / `email` / `docs` / `github` |
-| `files` | File | your `.txt` file |
+| `documents` | File | your `.txt` file |
 
-### Verify Processing (URL params + empty body)
+### Verify Processing (query params)
 ```
-GET /context/status?tenant_id=company-knowledge&ids=YOUR_SOURCE_ID
-Body: {}
+GET /context/status?tenant_id=company-knowledge&ids=YOUR_ID
 ```
 
 ### Store User Memory

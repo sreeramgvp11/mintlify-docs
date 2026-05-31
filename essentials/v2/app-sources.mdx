@@ -7,7 +7,7 @@ import { Field } from "/snippets/field.jsx";
 
 App sources are pre-parsed records from business applications: emails, chat messages, tickets, wiki pages, CRM objects, comments, and attachments. Use them when your connector already extracted the item's text and structured fields.
 
-App sources are ingested through [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content) with the `app_knowledge` multipart field. The app-source payload is **not** a generic top-level `content` object. It uses the same app-native model as v1: `kind`, `provider`, `external_id`, `fields`, metadata, attachments, comments, and typed relations.
+App sources are ingested through [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context) with the `app_knowledge` multipart field. The app-source payload is **not** a generic top-level `content` object. It uses the same app-native model as v1: `kind`, `provider`, `external_id`, `fields`, metadata, attachments, comments, and typed relations.
 
 <Info>
   App sources land in the [Knowledge](/essentials/v2/knowledge) store. Query them with [`POST /query`](/api-reference/v2/endpoint/query), `type: "knowledge"` or `type: "all"`, and **`query_apps: true`**. Use `mode: "thinking"` when you want app relation expansion and connected context.
@@ -18,7 +18,7 @@ App sources are ingested through [`POST /context/ingest`](/api-reference/v2/endp
 | | App source | File upload |
 |---|---|---|
 | **Content** | Pre-extracted app fields: Slack message body, Jira description, Notion page body, email body, etc. | Binary or text file (PDF, DOCX, MD, CSV, TXT) |
-| **Sent in** | `app_knowledge` as a stringified JSON object or array | `files` plus optional `document_metadata` |
+| **Sent in** | `app_knowledge` as a stringified JSON object or array | `documents` plus optional `document_metadata` |
 | **HydraDB does** | Normalizes app identity, extracts searchable text from `fields`, indexes attachments/comments, and builds app graph links | Parses the file, chunks extracted text, and indexes it |
 | **Best for** | Connectors and live app syncs | Documents in their original file format |
 
@@ -222,7 +222,7 @@ Use the same endpoint for initial backfill and live updates. The important model
 | Ticket title/description/status changed | Re-ingest the same `kind: "ticket"` item with the same `id` and `external_id`, `upsert: true` | The ticket snapshot changed. |
 | New Linear/Jira/Zendesk ticket comment | Ingest a **new** `kind: "comment"` source with its own `id` and `external_id`; put the parent ticket provider ID in `fields.parent_id` | The comment is a distinct provider object. |
 | Edited ticket comment | Re-ingest the comment source with the same `id` and `external_id` | Same comment changed. |
-| Deleted ticket comment | Call [`DELETE /source`](/api-reference/v2/endpoint/delete-source) with the comment source `id` | The comment should no longer surface. |
+| Deleted ticket comment | Call [`DELETE /context`](/api-reference/v2/endpoint/delete-source) with the comment source `id` | The comment should no longer surface. |
 | New Slack/Teams message | Ingest a **new** `kind: "message"` source with `fields.thread_id` and, when available, `fields.parent_id` | Messages are standalone events linked by provider IDs. |
 | New email reply | Ingest a **new** `kind: "email"` source with `fields.thread_id` and `fields.reply_to_id` | Email replies have their own provider IDs, actors, body, and timestamp. |
 | New Notion/Confluence page | Ingest a **new** `kind: "knowledge_base"` source | A page is a standalone document; the space belongs in metadata. |
@@ -273,7 +273,7 @@ A Slack thread is multiple `message` sources connected by `thread_id`, `parent_i
 }
 ```
 
-For a reply, ingest a second source. `fields.parent_id` points to the parent message's provider `external_id`; an explicit relation can point to either the parent source ID or the provider ID.
+For a reply, ingest a second source. `fields.parent_id` points to the parent message's provider `external_id`; an explicit relation can point to either the parent HydraDB ID or the provider ID.
 
 ```json
 {
@@ -518,7 +518,7 @@ The target can use either shape:
 
 | Target shape | Use when |
 |---|---|
-| `{ "id": "..." }` | You already know the HydraDB source ID. |
+| `{ "id": "..." }` | You already know the HydraDB ID. |
 | `{ "external_id": "...", "provider": "..." }` | You know the provider ID and want HydraDB to resolve it in the provider namespace. |
 
 Useful predicates include:
@@ -648,7 +648,7 @@ At recall time, `query_apps: true` lets the app-aware lane find an initial sourc
 
 | Field | Why send it | Query / ingestion effect |
 |---|---|---|
-| <Field name="id" type="string" required /> | Stable HydraDB source ID for this item. | Upsert key, delete/status/list ID, and direct relation target. |
+| <Field name="id" type="string" required /> | Stable HydraDB ID for this item. | Upsert key, delete/status/list ID, and direct relation target. |
 | <Field name="tenant_id" type="string" required /> | Tenant that owns the item. | Must match the form-level `tenant_id` when present. |
 | <Field name="sub_tenant_id" type="string" required /> | Logical partition. Use `"default"` if you do not partition. | Must match the form-level `sub_tenant_id` when present. |
 | <Field name="title" type="string" recommended /> | Human-readable subject, page name, ticket title, or message label. | Improves display, citations, and semantic matching. |
@@ -753,7 +753,7 @@ At recall time, `query_apps: true` lets the app-aware lane find an initial sourc
 | Field | Why send it | Search / ingestion effect |
 |---|---|---|
 | <Field name="predicate" type="string" required /> | Relationship name such as `linked_to`, `blocks`, `child_of`, `reply_to`, or `comment_on`. | Lets query expansion understand relation type and direction. |
-| <Field name="target.id" type="string" /> | Direct HydraDB source ID target. | Connects to a known source. |
+| <Field name="target.id" type="string" /> | Direct HydraDB ID target. | Connects to a known source. |
 | <Field name="target.external_id" type="string" /> | Provider ID target. | Resolves by app namespace. |
 | <Field name="target.provider" type="string" /> | Provider namespace for `external_id`. | Prevents false links across apps. |
 | <Field name="properties" type="object" /> | Optional relation metadata. | Preserves why the link exists. |
@@ -795,5 +795,5 @@ At recall time, `query_apps: true` lets the app-aware lane find an initial sourc
 - [Query](/essentials/v2/query) - retrieving app-source context
 - [Scoping using metadata](/essentials/v2/metadata) - designing filterable metadata
 - [Context Graphs](/essentials/v2/context-graphs) - graph enrichment and traversal
-- [Ingest Content - API Reference](/api-reference/v2/endpoint/ingest-content)
-- [Source Status - API Reference](/api-reference/v2/endpoint/source-status)
+- [Ingest Content - API Reference](/api-reference/v2/endpoint/ingest-context)
+- [Ingestion Status - API Reference](/api-reference/v2/endpoint/source-status)

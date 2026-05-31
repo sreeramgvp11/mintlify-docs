@@ -35,7 +35,7 @@ Good candidates for [Knowledge ingestion](/essentials/v2/knowledge) include prod
 
 ## What happens when you ingest a memory
 
-When you call [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=memory`, HydraDB turns your input into queryable user context.
+When you call [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context) with `type=memory`, HydraDB turns your input into queryable user context.
 
 The pipeline works like this:
 
@@ -90,7 +90,7 @@ Use `user_assistant_pairs` when the useful signal comes from dialogue, especiall
 
 ## Memory fields
 
-The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content). For `type=memory`, send a JSON-stringified `memories` array; each item can use the fields below.
+The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context). For `type=memory`, send a JSON-stringified `memories` array; each item can use the fields below.
 
 ### Request-level fields
 
@@ -171,7 +171,7 @@ Set forceful relations with the `relations` field on any item in the `memories` 
 ```
 
 <Note>
-The legacy alias `cortex_source_ids` is still accepted for backward compatibility. Prefer `ids` for new integrations.
+Use `ids` for new integrations.
 </Note>
 
 <CodeGroup>
@@ -230,7 +230,7 @@ At query time, linked memories return in the `additional_context` field of the [
 To make relations work reliably, control the `id` for the memories you ingest. You need stable IDs in order to link memories together.
 
 <Warning>
-**Memory items only.** Forceful relations work within the same store. Pointing a Memory item at a Knowledge source ID, or a Knowledge item at a Memory source ID, silently returns nothing at query time.
+**Memory items only.** Forceful relations work within the same store. Pointing a Memory item at a Knowledge ID, or a Knowledge item at a Memory ID, silently returns nothing at query time.
 </Warning>
 
 <Warning>
@@ -330,7 +330,7 @@ The response returns a `id` for each memory and an initial `status` of `queued`.
 }
 ```
 
-Poll [`GET /context/status`](/api-reference/v2/endpoint/sources-overview) with the returned `id` until `indexing_status` is `completed`. You can also use webhooks when available. After indexing, the memory can surface in [`POST /query`](/api-reference/v2/endpoint/query-overview) when called with `type: "memory"` or `type: "all"`.
+Poll [`GET /context/status`](/api-reference/v2/endpoint/source-status) with the returned `id` until `indexing_status` is `completed`. You can also use webhooks when available. After indexing, the memory can surface in [`POST /query`](/api-reference/v2/endpoint/query-overview) when called with `type: "memory"` or `type: "all"`.
 
 ---
 
@@ -455,8 +455,8 @@ If you sent the same input with `infer: false`, HydraDB would index the event lo
 | Extracting preferences yourself before sending raw logs | You duplicate work HydraDB can do for you | Send the raw signal with `infer: true` |
 | Sending pre-extracted facts with `infer: true` | HydraDB may re-derive the memory and change the original phrasing | Use `infer: false` for already-structured facts |
 | Treating `user_name` as cosmetic | It can influence inference, so the wrong name can bias extraction | Pass the actual user's name |
-| Storing shared docs as memories | They will not surface when querying `type: "knowledge"` | Use [knowledge ingestion](/essentials/v2/knowledge) with `type=knowledge` on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content) |
-| Expecting immediate searchability | Ingestion is asynchronous | Poll [`GET /context/status`](/api-reference/v2/endpoint/sources-overview) until indexing is complete |
+| Storing shared docs as memories | They will not surface when querying `type: "knowledge"` | Use [knowledge ingestion](/essentials/v2/knowledge) with `type=knowledge` on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context) |
+| Expecting immediate searchability | Ingestion is asynchronous | Poll [`GET /context/status`](/api-reference/v2/endpoint/source-status) until indexing is complete |
 | Forgetting `infer` for conversational input | Raw dialogue is stored without preference extraction | Set `infer: true` for conversations |
 
 ---

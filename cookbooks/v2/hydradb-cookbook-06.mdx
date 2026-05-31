@@ -898,7 +898,7 @@ def generate_execution_plan(
 
     # Search user preferences to personalise the plan
     user_prefs = client.query(
-        source='memories',
+        type="memory",
         tenant_id=TENANT_ID,
         sub_tenant_id=f"user-{user_id}",
         query="channel preferences urgency communication style",
@@ -1523,7 +1523,7 @@ Header: `Authorization: Bearer YOUR_API_KEY`
 ### Upload function schemas
 
 
-**`POST /context/ingest`** - Upload function schemas as app knowledge or files. Max 20/call, 1s between batches
+**`POST /context/ingest`** - Upload function schemas as app sources or documents. Max 20/call, 1s between batches
 
 
 ```json title="body - one function"

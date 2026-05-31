@@ -27,7 +27,7 @@ Knowledge is the counterpart to [Memories](/essentials/v2/memories), which holds
 
 ## 2. What it does
 
-When you call [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=knowledge`, HydraDB walks each source through a pipeline:
+When you call [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context) with `type=knowledge`, HydraDB walks each source through a pipeline:
 
 1. **Parses** the input  -  PDF, DOCX, Markdown, CSV, plain text, or app-source JSON.
 2. **Chunks** the content into semantically coherent segments.
@@ -35,7 +35,7 @@ When you call [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content
 4. **Embeds** every chunk into the dense and sparse vector stores.
 5. **Indexes** the result so it becomes queryable via [`POST /query`](/api-reference/v2/endpoint/query).
 
-The pipeline runs **asynchronously**. The ingest call returns `202 Accepted` with `id`s; the content isn't queryable until `indexing_status` reaches at least `graph_creation`. Poll [`GET /context/status`](/api-reference/v2/endpoint/source-status) to track progress  -  see the full status table at [Source Status](/api-reference/v2/endpoint/source-status).
+The pipeline runs **asynchronously**. The ingest call returns `202 Accepted` with `id`s; the content isn't queryable until `indexing_status` reaches at least `graph_creation`. Poll [`GET /context/status`](/api-reference/v2/endpoint/source-status) to track progress  -  see the full status table at [Ingestion Status](/api-reference/v2/endpoint/source-status).
 
 ---
 
@@ -64,7 +64,7 @@ When in doubt, ask "would a different user benefit from seeing this?"  -  if yes
 
 ## 4. Two ingestion paths
 
-[`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content) with `type=knowledge` accepts two content formats in the same request  -  you can send either, or both at once. Pick the path that matches what you have on hand:
+[`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context) with `type=knowledge` accepts two content formats in the same request  -  you can send either, or both at once. Pick the path that matches what you have on hand:
 
 - **Path A** when you have **binary files** HydraDB should parse for you.
 - **Path B** when you have **pre-extracted text** from an app or connector and want to skip parsing.
@@ -81,7 +81,7 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
     result = client.context.ingest(
         type="knowledge",
         tenant_id="acme_corp",
-        files=[
+        documents=[
             ("policy.pdf", f1, "application/pdf"),
             ("runbook.pdf", f2, "application/pdf"),
         ],
@@ -95,7 +95,7 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
 const result = await client.context.ingest({
   type: "knowledge",
   tenant_id: "acme_corp",
-  files: [
+  documents: [
     { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
   ],
@@ -111,8 +111,8 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "API-Version: 2" \
   -F "type=knowledge" \
   -F "tenant_id=acme_corp" \
-  -F "files=@/path/to/policy.pdf" \
-  -F "files=@/path/to/runbook.pdf" \
+  -F "documents=@/path/to/policy.pdf" \
+  -F "documents=@/path/to/runbook.pdf" \
   -F 'document_metadata=[
     { "id": "policy_v2", "metadata": { "document_type": "policy", "status": "approved" } },
     { "id": "runbook_deploy", "metadata": { "document_type": "runbook" } }
@@ -313,7 +313,7 @@ done
 }
 ```
 
-Status values move forward through `queued` → `processing` → `graph_creation` → `completed` (or land in `errored` on failure). Poll every few seconds; most documents complete in 1–5 minutes. The full table  -  including the `success` alias that occasionally appears for `completed`  -  is on [Source Status](/api-reference/v2/endpoint/source-status).
+Status values move forward through `queued` → `processing` → `graph_creation` → `completed` (or land in `errored` on failure). Poll every few seconds; most documents complete in 1–5 minutes. The full table  -  including the `success` alias that occasionally appears for `completed`  -  is on [Ingestion Status](/api-reference/v2/endpoint/source-status).
 
 <Info>
 **`graph_creation` is already queryable.** Items in this state are retrievable via [`POST /query`](/api-reference/v2/endpoint/query). Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
@@ -323,7 +323,7 @@ Status values move forward through `queued` → `processing` → `graph_creation
 
 ## 6. Key parameters
 
-The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-content). Below are the fields you'll touch most often, grouped by where they live in the request.
+The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ingest-context). Below are the fields you'll touch most often, grouped by where they live in the request.
 
 ### File metadata (`document_metadata` array items)
 
@@ -342,7 +342,7 @@ The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ing
 
 | Field | Description |
 |---|---|
-| <Field name="id" type="string" recommended /> | Stable source ID. Used as the upsert/delete/status key. |
+| <Field name="id" type="string" recommended /> | Stable ID. Used as the upsert/delete/status key. |
 | <Field name="tenant_id" type="string" recommended /> | Tenant that owns the item. Must match form-level `tenant_id` when present. |
 | <Field name="sub_tenant_id" type="string" recommended /> | Logical partition. Must match form-level `sub_tenant_id` when present. |
 | <Field name="title" type="string" recommended /> | Short title, subject, ticket title, or page name. |
@@ -469,7 +469,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
 At query time, linked sources are returned in the `additional_context` field of the [query response](/api-reference/v2/endpoint/query). `query_forceful_relations` defaults to `true`  -  you only need to set it explicitly if you want to disable forceful-relation expansion.
 
 <Warning>
-**Knowledge sources only.** Forceful relations work within the same store. Pointing a Knowledge source at a Memory source ID (or vice versa) will silently return nothing at query time.
+**Knowledge items only.** Forceful relations work within the same store. Pointing a Knowledge item at a Memory ID (or vice versa) will silently return nothing at query time.
 </Warning>
 
 <Warning>
@@ -520,5 +520,5 @@ See [Metadata](/essentials/v2/metadata) for schema design, filter examples, and 
 - [Query](/essentials/v2/query)  -  how [`POST /query`](/api-reference/v2/endpoint/query) retrieves Knowledge
 - [Metadata](/essentials/v2/metadata)  -  designing filterable schemas
 - [Context Graphs](/essentials/v2/context-graphs)  -  how the graph layer enriches retrieval
-- [Ingest Content  -  API Reference](/api-reference/v2/endpoint/ingest-content)
-- [Source Status  -  API Reference](/api-reference/v2/endpoint/source-status)
+- [Ingest Content  -  API Reference](/api-reference/v2/endpoint/ingest-context)
+- [Ingestion Status  -  API Reference](/api-reference/v2/endpoint/source-status)

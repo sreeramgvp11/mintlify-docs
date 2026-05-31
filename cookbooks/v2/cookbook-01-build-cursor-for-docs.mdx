@@ -166,7 +166,7 @@ def upload_file(filepath: str):
     with open(filepath, "rb") as f:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
-            files=[(filename, f, "text/markdown")],
+            documents=[(filename, f, "text/markdown")],
         )
 
     print("RESULT:", result)
@@ -182,16 +182,16 @@ if __name__ == "__main__":
 
 ```
 STATUS CODE: 200
-RESPONSE: {"results": [{"id": "YOUR_SOURCE_ID_HERE", "filename": "auth_middleware.md", "status": "accepted", "error": null}]}
+RESPONSE: {"results": [{"id": "YOUR_ID_HERE", "filename": "auth_middleware.md", "status": "accepted", "error": null}]}
 
-Copy your id for use in verify.py: {'results': [{'id': 'YOUR_SOURCE_ID_HERE', 'filename': 'auth_middleware.md', 'status': 'accepted', 'error': None}]}
+Copy your id for use in verify.py: {'results': [{'id': 'YOUR_ID_HERE', 'filename': 'auth_middleware.md', 'status': 'accepted', 'error': None}]}
 ```
 
 The exact value of `id` depends on HydraDB's internal file registration. Copy the value returned and use it in Step 3.
 
 **If it fails:**
 - `404 Tenant does not exist` - Step 1 not complete, or `tenant_id` mismatch.
-- `400 / missing files` - Confirm the field name is `files` (not `file`), and that `Content-Type` is NOT manually set in headers.
+- `400 / missing files` - Confirm the field name is `documents` (not `file`), and that `Content-Type` is NOT manually set in headers.
 
 ---
 
@@ -199,7 +199,7 @@ The exact value of `id` depends on HydraDB's internal file registration. Copy th
 
 **What:** Polls `/context/status` using the `id` returned in Step 2. HydraDB returns a `statuses` array; you read `statuses[0].indexing_status`. Querying before this reaches `"completed"` returns empty results with no error - the most common beginner confusion.
 
-Replace `YOUR_SOURCE_ID_HERE` with the `id` from Step 2:
+Replace `YOUR_ID_HERE` with the `id` from Step 2:
 
 ```python
 import sys, os, time
@@ -207,9 +207,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import client, TENANT_ID
 
 # Replace with the id returned by upload_file.py in Step 2
-SOURCE_ID = "YOUR_SOURCE_ID_HERE"
+ITEM_ID = "YOUR_ID_HERE"
 
-def verify_source(id: str, timeout: int = 120, interval: int = 3):
+def verify_item(id: str, timeout: int = 120, interval: int = 3):
     """
     Polls /context/status until indexing_status is "completed" or "errored".
     """
@@ -233,19 +233,19 @@ def verify_source(id: str, timeout: int = 120, interval: int = 3):
     raise TimeoutError("Indexing timed out")
 
 if __name__ == "__main__":
-    verify_source(SOURCE_ID)
+    verify_item(ITEM_ID)
 ```
 
 **Expected output:**
 
 ```
-Verifying 'YOUR_SOURCE_ID_HERE'...
+Verifying 'YOUR_ID_HERE'...
 STATUS CODE: 200
-RESPONSE: {"statuses": [{"id": "YOUR_SOURCE_ID_HERE", "indexing_status": "processing"}]}
+RESPONSE: {"statuses": [{"id": "YOUR_ID_HERE", "indexing_status": "processing"}]}
   indexing_status: processing - waiting...
 STATUS CODE: 200
-RESPONSE: {"statuses": [{"id": "YOUR_SOURCE_ID_HERE", "indexing_status": "completed"}]}
-✓ 'YOUR_SOURCE_ID_HERE' ready.
+RESPONSE: {"statuses": [{"id": "YOUR_ID_HERE", "indexing_status": "completed"}]}
+✓ 'YOUR_ID_HERE' ready.
 ```
 
 ---
@@ -370,7 +370,7 @@ The response also includes a `sources` array - a deduplicated list of the origin
 | `0.40–0.65` | Weak match - tangentially related | Include only if few high-score results |
 | `below 0.40` | Low match - probably not relevant | Drop from context to reduce noise |
 
-**How graph context changes search:** When you add `"graph_context": true` to your search request, HydraDB walks the explicit `relations.hydradb_source_ids` edges you set at ingestion time for every high-scoring chunk. A source file chunk can pull in the PR that last changed it. That PR can pull in the RFC it referenced. This multi-hop traversal is what makes "why" questions answerable.
+**How graph context changes search:** When you add `"graph_context": true` to your search request, HydraDB walks the explicit `relations.ids` edges you set at ingestion time for every high-scoring chunk. A source file chunk can pull in the PR that last changed it. That PR can pull in the RFC it referenced. This multi-hop traversal is what makes "why" questions answerable.
 
 > 💡 **Always safe to add to Phase 0.** `"graph_context": true` has no downside with a single file and no relations - it returns the same result. Turn it on now.
 
@@ -527,13 +527,13 @@ def build_context(chunks: list, min_score: float = 0.5) -> tuple[str, list]:
 
 ## Phase 2 - Multi-source Context · 20–30 minutes
 
-Connect GitHub source files to their pull requests, Slack decision threads, and internal wikis. Use explicit `relations.hydradb_source_ids` to guarantee graph edges. When a developer asks "why?", the answer now travels across all four source types in a single query.
+Connect GitHub source files to their pull requests, Slack decision threads, and internal wikis. Use explicit `relations.ids` to guarantee graph edges. When a developer asks "why?", the answer now travels across all four source types in a single query.
 
 **Goal:** A "why" question returns code + PR + Slack + RFC in one response.
 
 **Pipeline:** Source files → Pull requests → Slack threads → Wikis & RFCs → Graph built
 
-> 💡 **Explicit vs. automatic graph edges.** Setting `relations.hydradb_source_ids` *guarantees* a graph link every time. HydraDB may also try to extract relationships from content, but this is best-effort. Always use explicit relations for links that matter.
+> 💡 **Explicit vs. automatic graph edges.** Setting `relations.ids` *guarantees* a graph link every time. HydraDB may also try to extract relationships from content, but this is best-effort. Always use explicit relations for links that matter.
 
 ### Why Each Source Type Matters
 
@@ -542,7 +542,7 @@ A developer asking "why does the auth middleware skip token validation for inter
 | Source | Answers | Role | Without it |
 |---|---|---|---|
 | **Source files** | *What* the code does | Anchors the query. Entry node for graph traversal. | No traversal starting point |
-| **Pull requests** | *Why* the change happened | Intent and debate behind the change. Review comments capture rejected alternatives. Set `relations.hydradb_source_ids` to the changed source IDs. | Code exists but has no rationale |
+| **Pull requests** | *Why* the change happened | Intent and debate behind the change. Review comments capture rejected alternatives. Set `relations.ids` to the changed file IDs. | Code exists but has no rationale |
 | **Slack threads** | Discussion and trade-offs | Captures informal approvals and decisions never written up in docs. | Informal approvals are invisible |
 | **Wikis & RFCs** | Formal decision record | Authoritative rationale and approval chain. An RFC directly answers a whole class of "why" questions. | Missing the authoritative "because" |
 
@@ -561,7 +561,7 @@ When those sources share stable IDs and explicit relations, the assistant can mo
 
 ### P2 · Step 1 - Ingest GitHub Source Files with Consistent IDs
 
-**What:** Ingests source files using the `{repo_name}/{relative_path}` ID convention. These IDs are what PR ingestion will reference in `relations.hydradb_source_ids`. The IDs must match exactly - `myrepo/auth/middleware.py`, not `auth/middleware.py`.
+**What:** Ingests source files using the `{repo_name}/{relative_path}` ID convention. These IDs are what PR ingestion will reference in `relations.ids`. The IDs must match exactly - `myrepo/auth/middleware.py`, not `auth/middleware.py`.
 
 Use `ingest_directory()` from Phase 1 Step 1. If you already ran Phase 1, your files are already indexed.
 
@@ -577,7 +577,7 @@ ingest_directory('/path/to/your/repo', 'myrepo')
 
 ### P2 · Step 2 - Ingest Pull Requests with Explicit Graph Relations
 
-**What:** Fetches merged PRs and turns each into one document: title + description + review comments + changed-file list. The `relations.hydradb_source_ids` field guarantees graph edges form between the PR and every source file it changed.
+**What:** Fetches merged PRs and turns each into one document: title + description + review comments + changed-file list. The `relations.ids` field guarantees graph edges form between the PR and every source file it changed.
 
 **Before:** A GitHub token with `repo` scope. Create at `github.com/settings/tokens` → New classic token → check `repo` → add to `.env` as `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`.
 
@@ -638,7 +638,7 @@ def ingest_pull_requests(prs: list, repo_name: str) -> list:
             "timestamp":   pr["merged_at"],
             "content":     {"text": content},
             "collections": ["pull-requests"],
-            "relations":   {"hydradb_source_ids": ids},
+            "relations":   {"ids": ids},
             "metadata": {"doc_type":"pull_request","pr_number":pr["number"],
                       "author":pr["user"]["login"],"changed_files":changed},
         })
@@ -1255,7 +1255,7 @@ Detailed implementation coming in the next revision. Everything in Phase 4 is pa
 ### If Your Retrieval Quality Is Weak
 
 - **Fix your IDs and metadata.** Weak retrieval often starts upstream. Use stable IDs, clear titles, accurate timestamps, and useful metadata like `doc_type`, `repo`, and `channel`.
-- **Add explicit relations.** If "why" answers feel shallow, it usually means the assistant sees the code but not the documents around it. Add `relations.hydradb_source_ids` between code, PRs, Slack, and RFCs.
+- **Add explicit relations.** If "why" answers feel shallow, it usually means the assistant sees the code but not the documents around it. Add `relations.ids` between code, PRs, Slack, and RFCs.
 - **Improve source formatting.** A PR with only a title is weak. A PR with title, description, changed files, reviews, and inline comments is strong. Rich documents produce better chunks.
 - **Add relevancy_score filtering.** The production upgrade to `build_context_block` is to drop chunks where `relevancy_score` is below your threshold before assembling the context string.
 
@@ -1285,11 +1285,11 @@ A good progression: Phase 0 search in the terminal → FastAPI `/ask` in Postman
 
 **Fix:** Correct paths: `/context/ingest` (file upload or JSON batch with `app_knowledge`), `/query`, `/context/status`. If using `sub_tenant_id`, confirm at least one batch was successfully uploaded to that sub-tenant first.
 
-### 400 - Provide at least one of: files or app_knowledge
+### 400 - Provide at least one of: documents or app_knowledge
 
-**Cause:** For file upload: the field name is wrong (`file` instead of `files`), or `Content-Type: application/json` was manually set (which breaks multipart). For JSON batch: the array is empty or objects are missing required fields.
+**Cause:** For file upload: the field name is wrong (`file` instead of `documents`), or `Content-Type: application/json` was manually set (which breaks multipart). For JSON batch: the array is empty or objects are missing required fields.
 
-**Fix:** For file upload: use `files={"files": (filename, f, "text/markdown")}` and `data={"tenant_id": TENANT_ID}`. Do NOT set `Content-Type` manually. For JSON batch: confirm each item has `id`, `type`, and `content.text`.
+**Fix:** For file upload: use `files={"documents": (filename, f, "text/markdown")}` and `data={"tenant_id": TENANT_ID}`. Do NOT set `Content-Type` manually. For JSON batch: confirm each item has `id`, `type`, and `content.text`.
 
 ### Empty Search - chunks: []
 
@@ -1359,7 +1359,7 @@ GET /tenants/status?tenant_id=engineering-docs
 # Correct multipart file upload
 client.context.ingest(
     tenant_id=TENANT_ID,
-    files=[(filename, f, "text/markdown")],
+    documents=[(filename, f, "text/markdown")],
 )
 
 # Response:
@@ -1391,7 +1391,7 @@ client.context.ingest(
         "timestamp":   "2025-11-14T10:22:00Z",
         "content":     {"text": "full content here"},
         "collections": ["codebase", "myrepo"],
-        "relations":   {"hydradb_source_ids": ["pr-42"]},
+        "relations":   {"ids": ["pr-42"]},
         "metadata":   {"doc_type": "source_file", "repo": "myrepo"},
     }]),
 )
@@ -1401,7 +1401,7 @@ client.context.ingest(
 
 ### Verify Indexing
 
-**POST** `/context/status` - Returns `statuses[]` array · poll until `"completed"`
+**GET** `/context/status` - Returns `statuses[]` array · poll until `"completed"`
 
 ```json
 // Required: ?ids=<id>&tenant_id=engineering-docs

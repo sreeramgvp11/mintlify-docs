@@ -117,7 +117,7 @@ def extract_text(page_id: str) -> str:
 
 
 def upload_batch(sources: list, sub_tenant_id: str = None) -> list:
-    """Upload up to 20 sources. Returns list of source IDs."""
+    """Upload up to 20 sources. Returns list of IDs."""
     if sub_tenant_id:
         for s in sources:
             s["sub_tenant_id"] = sub_tenant_id
@@ -216,7 +216,7 @@ def ingest_space(space_key: str, sub_tenant_id: str = None) -> list:
 
 After uploading, always verify that HydraDB has fully processed and indexed your content before running search queries.
 
-**Endpoint:** `GET /context/status?ids=SOURCE_ID&tenant_id=TENANT` - Check indexing status
+**Endpoint:** `GET /context/status?ids=ID&tenant_id=TENANT` - Check indexing status
 
 ```python
 def poll_until_indexed(id: str, timeout: int = 120, interval: int = 3):
@@ -513,13 +513,13 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com`. Header
 ```bash
 curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "files=@/path/to/document.pdf" \
+  -F "documents=@/path/to/document.pdf" \
   -F "tenant_id=notion-ai-workspace"
 ```
 
 ### Verify processing
 
-**POST** `/context/status?ids=SOURCE_ID&tenant_id=YOUR_TENANT` - Poll until status = "completed"
+**GET** `/context/status?ids=ID&tenant_id=YOUR_TENANT` - Poll until status = "completed"
 
 ### Full search
 
@@ -587,7 +587,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
 
 ### Delete memory
 
-**DELETE** `/source` - Remove stale or incorrect data by memory_id
+**DELETE** `/context` - Remove stale or incorrect memory data with `type: "memory"` and `request.ids`
 
 ---
 

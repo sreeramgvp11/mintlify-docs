@@ -156,7 +156,7 @@ def ingest_press_release(competitor: str, title: str, text: str) -> str:
     result = client.context.ingest(
         tenant_id=TENANT_ID,
         sub_tenant_id=competitor,
-        files=[(filename, content.encode("utf-8"), "text/plain")],
+        documents=[(filename, content.encode("utf-8"), "text/plain")],
     )
     id = result.results[0].id
     print(f"[press] Uploaded {filename} → id: {id}")
@@ -197,7 +197,7 @@ def ingest_job_posting(competitor: str, title: str, department: str, description
     result = client.context.ingest(
         tenant_id=TENANT_ID,
         sub_tenant_id=competitor,
-        files=[(filename, content.encode("utf-8"), "text/plain")],
+        documents=[(filename, content.encode("utf-8"), "text/plain")],
     )
     id = result.results[0].id
     print(f"[jobs] Uploaded {filename} → id: {id}")
@@ -247,7 +247,7 @@ def ingest_review(
     result = client.context.ingest(
         tenant_id=TENANT_ID,
         sub_tenant_id=competitor,
-        files=[(filename, content.encode("utf-8"), "text/plain")],
+        documents=[(filename, content.encode("utf-8"), "text/plain")],
     )
     id = result.results[0].id
     print(f"[reviews] Uploaded {filename} ({sentiment}) → id: {id}")
@@ -286,7 +286,7 @@ def ingest_earnings_transcript(competitor: str, quarter: str, transcript: str) -
     result = client.context.ingest(
         tenant_id=TENANT_ID,
         sub_tenant_id=competitor,
-        files=[(filename, content.encode("utf-8"), "text/plain")],
+        documents=[(filename, content.encode("utf-8"), "text/plain")],
     )
     id = result.results[0].id
     print(f"[earnings] Uploaded {filename} → id: {id}")
@@ -302,11 +302,11 @@ After uploading, poll `GET /context/status` until `indexing_status` is `complete
 > **Note**: [`GET /context/status`](/api-reference/v2/endpoint/source-status) takes `ids` and `tenant_id` as **query parameters**. Pass multiple `ids` to check a batch in one call.
 
 ```bash
-curl -X POST \
-  'https://api.hydradb.com/context/status?tenant_id=competitive-intel&ids=YOUR_SOURCE_ID' \
+curl -G \
+  'https://api.hydradb.com/context/status' \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{}'
+  --data-urlencode "tenant_id=competitive-intel" \
+  --data-urlencode "ids=YOUR_ID"
 ```
 
 **Response when indexed**:
@@ -336,7 +336,7 @@ TENANT_ID = "competitive-intel"
 
 def wait_until_indexed(id: str, max_tries: int = 20, interval: int = 3) -> None:
     """
-    Poll /context/status until the source is indexed or times out.
+    Poll /context/status until the item is indexed or times out.
     Raises RuntimeError if indexing errors. Warns on timeout (may still complete).
     """
     for i in range(max_tries):
@@ -640,7 +640,7 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 |--------|----------|---------|
 | `POST` | `/tenants` | Create the competitive-intel tenant |
 | `POST` | `/context/ingest` | Upload a signal file (multipart form-data) |
-| `POST` | `/context/status?tenant_id=...&ids=...` | Check indexing status |
+| `GET` | `/context/status?tenant_id=...&ids=...` | Check indexing status |
 | `POST` | `/query` | Query indexed signals |
 
 ### Create Tenant
@@ -656,12 +656,11 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com` · Head
 |---|---|---|
 | `tenant_id` | Text | `competitive-intel` |
 | `sub_tenant_id` | Text | `acme-corp` |
-| `files` | File | your `.txt` or `.pdf` file |
+| `documents` | File | your `.txt` or `.pdf` file |
 
-### Verify Processing (URL params + empty body)
+### Verify Processing (query params)
 ```
-GET /context/status?tenant_id=competitive-intel&ids=YOUR_SOURCE_ID
-Body: {}
+GET /context/status?tenant_id=competitive-intel&ids=YOUR_ID
 ```
 
 ### Full Search - Point-in-Time

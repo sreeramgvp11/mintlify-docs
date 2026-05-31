@@ -307,7 +307,7 @@ class PersonalizationEngine {
   async getPersonalizedRecommendations(tenantId, subTenantId, destination) {
     // Retrieve user memories to provide personalized recommendations
     const memories = await this.client.query({
-      source: 'memories',
+      type: "memory",
       tenant_id: tenantId,
       sub_tenant_id: subTenantId,
       query: `travel preferences for ${destination}`,

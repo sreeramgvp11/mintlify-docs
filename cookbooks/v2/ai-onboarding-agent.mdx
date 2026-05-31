@@ -32,7 +32,7 @@ graph LR
     C["New hire question"] -->|"query()"| B
     B -->|"retrieved context"| D["Onboarding agent"]
     D -->|"context.ingest(type=memory)"| E["HydraDB<br/>sub_tenant: hire-{id}"]
-    E -->|"query() with source: memories"| F["Manager dashboard"]
+    E -->|"query(type=memory)"| F["Manager dashboard"]
 ```
 
 - **Phase 0**: Install SDK, create tenant, upload one document, run the first search query.
@@ -186,13 +186,13 @@ client = HydraDB(token=API_KEY)
 def upload_doc(filepath: str, doc_id: str, doc_type: str, team: str):
     """
     Upload a single text file to the shared company-context sub-tenant.
-    additional_metadata must be a JSON string, not a dict.
+    document_metadata must be a JSON string, not a dict.
     """
     with open(filepath, "rb") as f:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
-            files=[(os.path.basename(filepath), f, "application/octet-stream")],
-            additional_metadata=json.dumps([
+            documents=[(os.path.basename(filepath), f, "application/octet-stream")],
+            document_metadata=json.dumps([
                 {
                     "id": doc_id,
                     "additional_metadata": {
@@ -329,8 +329,8 @@ def ingest_decision_docs(folder: str):
         try:
             result = client.context.ingest(
                 tenant_id=TENANT_ID,
-                files=file_handles,
-                additional_metadata=metadata,
+                documents=file_handles,
+                document_metadata=metadata,
             )
             print(f"  Batch {i//batch_size + 1}: {result.success_count} uploaded")
         finally:
@@ -397,8 +397,8 @@ def ingest_people(people: list):
     try:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
-            files=file_handles,
-            additional_metadata=json.dumps(metadata_list),
+            documents=file_handles,
+            document_metadata=json.dumps(metadata_list),
         )
         print(f"Org chart: {result.success_count} people uploaded")
     finally:
@@ -475,8 +475,8 @@ def ingest_product_docs(folder: str, team: str = "product", status: str = "curre
     try:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
-            files=file_handles,
-            additional_metadata=metadata,
+            documents=file_handles,
+            document_metadata=metadata,
         )
         print(f"Product docs: {result.success_count} uploaded")
     finally:
@@ -532,8 +532,8 @@ def ingest_meeting_notes(folder: str):
     try:
         result = client.context.ingest(
             tenant_id=TENANT_ID,
-            files=file_handles,
-            additional_metadata=metadata,
+            documents=file_handles,
+            document_metadata=metadata,
         )
         print(f"Meeting notes: {result.success_count} uploaded")
     finally:
@@ -726,7 +726,7 @@ def ask_onboarding(hire_id: str, question: str, topic: str = "") -> str:
         graph_context=True,
     )
     hire_context = client.query(
-        source='memories',
+        type="memory",
         tenant_id=TENANT_ID,
         sub_tenant_id=hire_sub(hire_id),
         query=question,
@@ -777,7 +777,7 @@ def generate_progress_report(hire_id: str) -> dict:
     report = {}
     for key, query in queries.items():
         result = client.query(
-            source='memories',
+            type="memory",
             tenant_id=TENANT_ID,
             sub_tenant_id=hire_sub(hire_id),
             query=query,
@@ -804,7 +804,7 @@ if __name__ == "__main__":
 | `403 Plan limit reached` | Free plan allows 1 tenant only | Skip `create_tenant()` - reuse your existing tenant ID. |
 | `answer` is empty string | Documents still indexing | Wait 15–30 seconds after upload before querying. |
 | `UserWarning: Core Pydantic V1 functionality isn't compatible` | Python 3.14 incompatibility | Use Python 3.11 or 3.12. |
-| `422 Unprocessable Entity` on upload | Sending JSON text instead of files | Use `client.context.ingest(files=[...])` - not raw JSON body. |
+| `422 Unprocessable Entity` on upload | Sending JSON text instead of files | Use `client.context.ingest(documents=[...])` - not raw JSON body. |
 | `422 field required: memories` on `context.ingest(type="memory")` | Wrong field structure | Pass `memories=[{"text": "...", "infer": True}]` as a list of dicts. |
 | `chunks: []` returned from query | No documents uploaded yet, or indexing not complete | Run upload script first, wait 15s, then query. |
 
@@ -831,20 +831,20 @@ All SDK methods used in this cookbook.
 |---|---|
 | `client.tenants.create(tenant_id=...)` | Create the onboarding tenant |
 | `client.tenants.status(tenant_id=...)` | Check tenant is ready |
-| `client.context.ingest(tenant_id=..., files=..., additional_metadata=...)` | Upload company knowledge documents |
+| `client.context.ingest(tenant_id=..., documents=..., document_metadata=...)` | Upload company knowledge documents |
 | `client.context.ingest(
     type='memory',tenant_id=..., sub_tenant_id=..., memories=[...])` | Store per-hire memory |
 | `client.query(tenant_id=..., query=..., max_results=..., mode=...)` | Retrieve company context for a hire question |
 | `client.query(
-    source='memories',tenant_id=..., sub_tenant_id=..., query=...)` | Search hire memory for manager dashboard |
+    type="memory",tenant_id=..., sub_tenant_id=..., query=...)` | Search hire memory for manager dashboard |
 
 ### client.context.ingest - key parameters
 
 | Parameter | Type | Notes |
 |---|---|---|
 | `tenant_id` | `str` | Required. Your tenant ID. |
-| `files` | `list[IO[bytes]]` | Required. Open file handles - not file paths, not dicts. |
-| `additional_metadata` | `str` | Optional. JSON **string** (not dict) with per-file `id` and `additional_metadata`. |
+| `documents` | `list[IO[bytes]]` | Required. Open file handles - not file paths, not dicts. |
+| `document_metadata` | `str` | Optional. JSON **string** (not dict) with per-document `id` and `additional_metadata`. |
 
 ### client.query - key parameters
 
