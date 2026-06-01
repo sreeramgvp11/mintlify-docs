@@ -1,13 +1,13 @@
 ---
 title: "HydraDB Agent Integration Guide"
-description: "LLM-facing reference for building against the current HydraDB v2 docs, API, SDKs, and cookbooks."
+description: "LLM-facing reference for building against the current HydraDB docs, API, SDKs, and cookbooks."
 ---
 
 # HydraDB Agent Integration Guide
 
 This document is a self-contained reference designed for AI coding agents. It covers everything needed to understand, install, configure, and integrate HydraDB into any project -- from zero prior knowledge to production-ready usage.
 
-### TL;DR: Critical v2 Endpoints
+### TL;DR: Critical endpoints
 
 1. **`POST /tenants`** (`client.tenants.create()`): Provision an isolated tenant workspace.
 2. **`GET /tenants/status`** (`client.tenants.status()`): Poll until `infra.ready_for_ingestion` is true.
@@ -15,8 +15,6 @@ This document is a self-contained reference designed for AI coding agents. It co
 4. **`GET /context/status`** (`client.context.status()`): Poll status using `ids` until `indexing_status` is `completed` or `graph_creation`.
 5. **`POST /query`** (`client.query()`): Retrieve context via `type: "knowledge"`, `"memory"`, or `"all"`.
 
-
-> **Important:** Prefer the v2 surface in this guide. Older v1 routes like `/ingestion/upload_knowledge`, `/list/data`, and `/tenants/create` may still appear in the OpenAPI file for compatibility, but new integrations should use the consolidated v2 endpoints: `/tenants`, `/context/*`, and `/query`.
 
 ---
 
@@ -52,9 +50,9 @@ Core raw HTTP responses (`/tenants`, `/context/*`, and `/query`) are wrapped:
 - Log `meta.request_id` for failed requests.
 - Exception: webhook management endpoints (`/webhooks/indexing*`) return their documented response object directly, without the `{ success, data, error, meta }` envelope.
 
-### Use v2 endpoints for new work
+### Core endpoints
 
-| Task | Use this v2 endpoint / SDK method |
+| Task | Use this endpoint / SDK method |
 |---|---|
 | Create tenant | `POST /tenants` · `client.tenants.create()` |
 | Check tenant readiness | `GET /tenants/status` · `client.tenants.status()` |
@@ -100,9 +98,9 @@ Use the same `type` enum across context lifecycle APIs and search. Search additi
 
 - `tenant_metadata`: schema-aligned, declared at tenant creation, fast filter path.
 - `additional_metadata`: canonical free-form per-document metadata.
-- `document_metadata`: supported/deprecated alias for free-form metadata in many examples.
+- `document_metadata`: multipart field carrying per-document metadata for file uploads; use `additional_metadata` inside each item for free-form metadata.
 - `metadata_filters` top-level keys match `tenant_metadata`.
-- `metadata_filters.additional_metadata` or `metadata_filters.document_metadata` scopes free-form metadata.
+- `metadata_filters.additional_metadata` scopes free-form metadata.
 
 ### Do not mix scopes accidentally
 
@@ -193,7 +191,7 @@ At search time, set or rely on default `query_forceful_relations: true` with `mo
 Rules:
 
 - Forceful relation expansion only takes effect in `mode: "thinking"`.
-- Use `ids` for new code.
+- Use `ids`.
 - Relations are store-local: memory-to-memory or knowledge-to-knowledge. Cross-store relation lookups may not surface anything.
 
 ---
@@ -476,7 +474,7 @@ with open("policy.pdf", "rb") as f:
 |---|---|
 | `id` | stable ID / upsert key |
 | `tenant_metadata` | schema-aligned filterable fields |
-| `additional_metadata` / `document_metadata` | free-form display/bookkeeping fields |
+| `additional_metadata` | free-form display/bookkeeping fields |
 | `title`, `type`, `url`, `timestamp` | source display and citation fields |
 | `relations` | explicit forceful relations, e.g. `{ "ids": [...] }` |
 
@@ -581,7 +579,7 @@ Memory item fields:
 | `user_name` | helps inference |
 | `expiry_time` | TTL in seconds |
 | `tenant_metadata` | schema-aligned fields; for memory items, encode as a JSON string inside the JSON-stringified `memories` field |
-| `additional_metadata` / `document_metadata` | free-form fields; keep as objects |
+| `additional_metadata` | free-form fields; keep as objects |
 | `relations` | explicit memory-to-memory links |
 
 ---
@@ -600,7 +598,7 @@ Parameters:
 
 Status meanings from docs:
 
-| Status | Searchable? | Meaning |
+| Status | Searchable? | Meaning |s
 |---|---:|---|
 | `queued` | No | accepted, not picked up |
 | `processing` | No | parsing/chunking/embedding |
@@ -998,7 +996,7 @@ Parameters:
 - `ids`
 - `page`, `page_size` (1–100)
 - `filters.tenant_metadata`
-- `filters.additional_metadata` / `filters.document_metadata`
+- `filters.additional_metadata`
 - `filters.source_fields`
 - `include_fields` for projection
 
@@ -1074,7 +1072,7 @@ Use `type: "memory"` to delete memory IDs.
 
 | Code | Meaning |
 |---|---|
-| `INVALID_PARAMETERS` | required/malformed/incompatible parameter |
+| `INVALID_PARAMETERS` | required, malformed, or conflicting parameter |
 | `UNAUTHORIZED` | missing/invalid bearer token |
 | `FORBIDDEN` | key lacks access |
 | `TENANT_ALREADY_EXISTS` | duplicate tenant ID |
@@ -1128,30 +1126,9 @@ try {
 
 ---
 
-## 13. v1 to v2 migration cheatsheet
+## 13. Cookbook patterns
 
-| v1 concept/method | v2 replacement |
-|---|---|
-| `client.upload.knowledge(...)` | `client.context.ingest(type="knowledge", ...)` |
-| `client.upload.addMemory(...)` | `client.context.ingest(type="memory", ...)` |
-| `client.upload.verifyProcessing(...)` | `client.context.status(...)` |
-| `client.fetch.listData(...)` | `client.context.list(...)` |
-| `client.fetch.graphRelationsBySourceId(...)` | `client.context.relations(...)` |
-| `client.fetch.content(...)` | `client.context.inspect(...)` |
-| `client.data.delete(...)` | `client.context.delete(type="knowledge", ...)` |
-| `client.upload.deleteMemory(...)` | `client.context.delete(type="memory", ...)` |
-| `client.tenant.create(...)` | `client.tenants.create(...)` |
-| `client.tenant.getTenantIds(...)` | `client.tenants.list(...)` |
-| `client.tenant.deleteTenant(...)` | `client.tenants.delete(...)` |
-| `client.tenant.getInfraStatus(...)` | `client.tenants.status(...)` |
-| `client.tenant.getSubTenantIds(...)` | TS `client.tenants.subTenants(...)` / Python `client.tenants.sub_tenants(...)` |
-| `client.tenant.monitor(...)` | `client.tenants.stats(...)` |
-
----
-
-## 14. Cookbook patterns
-
-The v2 cookbooks show production patterns. Click the links below to read the raw Markdown guides with complete setup code and schemas:
+The cookbooks show production patterns. Click the links below to read the raw Markdown guides with complete setup code and schemas:
 
 | Cookbook Guide | Purpose & Retrieval Patterns | Link to Guide |
 |---|---|---|
@@ -1179,9 +1156,8 @@ Common architecture across cookbooks:
 
 ---
 
-## 15. Common mistakes checklist
+## 14. Common mistakes checklist
 
-- [ ] Using v1 endpoints for new code instead of `/tenants`, `/context/*`, `/query`.
 - [ ] Forgetting `API-Version: 2` in raw HTTP calls.
 - [ ] Parsing raw HTTP response from the top level instead of `data`.
 - [ ] Assuming SDK responses include the raw envelope; SDKs unwrap `data`.
@@ -1203,9 +1179,9 @@ Common architecture across cookbooks:
 
 ---
 
-## 16. SDK Method Reference
+## 15. SDK Method Reference
 
-### 16.1 TypeScript SDK (v2)
+### 15.1 TypeScript SDK
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -1223,7 +1199,7 @@ Common architecture across cookbooks:
 | `client.tenants.subTenants()` | `GET /tenants/sub-tenants` | List active sub-tenants |
 | `client.tenants.stats()` | `GET /tenants/stats` | Get tenant usage stats |
 
-### 16.2 Python SDK (v2)
+### 15.2 Python SDK
 
 | Group | Method | Endpoint | Description |
 |---|---|---|---|
@@ -1241,7 +1217,7 @@ Common architecture across cookbooks:
 | Tenants | `client.tenants.sub_tenants()` | `GET /tenants/sub-tenants` | List active sub-tenants |
 | Tenants | `client.tenants.stats()` | `GET /tenants/stats` | Get tenant usage stats |
 
-### 16.3 Minimal cURL example
+### 15.3 Minimal cURL example
 
 Use `type` on raw `/query` requests to select `knowledge`, `memory`, or `all`. The raw API response is wrapped; read payloads from `.data`.
 
@@ -1290,7 +1266,7 @@ curl -s -X POST 'https://api.hydradb.com/query' \
   | jq '.data.chunks'
 ```
 
-### 16.4 Raw HTTP: ingest app-source knowledge
+### 15.4 Raw HTTP: ingest app-source knowledge
 
 Use this for connector output where your app already extracted the text. `app_knowledge` must be a JSON string in multipart form data.
 
@@ -1348,7 +1324,7 @@ curl -s -X POST 'https://api.hydradb.com/query' \
 
 ---
 
-## 17. Navigation and support
+## 16. Navigation and support
 
 - Docs root for v2: `get-started/v2`, `essentials/v2`, `api-reference/v2`, `cookbooks/v2`
 - API reference OpenAPI: `api-reference/v2/openapi.json`
