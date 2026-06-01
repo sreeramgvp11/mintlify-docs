@@ -1,0 +1,101 @@
+---
+title: "Tenant Status"
+description: "Check the readiness of a tenant's infrastructure."
+openapi: "api-reference/v2/openapi.json GET /tenants/status"
+---
+
+Tenant creation is asynchronous, check if your tenant is ready before executing ingestion or any queries.
+
+The response includes `infra.ready_for_ingestion`, a convenience flag derived from the vectorstore fields below. For a single check, read that field. The underlying signals are:
+
+- `infra.ready_for_ingestion === true` (derived — true once both vectorstores are provisioned)
+- `infra.scheduler_status === true` (the background indexing scheduler)
+- `infra.graph_status === true` (the graph layer)
+- `infra.vectorstore_status.knowledge === true`
+- `infra.vectorstore_status.memories === true`
+
+<RequestExample>
+
+```python Python SDK
+response = client.tenants.status(tenant_id="my_first_tenant")
+
+if response.data.infra.ready_for_ingestion:
+    print("Tenant is ready.")
+```
+
+```typescript TypeScript SDK
+const response = await client.tenants.status({
+  tenantId: "my_first_tenant",
+});
+
+if (response.data?.infra.readyForIngestion) {
+  console.log("Tenant is ready.");
+}
+```
+
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants/status?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success
+{
+  "success": true,
+  "data": {
+    "tenant_id": "my_first_tenant",
+    "org_id": "org_abc123",
+    "infra": {
+      "scheduler_status": true,
+      "graph_status": true,
+      "vectorstore_status": {
+        "knowledge": true,
+        "memories": true
+      },
+      "ready_for_ingestion": true
+    },
+    "message": "Deployed infrastructure status"
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
+}
+```
+
+```json Failure
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "TENANT_NOT_FOUND",
+    "message": "Tenant not found"
+  },
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 4.8
+  }
+}
+```
+
+</ResponseExample>
+
+**Stale tenant IDs:** If `tenant_id` does not exist, the call returns `404 TENANT_NOT_FOUND`. Always verify that the tenant was created successfully before polling.
+
+<Warning>
+  **Common mistake:** `row_count` from [Tenant Stats](/api-reference/v2/endpoint/tenant-stats) counts individual chunks, not documents. For distinct source or memory counts, use [List Documents](/api-reference/v2/endpoint/list-documents) and read `pagination.total` from the response.
+</Warning>
+
+<div className="api-before-related-resources" />
+
+<Tip>
+  **Related Resources**
+
+  - **Before this:** [Create Tenant](/api-reference/v2/endpoint/create-tenant) - kicks off provisioning
+  - **After this:** [Ingest Context](/api-reference/v2/endpoint/ingest-context) - once status is ready
+</Tip>

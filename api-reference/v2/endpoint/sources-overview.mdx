@@ -1,0 +1,101 @@
+---
+title: "Context Management - Overview"
+description: "Quick reference for context management endpoints, their lifecycle, and when to use which."
+---
+
+## Endpoint references
+
+| Task | Endpoint |
+| :-- | :-- |
+| Upload PDFs, DOCX, CSVs, and other documents HydraDB should parse | `/context/ingest` with `type=knowledge` and `documents` |
+| Upload Slack messages, Notion pages, Gmail threads, or webpages with pre-extracted text | `/context/ingest` with `type=knowledge` and `app_knowledge` |
+| Upload user preferences, conversation history, or inline notes | `/context/ingest` with `type=memory` and `memories` |
+| Poll indexing progress | `/context/status` |
+| Browse stored sources or memories | `/context/list` |
+| Inspect original source content | `/context/inspect` |
+| Delete sources or memories | `DELETE /context` |
+| Inspect graph relations | `/context/relations` |
+
+## Lifecycle
+
+```mermaid
+flowchart LR
+    A([Choose content type]) --> B{Knowledge or memory?}
+
+    subgraph Ingestion [" "]
+      direction LR
+      SI([POST /context/ingest])
+    end
+
+    B -- Documents / app sources --> SI
+    B -- User memories --> SI
+
+    SI --> Q([queued])
+    Q --> P([processing])
+    P --> G([graph_creation])
+    G --> R([Search ready])
+    G --> C([completed])
+    C --> GR([Graph ready])
+
+    P -. failure .-> E([errored])
+    G -. failure .-> E
+
+    linkStyle default stroke:#64748b,stroke-width:2px,color:#f8fafc
+    style A fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc
+    style B fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc
+    style SI fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc
+    style Q fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc
+    style P fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc
+    style G fill:#4c1d95,stroke:#8b5cf6,stroke-width:3px,color:#ffffff,font-weight:bold
+    style C fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc
+    style R fill:#0f172a,stroke:#10b981,stroke-width:3px,color:#f8fafc
+    style GR fill:#0f172a,stroke:#10b981,stroke-width:3px,color:#f8fafc
+    style E fill:#0f172a,stroke:#ef4444,stroke-width:2px,color:#f8fafc
+```
+
+<Note>
+  **Why both** `type=knowledge `**and** `app_knowledge`**?** They have a theoretical differentiation.
+
+  - `type` picks the **bucket**: `knowledge` (shared documents) or `memory` (per-user context). It routes the ingest to the right store.
+  - Within `type=knowledge`, you pick the **payload shape**: `documents` (binary documents HydraDB will parse  -  PDFs, DOCX, CSV) or `app_knowledge` (a JSON array of already-extracted content from your app  -  Slack messages, Notion pages, web pages). You can send both in the same request.
+</Note>
+
+## Core Ingestion Concepts
+
+- **Knowledge vs. Memories**: [Knowledge](/essentials/v2/knowledge) is shared, tenant-wide content (documents, app pages, Slack messages). [Memories](/essentials/v2/memories) are user-specific preferences and conversational traits scoped by `sub_tenant_id`. Both can be searched together via `type: "all"` on `POST /query`.
+- **IDs**: Unique identifiers returned by `/context/ingest`. You can assign custom IDs using `id` in metadata or `id` in `app_knowledge` items. Use them for polling status, inspecting content, and deleting context.
+- **Metadata Filtering**: You can scope queries using `metadata` (structured fields defined in your tenant schema) or `additional_metadata` (free-form per-document JSON). For detailed guidelines on structuring metadata, see the [Scoping using metadata](/essentials/v2/metadata) guide.
+- **Forceful Relations**: Relationships between sources can be declared at ingestion time to construct a robust knowledge graph. For more details on the graph layer, see the [Context Graphs](/essentials/v2/context-graphs) guide.
+
+## Forceful relations and metadata
+
+Forceful relations let you pre-wire document relationships at ingestion time so that relevant documents surface together during retrieval - even before the graph layer discovers connections organically. Think of them as explicit "see also" links between your documents.
+
+Paired with document-level metadata, you get deterministic control over how results are filtered and ranked.
+
+```python Python SDK
+result = client.context.ingest(
+    type="knowledge",
+    tenant_id="acme_corp",
+    documents=[("runbook.pdf", f, "application/pdf")],
+    document_metadata=json.dumps([{
+        "id": "runbook_deploy",
+        "metadata": {"department": "ops"},
+        "additional_metadata": {"owner": "platform-team"},
+        "relations": {"ids": ["monitoring_guide"]},
+    }]),
+)
+```
+
+## Related sections
+
+- [Usage - Forceful Relations](/essentials/v2/knowledge) - linking sources at ingestion (see §7)
+- [Query](/api-reference/v2/endpoint/query-overview) - retrieve ingested content
+
+<Tip>
+  Related Resources
+
+  - [Usage - Memories](/essentials/v2/memories) - memories vs knowledge, when to use which
+
+  - [Usage - Metadata](/essentials/v2/metadata) - tenant-level vs document-level metadata
+</Tip>

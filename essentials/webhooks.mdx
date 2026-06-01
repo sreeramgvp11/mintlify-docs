@@ -307,8 +307,8 @@ SIGNING_SECRET = os.getenv("HYDRADB_WEBHOOK_SECRET")
 @app.post("/webhooks/hydradb")
 async def hydradb_webhook(
     request: Request,
-    x_cortex_delivery_id: str | None = Header(default=None),
-    x_cortex_signature: str | None = Header(default=None),
+    delivery_id: str | None = Header(default=None, alias="X-HydraDB-Delivery-ID"),
+    signature: str | None = Header(default=None, alias="X-HydraDB-Signature"),
 ):
     raw_body = await request.body()
 
@@ -320,13 +320,13 @@ async def hydradb_webhook(
         ).hexdigest()
         expected = f"sha256={digest}"
 
-        if not x_cortex_signature or not hmac.compare_digest(x_cortex_signature, expected):
+        if not signature or not hmac.compare_digest(signature, expected):
             return Response(status_code=401)
 
     event = json.loads(raw_body)
 
-    # Store x_cortex_delivery_id and skip it if you have already processed it.
-    print("HydraDB webhook", x_cortex_delivery_id, event["id"], event["status"])
+    # Store delivery_id and skip it if you have already processed it.
+    print("HydraDB webhook", delivery_id, event["id"], event["status"])
 
     return Response(status_code=204)
 ```

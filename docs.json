@@ -9,143 +9,268 @@
   },
   "favicon": "/favicon.svg",
   "contextual": {
-    "options": [
-      "copy",
-      "chatgpt",
-      "claude"
-    ]
+    "options": ["copy", "chatgpt", "claude"]
+  },
+  "integrations": {
+    "posthog": {
+      "apiKey": "phc_qH6psLVjkWQFAGSmTJoKkpVG9Tj5KUqzULfAn9mYdg79",
+      "apiHost": "https://us.i.posthog.com",
+      "sessionRecording": true
+    }
+  },
+  "api": {
+    "examples": {
+      "languages": ["python", "javascript", "curl"]
+    }
   },
   "navigation": {
-    "tabs": [
+    "versions": [
       {
-        "tab": "Guides",
-        "groups": [
+        "version": "v2",
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": [
-              "get-started/introduction",
-              "get-started/core-concepts",
-              "get-started/quickstart"
+            "tab": "Guides",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "get-started/v2/introduction",
+                  "get-started/v2/core-concepts",
+                  "get-started/v2/quickstart"
+                ]
+              },
+              {
+                "group": "Usage",
+                "pages": [
+                  {
+                    "group": "Ingestion",
+                    "pages": [
+                      "essentials/v2/knowledge",
+                      "essentials/v2/memories",
+                      "essentials/v2/app-sources"
+                    ]
+                  },
+                  "essentials/v2/query",
+                  "essentials/v2/metadata",
+                  "essentials/v2/api-results"
+                ]
+              },
+              {
+                "group": "Concepts",
+                "pages": [
+                  "essentials/v2/architecture",
+                  "essentials/v2/multi-tenant",
+                  "essentials/v2/context-graphs",
+                  "essentials/v2/semantic-search",
+                  "essentials/v2/webhooks"
+                ]
+              },
+              {
+                "group": "Plugins",
+                "pages": [
+                  "plugins/claude-code",
+                  "plugins/mcp",
+                  "plugins/cli",
+                  "plugins/openclaw"
+                ]
+              },
+              {
+                "group": "For Agents",
+                "pages": ["AGENTS"]
+              }
             ]
           },
           {
-            "group": "Essentials",
-            "pages": [
-              "essentials/architecture",
-              "essentials/memories",
-              "essentials/knowledge",
-              "essentials/app-sources",
-              "essentials/recall",
-              "essentials/webhooks",
-              "essentials/multi-tenant",
-              "essentials/metadata",
-              "essentials/context-graphs",
-              "essentials/api-results",
-              "essentials/semantic-search",
-              "continuity-assurance"
+            "tab": "Cookbooks",
+            "groups": [
+              {
+                "group": "Cookbooks",
+                "pages": [
+                  "cookbooks/v2/index",
+                  "cookbooks/v2/glean-clone",
+                  "cookbooks/v2/ai-chief-of-staff",
+                  "cookbooks/v2/ai-linkedin-recruiter",
+                  "cookbooks/v2/ai-travel-planner",
+                  "cookbooks/v2/cookbook-01-build-cursor-for-docs",
+                  "cookbooks/v2/customer-support-agent",
+                  "cookbooks/v2/cookbook-04-build-notion-ai",
+                  "cookbooks/v2/competitive-intelligence-agent",
+                  "cookbooks/v2/hydradb-cookbook-06",
+                  "cookbooks/v2/internal-search-perplexity",
+                  "cookbooks/v2/ai-onboarding-agent",
+                  "cookbooks/v2/cookbook-10-ai-financial-analyst"
+                ]
+              }
             ]
           },
           {
-            "group": "Plugins",
-            "pages": [
-              "plugins/claude-code",
-              "plugins/mcp",
-              "plugins/cli",
-              "plugins/openclaw"
-            ]
-          },
-          {
-            "group": "For Agents",
-            "pages": [
-              "AGENTS"
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "API Documentation",
+                "pages": ["api-reference/v2/index", "api-reference/v2/sdks"]
+              },
+              {
+                "group": "Tenants",
+                "pages": [
+                  "api-reference/v2/endpoint/tenants-overview",
+                  "api-reference/v2/endpoint/create-tenant",
+                  "api-reference/v2/endpoint/list-tenants",
+                  "api-reference/v2/endpoint/delete-tenant",
+                  "api-reference/v2/endpoint/tenant-status",
+                  "api-reference/v2/endpoint/list-sub-tenants",
+                  "api-reference/v2/endpoint/tenant-stats"
+                ]
+              },
+              {
+                "group": "Context",
+                "pages": [
+                  "api-reference/v2/endpoint/sources-overview",
+                  "api-reference/v2/endpoint/ingest-context",
+                  "api-reference/v2/endpoint/source-status",
+                  "api-reference/v2/endpoint/fetch-content",
+                  "api-reference/v2/endpoint/list-documents",
+                  "api-reference/v2/endpoint/delete-source",
+                  "api-reference/v2/endpoint/source-relations"
+                ]
+              },
+              {
+                "group": "Query",
+                "pages": [
+                  "api-reference/v2/endpoint/query-overview",
+                  "api-reference/v2/endpoint/query"
+                ]
+              },
+              {
+                "group": "Miscellaneous",
+                "pages": ["api-reference/v2/error-responses"]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "Cookbooks",
-        "groups": [
+        "version": "v1",
+        "tabs": [
           {
-            "group": "Cookbooks",
-            "pages": [
-              "cookbooks/index",
-              "cookbooks/glean-clone",
-              "cookbooks/ai-chief-of-staff",
-              "cookbooks/ai-linkedin-recruiter",
-              "cookbooks/ai-travel-planner",
-              "cookbooks/cookbook-01-build-cursor-for-docs",
-              "cookbooks/customer-support-agent",
-              "cookbooks/cookbook-04-build-notion-ai",
-              "cookbooks/competitive-intelligence-agent",
-              "cookbooks/hydradb-cookbook-06",
-              "cookbooks/internal-search-perplexity",
-              "cookbooks/ai-onboarding-agent",
-              "cookbooks/cookbook-10-ai-financial-analyst"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/index",
-              "api-reference/sdks",
-              "api-reference/error-responses"
-            ]
-          },
-          {
-            "group": "Tenants",
-            "pages": [
-              "api-reference/endpoint/tenants-overview",
-              "api-reference/endpoint/create-tenant",
-              "api-reference/endpoint/monitor-tenant",
-              "api-reference/endpoint/infra-status",
-              "api-reference/endpoint/list-sub-tenant-ids",
-              "api-reference/endpoint/list-tenant-ids",
-              "api-reference/endpoint/delete-tenant"
-            ]
-          },
-          {
-            "group": "Knowledge & Memories",
-            "pages": [
-              "api-reference/endpoint/ingestion-overview",
-              "api-reference/endpoint/memories-overview",
-              "api-reference/endpoint/upload-knowledge",
-              "api-reference/endpoint/add-memory",
-              "api-reference/endpoint/verify-processing",
-              "api-reference/endpoint/delete-memory",
-              "api-reference/endpoint/delete-knowledge"
+            "tab": "Guides",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "get-started/introduction",
+                  "get-started/core-concepts",
+                  "get-started/quickstart"
+                ]
+              },
+              {
+                "group": "Essentials",
+                "pages": [
+                  "essentials/architecture",
+                  "essentials/memories",
+                  "essentials/knowledge",
+                  "essentials/app-sources",
+                  "essentials/recall",
+                  "essentials/webhooks",
+                  "essentials/multi-tenant",
+                  "essentials/metadata",
+                  "essentials/context-graphs",
+                  "essentials/api-results",
+                  "essentials/semantic-search",
+                  "continuity-assurance"
+                ]
+              },
+              {
+                "group": "Plugins",
+                "pages": [
+                  "plugins/claude-code",
+                  "plugins/mcp",
+                  "plugins/cli",
+                  "plugins/openclaw"
+                ]
+              },
+              {
+                "group": "For Agents",
+                "pages": ["AGENTS"]
+              }
             ]
           },
           {
-            "group": "Recall",
-            "pages": [
-              "api-reference/endpoint/recall-overview",
-              "api-reference/endpoint/full-recall",
-              "api-reference/endpoint/recall-preferences",
-              "api-reference/endpoint/boolean-recall"
+            "tab": "Cookbooks",
+            "groups": [
+              {
+                "group": "Cookbooks",
+                "pages": [
+                  "cookbooks/index",
+                  "cookbooks/glean-clone",
+                  "cookbooks/ai-chief-of-staff",
+                  "cookbooks/ai-linkedin-recruiter",
+                  "cookbooks/ai-travel-planner",
+                  "cookbooks/cookbook-01-build-cursor-for-docs",
+                  "cookbooks/customer-support-agent",
+                  "cookbooks/cookbook-04-build-notion-ai",
+                  "cookbooks/competitive-intelligence-agent",
+                  "cookbooks/hydradb-cookbook-06",
+                  "cookbooks/internal-search-perplexity",
+                  "cookbooks/ai-onboarding-agent",
+                  "cookbooks/cookbook-10-ai-financial-analyst"
+                ]
+              }
             ]
           },
           {
-            "group": "Managing Data",
-            "pages": [
-              "api-reference/endpoint/list-overview",
-              "api-reference/endpoint/list-data",
-              "api-reference/endpoint/fetch-content",
-              "api-reference/endpoint/graph-relations"
-            ]
-          },
-          {
-            "group": "Embeddings",
-            "pages": [
-              "api-reference/endpoint/embeddings-overview",
-              "api-reference/endpoint/insert-raw-embeddings",
-              "api-reference/endpoint/search-raw-embeddings",
-              "api-reference/endpoint/filter-raw-embeddings",
-              "api-reference/endpoint/delete-raw-embeddings"
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "API Documentation",
+                "pages": [
+                  "api-reference/index",
+                  "api-reference/sdks",
+                  "api-reference/error-responses"
+                ]
+              },
+              {
+                "group": "Tenants",
+                "pages": [
+                  "api-reference/endpoint/tenants-overview",
+                  "api-reference/endpoint/create-tenant",
+                  "api-reference/endpoint/monitor-tenant",
+                  "api-reference/endpoint/infra-status",
+                  "api-reference/endpoint/list-sub-tenant-ids",
+                  "api-reference/endpoint/list-tenant-ids",
+                  "api-reference/endpoint/delete-tenant"
+                ]
+              },
+              {
+                "group": "Knowledge & Memories",
+                "pages": [
+                  "api-reference/endpoint/ingestion-overview",
+                  "api-reference/endpoint/memories-overview",
+                  "api-reference/endpoint/upload-knowledge",
+                  "api-reference/endpoint/add-memory",
+                  "api-reference/endpoint/verify-processing",
+                  "api-reference/endpoint/delete-memory",
+                  "api-reference/endpoint/delete-knowledge"
+                ]
+              },
+              {
+                "group": "Recall",
+                "pages": [
+                  "api-reference/endpoint/recall-overview",
+                  "api-reference/endpoint/full-recall",
+                  "api-reference/endpoint/recall-preferences",
+                  "api-reference/endpoint/boolean-recall"
+                ]
+              },
+              {
+                "group": "Managing Data",
+                "pages": [
+                  "api-reference/endpoint/list-overview",
+                  "api-reference/endpoint/list-data",
+                  "api-reference/endpoint/fetch-content",
+                  "api-reference/endpoint/graph-relations"
+                ]
+              }
             ]
           }
         ]

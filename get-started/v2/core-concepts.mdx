@@ -1,0 +1,136 @@
+---
+title: "Core Concepts"
+description: "A tour of the five primitives that make HydraDB."
+---
+
+> A short overview of each primitive, with links to deeper [Concepts](/essentials/v2/architecture) pages.
+
+| Primitive | What it is | Deep dive |
+
+| --- | --- | --- |
+| **Knowledge** | Complete working context of your organization - documents, <br />markdowns, knowledge from apps, etc | [Usage → Knowledge](/essentials/v2/knowledge) |
+| **Memories** | User preferences, inferred traits, likes/dislikes. <br />Makes context retrieval natively personalized. | [Usage → Memories](/essentials/v2/memories) |
+| **Querying** | How agents read context from HydraDB | [Usage → Query](/essentials/v2/query) |
+| **Tenants** | Isolated workspaces with sub-tenant hierarchy. To enforce RBACs. | [Concepts → Multi-Tenant](/essentials/v2/multi-tenant) |
+| **Metadata** | Filters to enrich your context graph. Also useful for deterministic<br />retrievals. | [Usage → Metadata](/essentials/v2/metadata) |
+
+---
+
+## The mental model
+
+To create a unified context substrate, a company brain, for your AI you need context & personalization combined with the right scopes. 
+
+---
+
+
+## Memories
+
+Memories are user-scoped preferences, conversation history, and inferred behavioral traits. They ensure retrieval is personalized to the person asking, not just the query itself.
+
+The same person querying "Project Acme changelog" might expect different results than a colleague working on the same project but with a different title. If they have previously engaged with backend architecture decisions over release notes, or flagged interest in a specific workstream, HydraDB helps you factor that in.
+
+Memories are not set once at onboarding. They compound with every interaction, so your agent becomes more accurate and feels more familiar to the end user over time. When you ingest a memory with `infer: true`, HydraDB extracts the underlying preference. You can ship raw behavioral logs (interaction events, UI actions, dialogue), and HydraDB derives the structured insight. 
+
+When you ingest a memory with `infer: false` (the default), HydraDB stores exactly what you send - useful for deterministic facts you've already captured.
+
+Memories are retrieved by calling [`POST /query`](/api-reference/v2/endpoint/query) with `type: "memory"`.
+
+Read More: [Usage → Memories](/essentials/v2/memories)
+
+---
+
+## Knowledge
+
+Knowledge in HydraDB represents the entire working context you want your agents to access: PDFs, DOCX, Markdown, Slack threads, Notion pages, CSVs, emails.
+
+HydraDB parses, relates, and stores each source into the graph. At query time, the graph traversal step surfaces structurally connected materials that vanilla query alone would miss.
+
+Knowledge is retrieved by calling [`POST /query`](/api-reference/v2/endpoint/query) with `type: "knowledge"`. Combine memories and knowledge in one call with `type: "all"`.
+
+Read More: [Usage → Knowledge](/essentials/v2/knowledge)
+
+---
+
+
+## Why are memories & knowledge separate
+
+Memories and Knowledge are distinct at the storage layer, not just conceptually:
+
+|  | Memories | Knowledge |
+| --- | --- | --- |
+| **Content** | User preferences, conversation history, inferred traits | Documents, files, app-generated content |
+| **Scope** | Per-user (scoped by `sub_tenant_id`) | Can be shared across all users in a tenant |
+| **Mutability** | Dynamic - evolves with every interaction | Versioned - replaced or deleted explicitly |
+| **Query `type`** | `"memory"` | `"knowledge"` |
+| **Inference** | `infer` flag extracts traits automatically | Not applicable - content is parsed and chunked |
+
+For personalized answers grounded in shared documents, call `POST /query` with `type: "all"` to merge both stores in a single request. See [How to Use API Results](/essentials/v2/api-results).
+
+---
+
+## Query
+
+Query is how agents read from HydraDB. Storing data is easy; knowing _what_ to retrieve, _when_, and _why_ is the hard part.
+
+HydraDB's query is a multi-stage pipeline that combines metadata filtering, semantic and keyword retrieval, and [context-graph](/essentials/v2/context-graphs) traversal - all in a single API call.
+
+Vector search asks _"what's similar to my query?"_ Graph traversal asks _"What's structurally connected to it?"_ HydraDB does both, then weights the results by usefulness for the current task.
+
+One endpoint - [`POST /query`](/api-reference/v2/endpoint/query) - covers Knowledge, Memories, or both, tuned by `query_by` (`hybrid` / `text`), `mode` (`thinking` / fast), and `graph_context`.
+
+Read More: [Usage → Query](/essentials/v2/query)
+
+---
+
+## Tenants and Sub-Tenants
+
+A **Tenant** is a completely isolated workspace. No tenant can read another tenant's data. In most cases, each organization is represented by its own tenant.
+
+A **sub-tenant** is a logical partition within a tenant - a user, team, project, or department.
+
+- **B2B** - each customer is a tenant; their departments are sub-tenants
+- **B2C** - one tenant for the organization; each end user is a sub-tenant
+
+Read More: [Concepts → Multi-Tenant Support](/essentials/v2/multi-tenant)
+
+---
+
+## Metadata
+
+Metadata makes querying deterministic. Sometimes production systems need hard filters: "only Engineering docs," "only approved policies," "only refund policies."
+
+Two tiers:
+
+- `metadata` - filterable fields defined in the tenant schema. Plan these fields before ingestion and pass them through `metadata_filters` at query time.
+- `additional_metadata` - free-form fields attached per document at ingestion. Flexible. Useful for passing additional context to your agents if needed.
+
+At ingestion:
+
+```json
+{
+  "metadata": { "compliance_framework": "SOC2", "region": "us" },
+  "additional_metadata": {
+    "owner": "sarah.chen@acme.com",
+    "status": "approved"
+ }
+}
+```
+
+At query time:
+
+```json
+{
+  "query": "latest pricing strategy",
+  "metadata_filters": { "compliance_framework": "SOC2" }
+}
+```
+
+Read More: [Usage → Metadata](/essentials/v2/metadata)
+
+---
+
+## What's next
+
+- [Architecture Overview](/essentials/v2/architecture) - how the graph, vector store, and ranking layers fit together
+- [Quickstart](/get-started/v2/quickstart) - build your first integration in five minutes
+- [Concepts](/essentials/v2/architecture) - deeper coverage of every concept on this page

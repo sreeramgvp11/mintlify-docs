@@ -1,0 +1,156 @@
+---
+title: "Create Tenant"
+description: "Creates a space for storing context. "
+openapi: "api-reference/v2/openapi.json POST /tenants"
+---
+
+import { Field } from "/snippets/field.jsx";
+
+<RequestExample>
+
+```python Python SDK
+response = client.tenants.create(
+    tenant_id="my_first_tenant",
+    tenant_metadata_schema=[
+        {
+            "name": "category",
+            "data_type": "VARCHAR",
+            "max_length": 256,
+            "enable_match": True,
+        },
+        {
+            "name": "product_description",
+            "data_type": "VARCHAR",
+            "max_length": 4096,
+            "enable_dense_embedding": True,
+            "enable_sparse_embedding": True,
+        },
+    ],
+)
+```
+
+```typescript TypeScript SDK
+const response = await client.tenants.create({
+  tenantId: "my_first_tenant",
+  tenantMetadataSchema: [
+    {
+      name: "category",
+      dataType: "VARCHAR",
+      maxLength: 256,
+      enableMatch: true,
+    },
+    {
+      name: "product_description",
+      dataType: "VARCHAR",
+      maxLength: 4096,
+      enableDenseEmbedding: true,
+      enableSparseEmbedding: true,
+    },
+  ],
+});
+```
+
+```bash cURL
+curl -X POST 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "my_first_tenant",
+    "tenant_metadata_schema": [
+      {
+        "name": "category",
+        "data_type": "VARCHAR",
+        "max_length": 256,
+        "enable_match": true
+      },
+      {
+        "name": "product_description",
+        "data_type": "VARCHAR",
+        "max_length": 4096,
+        "enable_dense_embedding": true,
+        "enable_sparse_embedding": true
+      }
+    ]
+  }'
+```
+
+</RequestExample>
+
+## Request body
+
+| Name | Description |
+| --- | --- |
+| <Field name="tenant_id" type="string" required /> | Account-scoped tenant identifier. Use a stable, case-sensitive ID up to 25 characters; prefer lowercase letters, numbers, and underscores for portability. |
+| <Field name="tenant_metadata_schema" type="array" /> | Defines tenant-level metadata fields. See the [Scoping using metadata](/essentials/v2/metadata#schema-declaration-set-at-tenant-creation) guide for detailed schema parameters. (default=`null`) |
+
+## Successful response
+
+Always check if a tenant is ready before using it. Use [Tenant Status](/api-reference/v2/endpoint/tenant-status) to check.
+
+<ResponseExample>
+
+```json Success
+{
+  "success": true,
+  "data": {
+    "status": "accepted",
+    "tenant_id": "my_first_tenant",
+    "message": "Tenant creation started in the background. Use GET /tenants/status?tenant_id=... to check progress."
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
+}
+```
+
+```json Failure
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "TENANT_ALREADY_EXISTS",
+    "message": "Tenant already exists"
+  },
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 4.8
+  }
+}
+```
+
+</ResponseExample>
+
+## What happens after tenant creation?
+
+1. Create the tenant with `POST /tenants`
+2. **Default sub-tenant:** A default sub-tenant is provisioned automatically when a tenant is created. This default sub tenant stores all your context. Create additional sub-tenants at any time to scope data to users, teams, or projects.
+3. **Retry failed tenants:** If a tenant appears in `data.failed_tenant_ids`, re-create that tenant with `POST /tenants` after addressing the reported issue. Poll status again before ingestion.
+4. Start [ingesting context](/api-reference/v2/endpoint/ingest-context) once tenants are ready
+5. Check status of [ingestion](/api-reference/v2/endpoint/source-status). Start querying the tenant once the recently ingested sources show `completed`
+
+---
+
+## Defining metadata schema
+
+<Warning>
+  Schema field names are **immutable** after tenant creation. You can add per-document free-form metadata fields at ingestion time, but tenant-level fields cannot be mutated. Plan your schema carefully before creating the tenant.
+</Warning>
+
+You can define a custom schema at tenant creation to enable fast, deterministic exact-match filtering or text-based search on metadata fields.
+
+For detailed parameters, valid data types, shorthand flags, and comprehensive configuration examples, see the [metadata](/essentials/v2/metadata) guide.
+
+---
+
+<div className="api-before-related-resources" />
+
+## **Related Resources**
+
+- **Next:** [Tenant Status](/api-reference/v2/endpoint/tenant-status) - poll until provisioning completes
+- **Next:** [Ingest Context](/api-reference/v2/endpoint/ingest-context) - start ingesting data once status is ready
+- **Related:** [Delete Tenant](/api-reference/v2/endpoint/delete-tenant) - teardown
+- **Read more:** [Concepts → Multi-Tenant Support](/essentials/v2/multi-tenant)
+- **Read more:** [Usage → Metadata](/essentials/v2/metadata)

@@ -1,0 +1,246 @@
+---
+title: "Quickstart"
+description: "Build your first working query in five minutes."
+---
+
+This guide walks you through the full HydraDB loop end-to-end  -  create a workspace, ingest some content, wait for indexing, and run a query  -  using the [API](/api-reference/v2). By the end you'll have a working personalized-RAG flow that you can plug into your own LLM prompt.
+
+If you're new to HydraDB, the [Core Concepts](/get-started/v2/core-concepts) page is a useful 5-minute primer first. If you want the architecture-level story, see [Architecture](/essentials/v2/architecture).
+
+### Install and initialize
+- Grab an API key from [app.hydradb.com](https://app.hydradb.com)
+
+<CodeGroup>
+```python Python SDK
+# Install: pip install "hydradb-sdk>=2,<3"
+import os
+from hydra_db import HydraDB
+
+client = HydraDB(token=os.environ["HYDRA_DB_API_KEY"])
+```
+```typescript TypeScript SDK
+// Install: npm install @hydradb/sdk@^2
+import { HydraDBClient } from "@hydradb/sdk";
+
+const client = new HydraDBClient({
+  token: process.env.HYDRA_DB_API_KEY,
+});
+```
+```bash cURL
+# No SDK needed — set your key once and reuse it.
+export HYDRA_DB_API_KEY="your_api_key"
+
+curl 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+</CodeGroup>
+
+---
+
+## Fast path: create, ingest, query
+
+Create a tenant, add one memory to the default sub-tenant, wait for indexing, then query it.
+
+<CodeGroup>
+```python Python SDK
+import json, time
+
+tenant_id = "my_first_tenant"
+
+# 1. Create a tenant.
+client.tenants.create(tenant_id=tenant_id)
+
+# 2. Wait until the tenant can accept data.
+while True:
+    infra = client.tenants.status(tenant_id=tenant_id).data.infra
+    if infra.ready_for_ingestion:
+        break
+    time.sleep(5)
+
+# 3. Ingest one memory into the default sub-tenant.
+ingest = client.context.ingest(
+    type="memory",
+    tenant_id=tenant_id,
+    memories=json.dumps([
+        {"text": "User prefers detailed technical explanations and dark mode"}
+    ]),
+)
+
+id = ingest.data.results[0].id
+
+# 4. Wait until the memory is indexed.
+while True:
+    status = client.context.status(
+        tenant_id=tenant_id,
+        ids=[id],
+    ).data.statuses[0]
+
+    if status.indexing_status == "completed":
+        break
+    if status.indexing_status == "errored":
+        raise RuntimeError(status.error_message)
+
+    time.sleep(2)
+
+# 5. Search memories.
+results = client.query(
+    tenant_id=tenant_id,
+    type="memory",
+    query="What does the user prefer?",
+)
+
+print(results.data.chunks)
+```
+```typescript TypeScript SDK
+const tenantId = "my_first_tenant";
+
+// 1. Create a tenant.
+await client.tenants.create({ tenantId: tenantId });
+
+// 2. Wait until the tenant can accept data.
+while (true) {
+  const { data } = await client.tenants.status({ tenantId: tenantId });
+  if (data?.infra.readyForIngestion) break;
+  await new Promise((resolve) => setTimeout(resolve, 5_000));
+}
+
+// 3. Ingest one memory into the default sub-tenant.
+const ingest = await client.context.ingest({
+  type: "memory",
+  tenantId: tenantId,
+  memories: JSON.stringify([
+    { text: "User prefers detailed technical explanations and dark mode" },
+  ]),
+});
+
+const id = ingest.data.results[0].id;
+
+// 4. Wait until the memory is indexed.
+while (true) {
+  const status = (await client.context.status({
+    tenantId: tenantId,
+    ids: [id],
+  })).data.statuses[0];
+
+  if (status.indexingStatus === "completed") break;
+  if (status.indexingStatus === "errored") {
+    throw new Error(status.errorMessage);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2_000));
+}
+
+// 5. Search memories.
+const results = await client.query({
+  tenantId: tenantId,
+  type: "memory",
+  query: "What does the user prefer?",
+});
+
+console.log(results.data.chunks);
+```
+```bash cURL
+export HYDRA_DB_API_KEY="your_api_key"
+TENANT_ID="my_first_tenant"
+
+# 1. Create a tenant.
+curl -s -X POST 'https://api.hydradb.com/tenants' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d "{\"tenant_id\":\"${TENANT_ID}\"}"
+
+# 2. Wait until the tenant can accept data.
+until curl -s "https://api.hydradb.com/tenants/status?tenant_id=${TENANT_ID}" \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  | jq -e '.data.infra.ready_for_ingestion' > /dev/null; do
+  sleep 5
+done
+
+# 3. Ingest one memory into the default sub-tenant.
+ID=$(curl -s -X POST 'https://api.hydradb.com/context/ingest' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -F "type=memory" \
+  -F "tenant_id=${TENANT_ID}" \
+  -F 'memories=[{"text":"User prefers detailed technical explanations and dark mode"}]' \
+  | jq -r '.data.results[0].id')
+
+# 4. Wait until the memory is indexed.
+while true; do
+  STATUS=$(curl -s -G 'https://api.hydradb.com/context/status' \
+    -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+    -H "API-Version: 2" \
+    --data-urlencode "tenant_id=${TENANT_ID}" \
+    --data-urlencode "ids=${ID}")
+
+  INDEXING_STATUS=$(echo "$STATUS" | jq -r '.data.statuses[0].indexing_status')
+
+  if [ "$INDEXING_STATUS" = "completed" ]; then break; fi
+  if [ "$INDEXING_STATUS" = "errored" ]; then
+    echo "$STATUS" | jq -r '.data.statuses[0].error_message'
+    exit 1
+  fi
+
+  sleep 2
+done
+
+# 5. Search memories.
+curl -s -X POST 'https://api.hydradb.com/query' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<EOF | jq '.data.chunks'
+{
+  "tenant_id": "${TENANT_ID}",
+  "type": "memory",
+  "query": "What does the user prefer?"
+}
+EOF
+```
+</CodeGroup>
+
+---
+
+## What you have built
+
+You have built the full retrieval loop: create an isolated workspace, ingest context, wait for indexing, query it, and pass the returned context to an LLM. HydraDB handles parsing, chunking, embedding, graph construction, and hybrid retrieval; your application sends the query and gets back the right slice of context.
+
+```mermaid
+flowchart LR
+  A([1. Create Tenant]) --> B([2. Ingest Data])
+  B --> C([3. Verify Processing])
+  C --> D([4. Query Context])
+  D --> E([5. Pass to LLM])
+
+  style A fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style B fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style C fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style D fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+  style E fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
+```
+
+Steps 1 and 3 are **asynchronous**(runs in background)  -  HydraDB provisions infrastructure and indexes your content in the background, so each one needs a short polling loop. Steps 2, 4, and 5 run in real time. The same loop scales as your corpus grows; nothing in the code changes between 10 documents and 10,000.
+
+
+---
+
+## You're done
+
+That's the full HydraDB v2 loop: [create a tenant](/api-reference/v2/endpoint/create-tenant), [ingest](/api-reference/v2/endpoint/ingest-context) knowledge and memories, [verify](/api-reference/v2/endpoint/source-status) processing, [query](/api-reference/v2/endpoint/query), and feed the result to an LLM. Everything else in HydraDB  -  [metadata filters](/essentials/v2/metadata), [sub-tenants](/essentials/v2/multi-tenant), [graph traversal](/essentials/v2/context-graphs), forceful relations  -  layers on top of this foundation.
+
+### Where to go next
+
+| If you want to… | Read… |
+|---|---|
+| Understand how content gets stored and retrieved | [Architecture](/essentials/v2/architecture) |
+| Tune query behavior (`alpha`, `mode`, `recency_bias`) | [Query](/essentials/v2/query) |
+| Design a filterable metadata schema | [Metadata](/essentials/v2/metadata) |
+| Scope data per user or workspace | [Multi-Tenant](/essentials/v2/multi-tenant) |
+| Format the LLM prompt from `RetrievalResult` | [How to Use API Results](/essentials/v2/api-results) |
+| See the full endpoint reference | [API Reference](/api-reference/v2) |
+| Pick from real-world recipes | [Cookbooks](/cookbooks/v2/index) |
+
+Stuck? Reach out at [founders@hydradb.com](mailto:founders@hydradb.com).

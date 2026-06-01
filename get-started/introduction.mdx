@@ -1,21 +1,55 @@
 ---
 title: "Introduction"
-description: "Graph-first, unified state infrastructure for AI. One API for memory, knowledge, and everything in between."
+description: "The unified context substrate for AI. One brain for semantic knowledge, user memories, and episodic experiences."
 ---
 
 ## What HydraDB is
 
-AI agents are stateless by default. Every session starts from zero. The field of memory and context infrastructure exists to fix this, and most of today's stack does it poorly.
+HydraDB is a unified context substrate for AI agents. One, three primitives:
 
-HydraDB is a retrieval API for stateful AI agents. You ingest your documents, user interactions, and preferences, and HydraDB autonomously builds a context graph capturing entities and relationships. When your agent asks a question, HydraDB returns *useful* context, not just similar context.
+- **Semantic knowledge.** Documents and facts your agent reasons over.
+- **User memories.** Preferences, history, and identity that persist across sessions.
+- **Episodic experiences.** Time-ordered events from every agent interaction.
+
+You ingest. HydraDB extracts entities, relationships, and temporal signals automatically. Your agent queries. HydraDB returns *useful* context, not just similar context.
 
 > *VectorDBs find what's similar. HydraDB finds what's useful.*
 
+## The problem we solve
+
+Most teams building stateful AI end up stitching together five systems: a vector database, a graph database, a relational store, filesystem primitives, and a cache. Months of plumbing, constant maintenance, and yet everything fails in production. Either embeddings miscalculate similarity or costs scale poorly in production for 
+
+HydraDB replaces the stack. One graph that learns every user preference, retains every agent experience, and delivers personalized context the moment your agent needs it.
+
+
 HydraDB is designed for teams building scalable, stateful AI agents, whether you're at 10K documents or 10M.
 
-**HydraDB** is developer-first, plug-and-play context infrastructure. Imagine Stripe for context, instead of payments. Rather than hacking together brittle pipelines for embedding tools, vector databases, ranking tweaks, and caching layers, HydraDB replaces all of it in a single API call - with better retrieval than a traditional vector database.
+**Skip ahead:** [Quickstart](/get-started/quickstart) · [API Reference](/api-reference) · [SDKs](/api-reference/sdks)
 
-**Some use cases:**
+---
+
+## The principle
+
+We give you primitives, not abstractions. The graph, the memory primitives, the retrieval pipeline, and the ranking knobs are yours to compose. Your context store, your opinions, not ours.
+
+The base is complex. The configuration is yours.
+
+
+---
+   
+
+## Performance
+
+- **Long-Context Accuracy:** Achieves a 90% score on LongMemEvals
+- **Low Latency:** Delivers sub-200ms retrieval latency
+- **Strict tenant isolation.** No cross-tenant aggregation, ever.
+
+View the full technical breakdown in our [research paper](https://benchmarks.hydradb.com/hydradb.pdf).
+
+---
+
+
+## What you can build with this:
 
 - Customer support agents grounded in real customer history and preferences
 - Coding agents with persistent memory of a codebase and team conventions
@@ -25,87 +59,6 @@ HydraDB is designed for teams building scalable, stateful AI agents, whether you
 - Consumer AI apps where every user gets a "second brain" that evolves over time
 
 Find more use cases at [Cookbooks](/cookbooks).
-
-**Skip ahead:** [Quickstart](/get-started/quickstart) · [API Reference](/api-reference) · [SDKs](/api-reference/sdks)
-
----
-
-## Why vector search breaks for stateful AI
-
-Vector databases are search engines. They answer one question well: *"What's most similar to this query?"*
-
-That's fine for static retrieval. It breaks for **stateful agents**.
-
-The structural reason: vector search treats every chunk as an isolated point. There is no concept of who said what, what is contradicted later, what is stale, or how an entity has evolved.
-
-At 10M+ documents, a vector search will confidently return an answer pulled from a completely different client's file. The similarity score might read 0.94. The answer is still wrong.
-
-The failure mode isn't the embedding model. It's the assumption that semantic similarity equals relevance.
-
----
-
-## How HydraDB is different
-
-HydraDB is **graph-first, not graph-optional**. The graph is the primary substrate; vectors are one of several signals feeding into it.
-
-It builds an **ontology-first context graph** over your data. Entities, relationships, and temporal signals are extracted automatically at write time. When you query for "Apple," HydraDB knows you mean the customer you serve, not the fruit.
-
-Every retrieval runs through a multi-stage intelligent recall pipeline:
-
-```mermaid
-flowchart LR
-  Q([Query]) --> F([Metadata Filter])
-  F --> H([Hybrid Retrieval])
-  H --> G([Graph Traversal])
-  G --> R([Personalized Ranking])
-  R --> O([Results])
-
-%% HydraDB Dark Mode Styles
-%% Background (set outside Mermaid itself), but node colors are key
-
-%% Set all node text to off-white for readability
-  style Q fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
-  style F fill:#1e293b,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
-  style H fill:#1e293b,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc,stroke-linecap:round
-  %% 'Graph Traversal' - Hydra Purple Highlight
-  style G fill:#8b5cf6,stroke:#8b5cf6,stroke-width:2.5px,color:#f8fafc,stroke-linecap:round
-  style R fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
-  style O fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc,stroke-linecap:round
-```
-
----
-
-## What sets HydraDB apart
-
-**One endpoint, one stack.** HydraDB replaces a Neo4j + vector DB + Redis stack. One API manages Memories, Knowledge, semantic context, and relational context together.
-
-**Memories and Knowledge as distinct primitives.** Other tools treat all stored data the same way. HydraDB separates them at the infrastructure level - Memories are dynamic, interaction-level state that evolves with every session; Knowledge is static, document-level context that gets versioned and replaced: different storage layers, different retrieval paths, one unified API.
-
-**Composable and unopinionated.** You control what gets stored as vectors, what becomes graph nodes, which relationships matter, and how retrieval is parameterized - recency alpha, forced relations, custom embeddings, custom metadata. The complex base is ours; the configuration is yours.
-
----
-
-## Key features
-
-- **Ontology-first context graph** - entities and relationships extracted automatically
-- **Memories + Knowledge primitives** - separated storage, unified API
-- **Hybrid retrieval** - semantic, keyword, graph, and metadata signals in one call
-- **Multi-tenant by default** - fully isolated workspaces at tenant and sub-tenant levels
-- **Plug-and-play SDK** - TypeScript and Python with full type safety
-- **Bring-your-own embeddings** - plug in fine-tuned models when needed
-- **Self-hosting** - deploy with a single Docker command
-
----
-
-## Performance
-HydraDB sets a new industry benchmark for high-performance, privacy-centric retrieval systems. Our architecture is optimized for speed, precision, and absolute data isolation.
-
-- **Long-Context Accuracy:** Achieves a 90% score on LongMemEvals
-- **Ultra-Low Latency:** Delivers sub-200ms retrieval latency
-- **Optimized Architecture:** Utilizes in-memory processing for hot paths, minimizing I/O overhead and maximizing throughput for frequently accessed relational data.
-- **Secure Multi-Tenancy:** Built with a strict no cross-tenant data aggregation policy
-
-View the full technical breakdown in our [research paper](https://benchmarks.hydradb.com/hydradb.pdf).
 
 ---
 
@@ -118,4 +71,4 @@ View the full technical breakdown in our [research paper](https://benchmarks.hyd
 For enterprise onboarding, contact [founders@hydradb.com](mailto:founders@hydradb.com).
 
 ## LLMs
-For developers using LLMs or IDEs, we have compiled an uploadable summary of the docs here [llm.txt](/assets/llm.txt).
+For developers using LLMs or IDEs, we have compiled an uploadable summary of the docs here  [AGENTS.md](/AGENTS).

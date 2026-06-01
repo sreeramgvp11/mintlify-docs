@@ -1,0 +1,109 @@
+---
+
+title: "Tenant Stats"
+description: "Retrieve usage statistics for a tenant."
+openapi: "api-reference/v2/openapi.json GET /tenants/stats"
+---
+
+Get detailed metrics including storage growth, object counts, and vector dimensions.
+
+The response splits stats into two tenant-wide collections: `data.knowledge_collection` (Knowledge) and `data.memory_collection` (User memories), each with its own row count and embedding dimensionality. Counts aggregate across all sub-tenants in the tenant.
+
+<RequestExample>
+
+```python Python SDK
+stats = client.tenants.stats(tenant_id="your tenant id")
+```
+
+```typescript TypeScript SDK
+const stats = await client.tenants.stats({
+  tenantId: "my_first_tenant",
+});
+```
+
+```bash cURL
+curl -X GET 'https://api.hydradb.com/tenants/stats?tenant_id=my_first_tenant' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success
+{
+  "success": true,
+  "data": {
+    "tenant_id": "my_first_tenant",
+    "knowledge_collection": {
+      "row_count": 42318,
+      "dimensions": 1536
+    },
+    "memory_collection": {
+      "row_count": 287,
+      "dimensions": 1536
+    },
+    "message": "Successfully retrieved tenant collection statistics"
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
+}
+```
+
+```json Empty tenant
+{
+  "success": true,
+  "data": {
+    "tenant_id": "my_first_tenant",
+    "knowledge_collection": { "row_count": 0, "dimensions": 1536 },
+    "memory_collection": { "row_count": 0, "dimensions": 1536 },
+    "message": "Successfully retrieved tenant collection statistics"
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
+}
+```
+
+```json Failure
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "TENANT_NOT_FOUND",
+    "message": "Tenant not found"
+  },
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 4.8
+  }
+}
+```
+
+</ResponseExample>
+
+## Behavior notes
+
+<Info>
+  **`row_count` is chunks, not sources.** One ingested document typically becomes many chunks (e.g., a 30-page PDF can produce 100\+ rows). To count distinct sources, use [List Documents](/api-reference/v2/endpoint/list-documents) with `page_size=1` and read `total`.
+</Info>
+
+- **Both collections always exist:** Even if you've only ingested knowledge (or only memories), both collections are provisioned. Empty collections report `row_count: 0` with the configured `dimensions`.
+- **Stats are eventually consistent:** Immediately after ingestion or deletion, counts may lag until background processing completes. Check [Ingestion Status](/api-reference/v2/endpoint/source-status) for recently ingested IDs before treating counts as final.
+
+<div className="api-before-related-resources" />
+
+<Tip>
+  **Related Resources**
+
+  - **List sources/memories:** [List Documents](/api-reference/v2/endpoint/list-documents)
+  - **List sub-tenants:** [List Sub-Tenants](/api-reference/v2/endpoint/list-sub-tenants)
+  - **Check provisioning:** [Tenant Status](/api-reference/v2/endpoint/tenant-status)
+  - **Read more:** [Concepts → Multi-Tenant Support](/essentials/v2/multi-tenant)
+</Tip>

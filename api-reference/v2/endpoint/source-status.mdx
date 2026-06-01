@@ -1,0 +1,241 @@
+---
+title: "Ingestion Status"
+description: "Check the processing status of ingested documents. "
+openapi: "api-reference/v2/openapi.json GET /context/status"
+---
+
+import { Field } from "/snippets/field.jsx";
+
+Since ingestion is asynchronous, use this endpoint to determine when context is ready to be retrieved.
+
+Pass one or more IDs in `ids` to retrieve status. Works for documents, app sources, and memories. For more information, see the [Knowledge](/essentials/v2/knowledge) and [Memories](/essentials/v2/memories) guides.
+
+<Info>
+  **Prefer webhooks over polling?** Register a webhook for `indexing.status_changed` events and HydraDB will `POST` to your endpoint when content reaches a terminal state (`completed` or `errored`). See [Webhooks](/essentials/v2/webhooks) for setup and receiver examples.
+</Info> 
+
+<RequestExample>
+
+```python Python SDK
+status = client.context.status(
+    tenant_id="acme_corp",
+    sub_tenant_id="team_docs",
+    ids=["policy_main", "runbook_deploy"],
+)
+```
+
+```typescript TypeScript SDK
+const status = await client.context.status({
+  tenantId: "acme_corp",
+  subTenantId: "team_docs",
+  ids: ["policy_main", "runbook_deploy"],
+});
+```
+
+```bash cURL
+curl -G 'https://api.hydradb.com/context/status' \
+  -H "Authorization: Bearer <your_api_key>" \
+  -H "API-Version: 2" \
+  --data-urlencode "tenant_id=acme_corp" \
+  --data-urlencode "sub_tenant_id=team_docs" \
+  --data-urlencode "ids=policy_main" \
+  --data-urlencode "ids=runbook_deploy"
+```
+
+</RequestExample>
+
+## Query parameters
+
+| Name | Description |
+| --- | --- |
+| <Field name="ids" type="string[]" required /> | One or more `id` values returned at ingestion. Accepts IDs for documents, app sources, or memories. |
+| <Field name="tenant_id" type="string" required /> | Tenant the items belong to. |
+| <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
+
+<ResponseExample>
+
+```json Success
+{
+  "success": true,
+  "data": {
+    "statuses": [
+      {
+        "id": "policy_main",
+        "indexing_status": "completed",
+        "error_code": "",
+        "success": true,
+        "message": "Processing status retrieved successfully"
+      },
+      {
+        "id": "runbook_deploy",
+        "indexing_status": "graph_creation",
+        "error_code": "",
+        "success": true,
+        "message": "Processing status retrieved successfully"
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 12.3
+  }
+}
+```
+
+```json Failure
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "TENANT_NOT_FOUND",
+    "message": "Tenant not found"
+  },
+  "meta": {
+    "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
+    "latency_ms": 4.8
+  }
+}
+```
+
+</ResponseExample>
+
+## Status values
+
+```mermaid
+flowchart LR
+    classDef standard fill:#0f172a,stroke:#334155,stroke-width:2px,color:#f8fafc;
+    classDef innovation fill:#4c1d95,stroke:#8b5cf6,stroke-width:3px,color:#ffffff,font-weight:bold;
+    classDef success fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef failure fill:#0f172a,stroke:#ef4444,stroke-width:2px,color:#f8fafc;
+
+    Q([queued])
+    P([processing])
+    G([graph_creation])
+    C([completed])
+    E([errored])
+
+    Q --> P
+    P --> G
+    G --> C
+    P -.failure.-> E
+    G -.failure.-> E
+
+    class Q,P standard;
+    class G innovation;
+    class C success;
+    class E failure;
+
+    linkStyle default stroke:#64748b,stroke-width:2px;
+```
+
+| Status | Searchable? | Meaning |
+| --- | --- | --- |
+| `queued` | No | Accepted by the server, not yet picked up by a worker. |
+| `processing` | No | Content is being parsed, chunked, and embedded. |
+| `graph_creation` | **Yes** | Indexed and retrievable; the knowledge graph is still being built. Already searchable via `/query`, but graph context may still be incomplete. |
+| `completed` | Yes | Fully indexed and graphed. Ready for all retrieval modes. |
+| `errored` | No | Processing failed. Inspect `error_code` and `message`. |
+
+The normal progression is `queued` → `processing` → `graph_creation` → `completed`. Treat `errored` as terminal.
+
+## Polling patterns
+
+### Stop when content is searchable
+
+Use this for normal RAG/search flows. `graph_creation` means chunks are indexed and can be retrieved.
+
+<CodeGroup>
+
+```python Python
+import time
+
+ids = ["policy_main", "runbook_deploy"]
+
+while True:
+    response = client.context.status(
+        tenant_id="acme_corp",
+        sub_tenant_id="team_docs",
+        ids=ids,
+    )
+    statuses = [s.indexing_status for s in response.data.statuses]
+
+    if all(s in ("graph_creation", "completed") for s in statuses):
+        break
+    if any(s == "errored" for s in statuses):
+        raise RuntimeError("Context processing failed")
+
+    time.sleep(5)
+```
+
+```typescript TypeScript
+const ids = ["policy_main", "runbook_deploy"];
+
+while (true) {
+  const response = await client.context.status({
+    tenantId: "acme_corp",
+    subTenantId: "team_docs",
+    ids: ids,
+  });
+
+  const statuses = response.data.statuses.map((s) => s.indexingStatus);
+  if (statuses.every((s) => s === "graph_creation" || s === "completed")) break;
+  if (statuses.some((s) => s === "errored")) throw new Error("Context processing failed");
+
+  await new Promise((r) => setTimeout(r, 5000));
+}
+```
+
+</CodeGroup>
+
+### Stop when graph processing is complete
+
+Use this before graph-heavy operations such as `/context/relations` or when you require complete `graph_context`.
+
+```python
+while True:
+    response = client.context.status(
+        tenant_id="acme_corp",
+        sub_tenant_id="team_docs",
+        ids=["policy_main", "runbook_deploy"],
+    )
+    statuses = [s.indexing_status for s in response.data.statuses]
+
+    if all(s == "completed" for s in statuses):
+        break
+    if any(s == "errored" for s in statuses):
+        raise RuntimeError("Graph processing failed")
+
+    time.sleep(5)
+```
+
+Typical processing time:
+
+- **Memories** (text, markdown, conversation pairs): seconds
+- **Small documents** (under 50 pages): 1–5 minutes
+- **Large documents** (50\+ pages): 5–15 minutes
+
+## Behavior notes
+
+<Info>
+  **`graph_creation` is searchable.** Items in this state are already retrievable via `/query`. Wait for `completed` only when you specifically need full graph traversal (`graph_context: true`).
+</Info>
+
+- **Unknown IDs return as `errored`:** If you pass an ID that does not exist (e.g., a typo), HydraDB returns an entry with `indexing_status: "errored"` rather than silently dropping it.
+
+## Errors
+
+Common codes: `400 INVALID_PARAMETERS`, `404 TENANT_NOT_FOUND`, `422 VALIDATION_ERROR`. See [Error Responses](/api-reference/v2/error-responses) for the full list.
+
+<div className="api-before-related-resources" />
+
+<Tip>
+  **Related Resources**
+
+  - **Before this:** [Ingest Context](/api-reference/v2/endpoint/ingest-context) - to get the IDs
+  - **After completion:** [Query](/api-reference/v2/endpoint/query)
+  - **After completion:** [Fetch Content](/api-reference/v2/endpoint/fetch-content)
+  - **After completion:** [Context Relations](/api-reference/v2/endpoint/source-relations)
+  - **Read more:** [Usage → Knowledge](/essentials/v2/knowledge)
+  - **Read more:** [Usage → Memories](/essentials/v2/memories)
+</Tip>
