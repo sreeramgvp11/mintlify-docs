@@ -37,7 +37,9 @@
     },
     "/ingestion/upload_knowledge": {
       "post": {
-        "tags": ["ingestion-pipeline"],
+        "tags": [
+          "ingestion-pipeline"
+        ],
         "summary": "Upload Knowledge",
         "description": "Unified endpoint to upload knowledge: documents (files) and/or app-generated sources.\n\n- **Documents**: send one or more files in `files` and optionally `file_metadata`.\n- **App sources**: send structured source(s) as JSON in `app_knowledge` (single object or array).\n\nProvide at least one of `files` or `app_knowledge`. You can send both in the same request.",
         "operationId": "upload_knowledge_ingestion_upload_knowledge_post",
@@ -140,12 +142,16 @@
         ],
         "x-fern-sdk-group-name": "upload",
         "x-fern-sdk-method-name": "knowledge",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/ingestion/verify_processing": {
       "post": {
-        "tags": ["ingestion-pipeline"],
+        "tags": [
+          "ingestion-pipeline"
+        ],
         "summary": "Verify Processing",
         "description": "Check the processing status of uploaded content.\n\nAccepts a single ``file_id`` **or** a list of ``file_ids`` (or both).\nReturns a ``BatchProcessingStatus`` with one entry per requested ID.",
         "operationId": "verify_processing_ingestion_verify_processing_post",
@@ -303,12 +309,16 @@
         },
         "x-fern-sdk-group-name": "upload",
         "x-fern-sdk-method-name": "verify_processing",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/ingestion/v1/memories/ingest": {
       "post": {
-        "tags": ["ingestion-pipeline"],
+        "tags": [
+          "ingestion-pipeline"
+        ],
         "summary": "Ingest Memory",
         "description": "Ingest text content as memory. S3 -> Kafka -> 202.",
         "operationId": "ingest_memory_ingestion_v1_memories_ingest_post",
@@ -353,7 +363,9 @@
     },
     "/ingestion/inspector/runs/{doc_id}": {
       "get": {
-        "tags": ["ingestion-inspector"],
+        "tags": [
+          "ingestion-inspector"
+        ],
         "summary": "Get Pipeline Run",
         "operationId": "get_pipeline_run_ingestion_inspector_runs__doc_id__get",
         "parameters": [
@@ -434,7 +446,9 @@
     },
     "/tenants/create": {
       "post": {
-        "tags": ["tenants"],
+        "tags": [
+          "tenants"
+        ],
         "summary": "Create Tenant",
         "description": "Create a tenant for your account (API key auth).\n\nAccepts the request and starts tenant creation in the background, then returns\n200 OK immediately. Use GET /tenants/infra/status?tenant_id=... to check\ndeployment progress.\n\n**Tenant Metadata Schema**\n\nYou can optionally provide a `tenant_metadata_schema` to define custom fields that will be\nindexed in the vector store. Each field can be configured with:\n\n- `enable_match`: Enable text filtering on this field\n- `enable_dense_embedding`: Create dense embeddings for semantic similarity search\n- `enable_sparse_embedding`: Create sparse embeddings (BM25) for keyword search\n\n**Example Request:**\n```json\n{\n    \"tenant_id\": \"my-tenant\",\n    \"tenant_metadata_schema\": [\n        {\n            \"name\": \"category\",\n            \"data_type\": \"VARCHAR\",\n            \"max_length\": 256,\n            \"enable_match\": true\n        },\n        {\n            \"name\": \"product_description\",\n            \"data_type\": \"VARCHAR\",\n            \"max_length\": 4096,\n            \"enable_dense_embedding\": true,\n            \"enable_sparse_embedding\": true\n        }\n    ]\n}\n```\n\nExpected outcome:\n- Request is accepted and tenant creation runs in the background.\n- Response returns 200 with status \"accepted\" and tenant_id.\n- Poll GET /tenants/infra/status?tenant_id=... to verify when provisioning is complete.",
         "operationId": "create_tenant_tenants_create_post",
@@ -537,12 +551,16 @@
         ],
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "create",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/tenants/sub_tenant_ids": {
       "get": {
-        "tags": ["tenants"],
+        "tags": [
+          "tenants"
+        ],
         "summary": "Get Sub Tenant Ids",
         "description": "List unique sub-tenant IDs that have indexed data in Milvus for the given tenant.\n\nUses API key auth. Returns sub_tenant_id values that appear in the tenant's\ncontext and memory collections (any sub-tenant with at least one chunk).",
         "operationId": "get_sub_tenant_ids_tenants_sub_tenant_ids_get",
@@ -648,12 +666,16 @@
         },
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "get_sub_tenant_ids",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/tenants/tenant_ids": {
       "get": {
-        "tags": ["tenants"],
+        "tags": [
+          "tenants"
+        ],
         "summary": "List Tenant Ids",
         "description": "List all tenant IDs registered for the authenticated organization (API key auth).\n\nQueries the DynamoDB tenant mapping table for the org and returns the tenant IDs.",
         "operationId": "list_tenant_ids_tenants_tenant_ids_get",
@@ -746,12 +768,17 @@
         ],
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "get_tenant_ids",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/tenants/infra/status": {
       "get": {
-        "tags": ["tenants", "tenants", "Monitor & infra status"],
+        "tags": [
+          "tenants",
+          "Monitor & infra status"
+        ],
         "summary": "Get Infra Status",
         "description": "Check the status of deployed infrastructure for a tenant.\n\nReturns scheduler, graph (FalkorDB), and vectorstore (Milvus) deployment\nstatus for the given tenant: whether the graph DB is healthy and whether\nthe context and memory collections exist.\n\nUse this endpoint to verify that tenant provisioning or ArgoCD sync has\ncompleted successfully.",
         "operationId": "get_infra_status_tenants_infra_status_get",
@@ -857,12 +884,16 @@
         },
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "get_infra_status",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/tenants/delete": {
       "delete": {
-        "tags": ["tenants"],
+        "tags": [
+          "tenants"
+        ],
         "summary": "Delete Tenant",
         "description": "Delete a tenant and all its associated infrastructure and data.\n\nThis permanently removes:\n- GitHub ArgoCD infra file (FalkorDB helm values)\n- Milvus vector store collections (context + memory)\n- MongoDB source documents\n- MongoDB chunk_data documents\n- MongoDB tenant metadata schema\n- DynamoDB primary tenant ID mapping\n\nThis action is irreversible.",
         "operationId": "delete_tenant_tenants_delete_delete",
@@ -968,12 +999,18 @@
         },
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "delete_tenant",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/tenants/monitor": {
       "get": {
-        "tags": ["tenants", "tenants", "Monitor & infra status"],
+        "tags": [
+          "tenants",
+          "tenants",
+          "Monitor & infra status"
+        ],
         "summary": "Get Tenant Stats",
         "description": "Retrieve usage stats for your tenant.\n\nUse this endpoint to check whether a tenant exists and view core metrics like total\nindexed objects and vector dimension. This helps you validate\nsetup and monitor ingestion.\n\nExpected outcome\n\nYou receive the current object count and vector dimension for the tenant.\nIf the tenant does not exist, you get a not-found error.",
         "operationId": "get_tenant_stats_tenants_monitor_get",
@@ -1079,12 +1116,16 @@
         },
         "x-fern-sdk-group-name": "tenant",
         "x-fern-sdk-method-name": "monitor",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/api-keys/create_api_key": {
       "post": {
-        "tags": ["api-keys"],
+        "tags": [
+          "api-keys"
+        ],
         "summary": "Create Api Key",
         "description": "Create an API key (dashboard / NextAuth). Store hashed secret in DynamoDB, return full key once.\n\nRequires NextAuth. The user's email is always taken from the JWT token.\nAn optional label can be provided for human-readable identification.\nPlan is taken from the user's tier for routing.",
         "operationId": "create_api_key_api_keys_create_api_key_post",
@@ -1182,12 +1223,16 @@
         },
         "x-fern-sdk-group-name": "key",
         "x-fern-sdk-method-name": "create_api_key",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/embeddings/insert_raw_embeddings": {
       "post": {
-        "tags": ["embeddings"],
+        "tags": [
+          "embeddings"
+        ],
         "summary": "Insert Raw Embeddings Endpoint",
         "description": "Upload pre-computed embeddings for advanced similarity search.\n\nThis endpoint accepts vector embeddings that you've generated externally,\n allowing you to integrate with custom embedding models or existing vector databases.\n  The embeddings represent chunks of your content as numerical vectors.\n\nThe system stores these embeddings and makes them available for semantic search and similarity matching.\n Use this when you want to leverage specialized embedding models or have existing vector representations.\nWhen upsert=True, existing embeddings with the same chunk_id will be updated.",
         "operationId": "insert_raw_embeddings_endpoint_embeddings_insert_raw_embeddings_post",
@@ -1290,12 +1335,16 @@
         ],
         "x-fern-sdk-group-name": "embeddings",
         "x-fern-sdk-method-name": "insert",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/embeddings/search_raw_embeddings": {
       "post": {
-        "tags": ["embeddings"],
+        "tags": [
+          "embeddings"
+        ],
         "summary": "Search Raw Embeddings Endpoint",
         "description": "Find similar chunks using an embedding vector.\n\nUse this to retrieve the most similar chunk IDs to a single query embedding.\n\nExpected outcome:\n- You receive the closest chunk IDs with optional similarity scores.",
         "operationId": "search_raw_embeddings_endpoint_embeddings_search_raw_embeddings_post",
@@ -1402,12 +1451,16 @@
         ],
         "x-fern-sdk-group-name": "embeddings",
         "x-fern-sdk-method-name": "search",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/embeddings/filter_raw_embeddings": {
       "post": {
-        "tags": ["embeddings"],
+        "tags": [
+          "embeddings"
+        ],
         "summary": "Filter Raw Embeddings Endpoint",
         "description": "Retrieve embeddings for specific chunk IDs.\nUse this when you already know the chunk IDs and need their corresponding embeddings.",
         "operationId": "filter_raw_embeddings_endpoint_embeddings_filter_raw_embeddings_post",
@@ -1514,12 +1567,16 @@
         ],
         "x-fern-sdk-group-name": "embeddings",
         "x-fern-sdk-method-name": "filter",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/embeddings/delete_raw_embeddings": {
       "delete": {
-        "tags": ["embeddings"],
+        "tags": [
+          "embeddings"
+        ],
         "summary": "Delete Raw Embeddings Endpoint",
         "description": "Delete embedding chunks by chunk ID.\n\nUse this to remove specific chunks from your embeddings index when they are no longer\nvalid or should not appear in results.",
         "operationId": "delete_raw_embeddings_endpoint_embeddings_delete_raw_embeddings_delete",
@@ -1682,12 +1739,16 @@
         },
         "x-fern-sdk-group-name": "embeddings",
         "x-fern-sdk-method-name": "delete",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/list/data": {
       "post": {
-        "tags": ["list"],
+        "tags": [
+          "list"
+        ],
         "summary": "List Content",
         "description": "Unified API to list either knowledge sources or user memories.\n\nSupports **pagination** via `page` / `page_size` and optional **filters**\non `tenant_metadata` and `document_metadata`.\n\n- If `source_ids` is provided (non-empty), only those items are returned.\n- Otherwise, all items for the tenant/sub-tenant scope are returned.\n- Use `type` to switch between listing sources (`knowledge`) vs\n  user memories (`memory`).",
         "operationId": "list_content_list_data_post",
@@ -1798,12 +1859,16 @@
         ],
         "x-fern-sdk-group-name": "fetch",
         "x-fern-sdk-method-name": "list_data",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/list/graph_relations_by_id": {
       "get": {
-        "tags": ["list"],
+        "tags": [
+          "list"
+        ],
         "summary": "Graph Relations By Id",
         "description": "Retrieve relations for a specific source.\n\nUse this endpoint to fetch all relations associated with a specific source.\nThis is useful when you need to understand the relationships between entities within a source.\n\nProvide the source ID in the request body along with your tenant information to get the relations\nfor that source.",
         "operationId": "graph_relations_by_id_list_graph_relations_by_id_get",
@@ -1990,12 +2055,16 @@
         },
         "x-fern-sdk-group-name": "fetch",
         "x-fern-sdk-method-name": "graph_relations_by_source_id",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/knowledge/delete_knowledge": {
       "post": {
-        "tags": ["delete"],
+        "tags": [
+          "delete"
+        ],
         "summary": "Delete Source",
         "description": "Remove documents and content from your knowledge base.\n\nThis endpoint permanently deletes the specified sources from your knowledge base.\n Once deleted, the content will no longer be available for search or retrieval.\n\nUse this carefully as the action cannot be undone. The system will confirm\nsuccessful deletion of each source ID you specify.",
         "operationId": "delete_source_knowledge_delete_knowledge_post",
@@ -2098,12 +2167,16 @@
         ],
         "x-fern-sdk-group-name": "data",
         "x-fern-sdk-method-name": "delete",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/fetch/content": {
       "post": {
-        "tags": ["fetch"],
+        "tags": [
+          "fetch"
+        ],
         "summary": "Fetch Source",
         "description": "Fetch the content of a source ingested.\n\nThis endpoint can return:\n- File content directly (as string or base64)\n- A presigned URL to access the file\n- Both content and presigned URL",
         "operationId": "fetch_source_fetch_content_post",
@@ -2206,12 +2279,16 @@
         ],
         "x-fern-sdk-group-name": "fetch",
         "x-fern-sdk-method-name": "content",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/recall/full_recall": {
       "post": {
-        "tags": ["Search"],
+        "tags": [
+          "Search"
+        ],
         "summary": "Full recall for knowledge base",
         "description": "Search for relevant content within your indexed sources (documents).\n\n    Results are ranked by relevance and can be customized with parameters like\n    result limits, alpha weighting, and recency preferences.\n\n    Use `mode` to control retrieval quality:\n    - \"fast\" (default): Single query, faster response\n    - \"thinking\": Multi-query generation with reranking, higher quality\n\n    Use `filters` to narrow results by metadata:\n    - Provide key-value pairs matching fields defined in your tenant_metadata_schema\n    - Example: `{\"category\": \"engineering\", \"priority\": \"high\"}`\n    - Filters are validated against your tenant schema for type safety",
         "operationId": "full_recall_recall_full_recall_post",
@@ -2324,12 +2401,16 @@
         ],
         "x-fern-sdk-group-name": "recall",
         "x-fern-sdk-method-name": "full_recall",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/recall/recall_preferences": {
       "post": {
-        "tags": ["Search"],
+        "tags": [
+          "Search"
+        ],
         "summary": "Recall preferences (memories)",
         "description": "Search for relevant content within user memories (inferred content).\n\n    Results are ranked by relevance and can be customized with parameters like\n    result limits, alpha weighting, and recency preferences.\n\n    Use `mode` to control retrieval quality:\n    - \"fast\" (default): Single query, faster response\n    - \"thinking\": Multi-query generation with reranking, higher quality\n\n    Use `filters` to narrow results by metadata:\n    - Provide key-value pairs matching fields defined in your tenant_metadata_schema\n    - Example: `{\"category\": \"engineering\", \"priority\": \"high\"}`\n    - Filters are validated against your tenant schema for type safety",
         "operationId": "recall_preferences_recall_recall_preferences_post",
@@ -2442,12 +2523,16 @@
         ],
         "x-fern-sdk-group-name": "recall",
         "x-fern-sdk-method-name": "recall_preferences",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/recall/boolean_recall": {
       "post": {
-        "tags": ["Search"],
+        "tags": [
+          "Search"
+        ],
         "summary": "Full-text search",
         "description": "Perform full text search for exact matches within your indexed sources or memories.\n    Choose between 'OR', 'AND', or 'PHRASE' operators to control how search terms\n    are combined for precise text matching.\n\n    Operators:\n    - \"or\"  (default): Match chunks containing **any** of the search terms\n    - \"and\": Match chunks containing **all** of the search terms\n    - \"phrase\": Match chunks containing the **exact phrase** in order\n\n    Use `search_mode` to specify what to search:\n    - \"knowledge\" (default): Search over indexed documents\n    - \"memory\": Search over user memories",
         "operationId": "full_text_search_recall_boolean_recall_post",
@@ -2560,12 +2645,16 @@
         ],
         "x-fern-sdk-group-name": "recall",
         "x-fern-sdk-method-name": "boolean_recall",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/recall/qna": {
       "post": {
-        "tags": ["Search"],
+        "tags": [
+          "Search"
+        ],
         "summary": "Question & Answer with retrieval",
         "description": "Ask a question and get an AI-generated answer based on your indexed sources or memories.\n\n    The response includes both the AI answer and the source chunks used to generate it,\n    enabling full transparency and citation capabilities.\n\n    Use `search_mode` to specify what to search:\n    - \"knowledge\" (default): Search over indexed documents\n    - \"memory\": Search over user memories\n\n    Use `mode` to control retrieval quality:\n    - \"fast\" (default): Single query, faster response\n    - \"thinking\": Multi-query generation with reranking, higher quality",
         "operationId": "qna_search_recall_qna_post",
@@ -2678,12 +2767,16 @@
         ],
         "x-fern-sdk-group-name": "recall",
         "x-fern-sdk-method-name": "qna",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/memories/add_memory": {
       "post": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Add memory",
         "description": "Add memories for indexing and retrieval.\n\n    This API provides a unified entry point for ingesting various types of content:\n\n    **Content Types Supported:**\n    - Raw text content (`text` field)\n    - Markdown formatted content (`text` + `is_markdown=true`)\n    - User/assistant conversation pairs (`user_assistant_pairs` field)\n\n    **Key Features:**\n    - **Inference Mode (`infer=true`)**: When enabled, the system extracts additional\n      insights and implicit information from your content. Useful for conversation\n      analysis and knowledge extraction.\n    - **Direct Mode (`infer=false`)**: Content is chunked and indexed as-is without\n      additional processing.\n\n    Use `/ingestion/verify-processing` endpoint to check the processing status.",
         "operationId": "add_memory_memories_add_memory_post",
@@ -2786,12 +2879,16 @@
         ],
         "x-fern-sdk-group-name": "upload",
         "x-fern-sdk-method-name": "add_memory",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/memories/delete_memory": {
       "delete": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Delete memory",
         "description": "Permanently remove a specific memory from storage.\n\n    This API allows you to delete a memory by its unique identifier.\n    Once deleted, the memory cannot be recovered, so use this operation carefully.\n\n    The memory will be removed from your tenant's storage and will no longer\n    appear in search results or memory listings.",
         "operationId": "delete_memory_memories_delete_memory_delete",
@@ -2926,12 +3023,16 @@
         },
         "x-fern-sdk-group-name": "upload",
         "x-fern-sdk-method-name": "delete_memory",
-        "x-fern-audiences": ["public"]
+        "x-fern-audiences": [
+          "public"
+        ]
       }
     },
     "/dashboard/webhooks/indexing": {
       "get": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard Get Webhook",
         "description": "Return the currently registered webhook for the authenticated user's API key.",
         "operationId": "dashboard_get_webhook_dashboard_webhooks_indexing_get",
@@ -2949,7 +3050,9 @@
         }
       },
       "post": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard Register Webhook",
         "description": "Register (or replace) the webhook for the authenticated user's API key.",
         "operationId": "dashboard_register_webhook_dashboard_webhooks_indexing_post",
@@ -2987,7 +3090,9 @@
         }
       },
       "delete": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard Delete Webhook",
         "description": "Unregister the webhook for the authenticated user's API key.",
         "operationId": "dashboard_delete_webhook_dashboard_webhooks_indexing_delete",
@@ -3007,7 +3112,9 @@
     },
     "/dashboard/webhooks/indexing/test": {
       "post": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard Test Webhook",
         "description": "Send a synthetic test payload to the registered webhook URL.",
         "operationId": "dashboard_test_webhook_dashboard_webhooks_indexing_test_post",
@@ -3027,7 +3134,9 @@
     },
     "/dashboard/webhooks/indexing/deliveries": {
       "get": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard List Deliveries",
         "description": "Return recent webhook delivery attempts for the authenticated user's API key.",
         "operationId": "dashboard_list_deliveries_dashboard_webhooks_indexing_deliveries_get",
@@ -3103,7 +3212,9 @@
     },
     "/dashboard/webhooks/indexing/deliveries/{delivery_id}/retry": {
       "post": {
-        "tags": ["dashboard-webhooks"],
+        "tags": [
+          "dashboard-webhooks"
+        ],
         "summary": "Dashboard Retry Delivery",
         "description": "Reset a failed or permanently_failed delivery so the sweep retries it.",
         "operationId": "dashboard_retry_delivery_dashboard_webhooks_indexing_deliveries__delivery_id__retry_post",
@@ -3144,7 +3255,9 @@
     },
     "/webhooks/indexing": {
       "get": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Get the registered webhook for this API key",
         "description": "Return the currently registered webhook URL and event types.",
         "operationId": "get_indexing_webhook_webhooks_indexing_get",
@@ -3167,10 +3280,14 @@
         ],
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "get",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       },
       "post": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Register a webhook",
         "description": "Register (or replace) a webhook for this org.\n\nSupply signing_secret (min 16 chars) to have every delivery signed with\nX-HydraDB-Signature: sha256=<hmac-sha256>.  Omit to disable signing.\nThe secret is stored server-side and never returned in API responses.",
         "operationId": "register_indexing_webhook_webhooks_indexing_post",
@@ -3213,10 +3330,14 @@
         ],
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "register",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       },
       "delete": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Delete the registered webhook for this API key",
         "description": "Unregister the webhook for this org.",
         "operationId": "delete_indexing_webhook_webhooks_indexing_delete",
@@ -3239,12 +3360,16 @@
         ],
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "delete",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/webhooks/indexing/deliveries": {
       "get": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "List recent webhook delivery attempts",
         "description": "Return recent webhook delivery attempts for this API key, newest first.\n\nUse ``next_cursor`` from the response as ``cursor`` on the next call to page through results.",
         "operationId": "list_webhook_deliveries_webhooks_indexing_deliveries_get",
@@ -3329,12 +3454,16 @@
         },
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "list_deliveries",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/webhooks/indexing/deliveries/{delivery_id}": {
       "get": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Get a single webhook delivery attempt",
         "description": "Return the full detail of a single delivery attempt.",
         "operationId": "get_webhook_delivery_webhooks_indexing_deliveries__delivery_id__get",
@@ -3378,12 +3507,16 @@
         },
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "get_delivery",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/webhooks/indexing/deliveries/{delivery_id}/retry": {
       "post": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Retry a failed or permanently failed delivery",
         "description": "Reset a failed or permanently_failed delivery so the sweep picks it up again.\n\nHas no effect on deliveries that are already pending, sweeping, or delivered.",
         "operationId": "retry_webhook_delivery_webhooks_indexing_deliveries__delivery_id__retry_post",
@@ -3427,12 +3560,16 @@
         },
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "retry_delivery",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/webhooks/indexing/test": {
       "post": {
-        "tags": ["webhooks"],
+        "tags": [
+          "webhooks"
+        ],
         "summary": "Send a test webhook delivery",
         "description": "Send a synthetic payload to the registered webhook URL right now.\n\nNo delivery row is created and no retries are performed.\nThe payload is signed with your signing_secret if one is configured.\nUse this to verify your endpoint is reachable and can verify signatures\nbefore ingesting real documents.\n\nThe test payload includes ``\"test\": true`` so your receiver can distinguish\nit from real events.",
         "operationId": "test_indexing_webhook_webhooks_indexing_test_post",
@@ -3455,12 +3592,16 @@
         ],
         "x-fern-sdk-group-name": "webhooks",
         "x-fern-sdk-method-name": "test",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/graph-health/super-nodes": {
       "get": {
-        "tags": ["graph-health"],
+        "tags": [
+          "graph-health"
+        ],
         "summary": "Detect super nodes in the knowledge graph",
         "description": "Returns entities whose RELATES degree exceeds the given threshold. Useful for diagnosing RAM bloat caused by high-degree nodes.",
         "operationId": "get_super_nodes_graph_health_super_nodes_get",
@@ -3613,9 +3754,11 @@
     },
     "/context/ingest": {
       "post": {
-        "tags": ["Context"],
+        "tags": [
+          "Source"
+        ],
         "summary": "Ingest content",
-        "description": "Unified ingestion endpoint for both knowledge and memory.\n\n    Use `type` to specify what you're ingesting:\n    - \"knowledge\" (default): Upload documents or app-generated sources for indexing\n    - \"memory\": Add memories (text, conversations) for indexing and retrieval\n\n    **For knowledge (type=\"knowledge\"):**\n    Provide `documents` (multipart uploads) and/or `app_knowledge` (JSON sources).\n\n    **For memory (type=\"memory\"):**\n    Provide `memories` as a JSON array of memory items in the `memories` field.",
+        "description": "Unified ingestion endpoint for both knowledge and memory.\n\n    Use `type` to specify what you're ingesting:\n    - \"knowledge\" (default): Upload files or app-generated sources for indexing\n    - \"memory\": Add memories (text, conversations) for indexing and retrieval\n\n    **For knowledge (type=\"knowledge\"):**\n    Provide `documents` (multipart uploads) and/or `app_knowledge` (JSON sources).\n\n    **For memory (type=\"memory\"):**\n    Provide `memories` as a JSON array of memory items in the `memories` field.",
         "operationId": "ingest_context_ingest_post",
         "requestBody": {
           "content": {
@@ -3716,12 +3859,16 @@
         ],
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "ingest",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/context/status": {
       "get": {
-        "tags": ["Context"],
+        "tags": [
+          "Source"
+        ],
         "summary": "Check processing status",
         "description": "Check the processing status of ingested documents or memories by their IDs.",
         "operationId": "get_status_context_status_get",
@@ -3744,10 +3891,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Single context item ID.",
+              "description": "Single source ID.",
               "title": "Id"
             },
-            "description": "Single context item ID."
+            "description": "Single source ID."
           },
           {
             "name": "ids",
@@ -3758,11 +3905,11 @@
               "items": {
                 "type": "string"
               },
-              "description": "One or more context item IDs to check.",
+              "description": "One or more source IDs to check.",
               "default": [],
               "title": "Ids"
             },
-            "description": "One or more context item IDs to check."
+            "description": "One or more source IDs to check."
           },
           {
             "name": "tenant_id",
@@ -3879,12 +4026,16 @@
         },
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "status",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/context/inspect": {
       "get": {
-        "tags": ["Context"],
+        "tags": [
+          "Source"
+        ],
         "summary": "Fetch document content",
         "description": "Retrieve the content of a previously ingested document or memory.",
         "operationId": "fetch_context_inspect_get",
@@ -4045,14 +4196,18 @@
         },
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "inspect",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/context/list": {
       "post": {
-        "tags": ["Context"],
-        "summary": "List context",
-        "description": "List knowledge or memories with pagination and optional filters.",
+        "tags": [
+          "Source"
+        ],
+        "summary": "List documents",
+        "description": "List knowledge sources or memories with pagination and optional filters.",
         "operationId": "list_documents_context_list_post",
         "requestBody": {
           "content": {
@@ -4153,12 +4308,16 @@
         ],
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "list",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/context": {
       "delete": {
-        "tags": ["Context"],
+        "tags": [
+          "Source"
+        ],
         "summary": "Delete documents or memories",
         "description": "Unified deletion endpoint for both knowledge documents and memories.\n\n    Use `type` to specify what to delete:\n    - \"knowledge\" (default): Delete knowledge documents by their IDs\n    - \"memory\": Delete memories by their IDs\n\n    Provide one or more IDs in the `ids` field.",
         "operationId": "delete_documents_context_delete",
@@ -4166,7 +4325,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_delete_documents_context_delete"
+                "$ref": "#/components/schemas/V2SourceDeleteRequest"
               }
             }
           },
@@ -4261,14 +4420,18 @@
         ],
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "delete",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/context/relations": {
       "get": {
-        "tags": ["Context"],
+        "tags": [
+          "Source"
+        ],
         "summary": "Get graph relations",
-        "description": "Retrieve knowledge graph relations for a specific context item or across an entire sub-tenant.\n\n    If `id` is provided, returns relations for that specific document.\n    If omitted, returns all relations in the sub-tenant scope.\n\n    Supports cursor-based pagination for large result sets.",
+        "description": "Retrieve knowledge graph relations for a specific source or across an entire sub-tenant.\n\n    If `id` is provided, returns relations for that specific document.\n    If omitted, returns all relations in the sub-tenant scope.\n\n    Supports cursor-based pagination for large result sets.",
         "operationId": "get_relations_context_relations_get",
         "security": [
           {
@@ -4451,12 +4614,16 @@
         },
         "x-fern-sdk-group-name": "context",
         "x-fern-sdk-method-name": "relations",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/query": {
       "post": {
-        "tags": ["Query"],
+        "tags": [
+          "Query"
+        ],
         "summary": "Query",
         "description": "Unified query endpoint for all retrieval over documents, memories, or both.\n\n    Use `source` to choose what to query:\n    - \"knowledge\" (default): Query over indexed knowledge documents\n    - \"memory\": Query over user memories\n    - \"all\": Query both documents and memories, merge and rank results together\n\n    Use `query_by` to choose the query method:\n    - \"hybrid\" (default): Dense vector + BM25 sparse \u2014 best overall relevance\n    - \"text\": BM25 full-text search only \u2014 for exact keyword matching\n\n    Use `mode` to control retrieval quality (hybrid only):\n    - \"fast\" (default): Single query, faster response\n    - \"thinking\": Multi-query generation with reranking, higher quality\n\n    Use `operator` to control text matching (text only):\n    - \"or\" (default): Match any of the search terms\n    - \"and\": Match all search terms\n    - \"phrase\": Match the exact phrase",
         "operationId": "query_query_post",
@@ -4568,12 +4735,16 @@
           }
         ],
         "x-fern-sdk-method-name": "query",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/tenants": {
       "post": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "Create a tenant",
         "description": "Create a new tenant and provision its infrastructure.",
         "operationId": "create_tenants_post",
@@ -4676,10 +4847,14 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "create",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       },
       "get": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "List tenants",
         "description": "List all tenant IDs registered for the authenticated organization.",
         "operationId": "list_tenants_tenants_get",
@@ -4772,10 +4947,14 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "list",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       },
       "delete": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "Delete a tenant",
         "description": "Delete a tenant and all its associated infrastructure and data. Irreversible.",
         "operationId": "delete_tenants_delete",
@@ -4881,12 +5060,16 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "delete",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/tenants/status": {
       "get": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "Get tenant infrastructure status",
         "description": "Check the provisioning status of a tenant's infrastructure.",
         "operationId": "status_tenants_status_get",
@@ -4992,12 +5175,16 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "status",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/tenants/sub-tenants": {
       "get": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "List sub-tenants",
         "description": "List unique sub-tenant IDs that have indexed data.",
         "operationId": "list_sub_tenants_tenants_sub_tenants_get",
@@ -5103,12 +5290,16 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "sub_tenants",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     },
     "/tenants/stats": {
       "get": {
-        "tags": ["Tenants"],
+        "tags": [
+          "Tenants"
+        ],
         "summary": "Get tenant stats",
         "description": "Retrieve usage statistics (object count, vector dimension) for a tenant.",
         "operationId": "stats_tenants_stats_get",
@@ -5214,7 +5405,9 @@
         },
         "x-fern-sdk-group-name": "tenants",
         "x-fern-sdk-method-name": "stats",
-        "x-fern-audiences": ["v2"]
+        "x-fern-audiences": [
+          "v2"
+        ]
       }
     }
   },
@@ -5227,7 +5420,9 @@
           }
         },
         "type": "object",
-        "required": ["detail"],
+        "required": [
+          "detail"
+        ],
         "title": "ActualErrorResponse"
       },
       "AddMemoryResponse": {
@@ -5347,7 +5542,12 @@
           }
         },
         "type": "object",
-        "required": ["api_key_id", "env", "full_api_key", "created_at"],
+        "required": [
+          "api_key_id",
+          "env",
+          "full_api_key",
+          "created_at"
+        ],
         "title": "ApiKeyCreateResponse"
       },
       "AppAttachment": {
@@ -5571,7 +5771,11 @@
       },
       "BM25OperatorType": {
         "type": "string",
-        "enum": ["or", "and", "phrase"],
+        "enum": [
+          "or",
+          "and",
+          "phrase"
+        ],
         "title": "BM25OperatorType"
       },
       "BatchProcessingStatus": {
@@ -5586,7 +5790,9 @@
           }
         },
         "type": "object",
-        "required": ["statuses"],
+        "required": [
+          "statuses"
+        ],
         "title": "BatchProcessingStatus"
       },
       "Body_add_memory_memories_add_memory_post": {
@@ -5619,23 +5825,11 @@
           }
         },
         "type": "object",
-        "required": ["memories", "tenant_id"],
+        "required": [
+          "memories",
+          "tenant_id"
+        ],
         "title": "Body_add_memory_memories_add_memory_post"
-      },
-      "Body_delete_documents_context_delete": {
-        "properties": {
-          "request": {
-            "$ref": "#/components/schemas/SourceDeleteRequest"
-          },
-          "type": {
-            "$ref": "#/components/schemas/IngestType",
-            "description": "Type of content to delete: 'knowledge' or 'memory'",
-            "default": "knowledge"
-          }
-        },
-        "type": "object",
-        "required": ["request"],
-        "title": "Body_delete_documents_context_delete"
       },
       "Body_filter_raw_embeddings_endpoint_embeddings_filter_raw_embeddings_post": {
         "properties": {
@@ -5701,7 +5895,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "sub_tenant_id"],
+        "required": [
+          "tenant_id",
+          "sub_tenant_id"
+        ],
         "title": "Body_filter_raw_embeddings_endpoint_embeddings_filter_raw_embeddings_post"
       },
       "Body_ingest_context_ingest_post": {
@@ -5725,7 +5922,7 @@
           "upsert": {
             "type": "boolean",
             "title": "Upsert",
-            "description": "If true, update existing context items with the same id.",
+            "description": "If true, update existing sources with the same id.",
             "default": true
           },
           "documents": {
@@ -5748,7 +5945,7 @@
               }
             ],
             "title": "Document Metadata",
-            "description": "JSON array of per-document metadata objects (knowledge only). Each object may include: id (optional), metadata, additional_metadata, infer, and relations."
+            "description": "JSON array of per-file metadata objects (knowledge only). Each object may include: id (optional), metadata, additional_metadata, infer, and relations."
           },
           "app_knowledge": {
             "anyOf": [
@@ -5776,7 +5973,9 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "Body_ingest_context_ingest_post"
       },
       "Body_insert_raw_embeddings_endpoint_embeddings_insert_raw_embeddings_post": {
@@ -5808,7 +6007,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "embeddings"],
+        "required": [
+          "tenant_id",
+          "embeddings"
+        ],
         "title": "Body_insert_raw_embeddings_endpoint_embeddings_insert_raw_embeddings_post"
       },
       "Body_search_raw_embeddings_endpoint_embeddings_search_raw_embeddings_post": {
@@ -5868,7 +6070,11 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "sub_tenant_id", "query_embedding"],
+        "required": [
+          "tenant_id",
+          "sub_tenant_id",
+          "query_embedding"
+        ],
         "title": "Body_search_raw_embeddings_endpoint_embeddings_search_raw_embeddings_post"
       },
       "Body_upload_knowledge_ingestion_upload_knowledge_post": {
@@ -5938,7 +6144,9 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "Body_upload_knowledge_ingestion_upload_knowledge_post"
       },
       "CollectionStats": {
@@ -5955,7 +6163,10 @@
           }
         },
         "type": "object",
-        "required": ["row_count", "dimensions"],
+        "required": [
+          "row_count",
+          "dimensions"
+        ],
         "title": "CollectionStats"
       },
       "CommentFields": {
@@ -6213,7 +6424,9 @@
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "CustomPropertyDefinition",
         "description": "Definition for custom/dynamic properties on a collection.\n\nUse this to define tenant metadata fields that can enhance search capabilities:\n- enable_dense_embedding: Creates a dense vector field for semantic similarity search\n- enable_sparse_embedding: Creates a sparse vector field for BM25 keyword search\n\nExample:\n    CustomPropertyDefinition(\n        name=\"product_description\",\n        data_type=\"string\",\n        enable_dense_embedding=True,\n        enable_sparse_embedding=True,\n    )"
       },
@@ -6244,7 +6457,9 @@
           }
         },
         "type": "object",
-        "required": ["delete_count"],
+        "required": [
+          "delete_count"
+        ],
         "title": "DeleteResult",
         "description": "Result of a delete operation."
       },
@@ -6263,7 +6478,9 @@
           }
         },
         "type": "object",
-        "required": ["user_memory_deleted"],
+        "required": [
+          "user_memory_deleted"
+        ],
         "title": "DeleteUserMemoryResponse",
         "description": "Response model for deleting a user memory."
       },
@@ -6364,7 +6581,10 @@
           }
         },
         "type": "object",
-        "required": ["deliveries", "count"],
+        "required": [
+          "deliveries",
+          "count"
+        ],
         "title": "DeliveryListResponse"
       },
       "EmailFields": {
@@ -6484,7 +6704,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "type", "entity_id"],
+        "required": [
+          "name",
+          "type",
+          "entity_id"
+        ],
         "title": "Entity"
       },
       "ErrorApiResponse": {
@@ -6527,7 +6751,10 @@
           }
         },
         "type": "object",
-        "required": ["code", "message"],
+        "required": [
+          "code",
+          "message"
+        ],
         "title": "ErrorDetail"
       },
       "ErrorResponse": {
@@ -6560,7 +6787,11 @@
       },
       "FetchMode": {
         "type": "string",
-        "enum": ["content", "url", "both"],
+        "enum": [
+          "content",
+          "url",
+          "both"
+        ],
         "title": "FetchMode",
         "description": "Mode for fetching file content."
       },
@@ -6640,7 +6871,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "query"],
+        "required": [
+          "tenant_id",
+          "query"
+        ],
         "title": "FullTextSearchRequest"
       },
       "GraphContext": {
@@ -6725,7 +6959,11 @@
           }
         },
         "type": "object",
-        "required": ["scheduler_status", "graph_status", "vectorstore_status"],
+        "required": [
+          "scheduler_status",
+          "graph_status",
+          "vectorstore_status"
+        ],
         "title": "Infra",
         "description": "V1 infra shape \u2014 ``vectorstore_status`` is a ``[bool, bool]`` tuple.\n\nKept for backward compatibility with v1 API consumers. v2 routes convert\nto :class:`InfraV2` before responding."
       },
@@ -6760,7 +6998,10 @@
           }
         },
         "type": "object",
-        "required": ["org_id", "infra"],
+        "required": [
+          "org_id",
+          "infra"
+        ],
         "title": "InfraStatusResponse",
         "description": "Response for deployed infrastructure status checks (v1 shape)."
       },
@@ -6795,7 +7036,10 @@
           }
         },
         "type": "object",
-        "required": ["org_id", "infra"],
+        "required": [
+          "org_id",
+          "infra"
+        ],
         "title": "InfraStatusResponseV2",
         "description": "V2 response for deployed infrastructure status checks.\n\nIdentical to :class:`InfraStatusResponse` except ``infra.vectorstore_status``\nis a typed :class:`VectorstoreStatus` object rather than a 2-tuple."
       },
@@ -6842,12 +7086,17 @@
           }
         },
         "type": "object",
-        "required": ["doc_id"],
+        "required": [
+          "doc_id"
+        ],
         "title": "IngestResponse"
       },
       "IngestType": {
         "type": "string",
-        "enum": ["knowledge", "memory"],
+        "enum": [
+          "knowledge",
+          "memory"
+        ],
         "title": "IngestType"
       },
       "InsertResult": {
@@ -6885,7 +7134,9 @@
           }
         },
         "type": "object",
-        "required": ["insert_count"],
+        "required": [
+          "insert_count"
+        ],
         "title": "InsertResult",
         "description": "Result of an insert operation."
       },
@@ -7035,11 +7286,20 @@
             ],
             "title": "Include Fields",
             "description": "Optional list of source fields to include in the response. When provided, only the specified fields (plus id, tenant_id, sub_tenant_id which are always returned) will be populated; all other fields will have their default/empty values. This reduces payload size and improves performance. Allowed values: attachments, content, description, document_metadata, note, relations, tenant_metadata, timestamp, title, type, url. Omit or pass null to return all fields. Only applies to type=knowledge; ignored for type=memory.",
-            "examples": [["title", "type", "url", "timestamp"]]
+            "examples": [
+              [
+                "title",
+                "type",
+                "url",
+                "timestamp"
+              ]
+            ]
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "ListContentRequest",
         "description": "Unified request model for listing either sources or user memories.\n\nSupports **pagination** (page / page_size) and optional **filters**\non tenant_metadata and document_metadata.\n\nIf `source_ids` is provided and non-empty, only those IDs are returned\n(pagination and filters still apply)."
       },
@@ -7071,7 +7331,9 @@
           }
         },
         "type": "object",
-        "required": ["pagination"],
+        "required": [
+          "pagination"
+        ],
         "title": "ListUserMemoriesResponse",
         "description": "Response model for listing all user memories."
       },
@@ -7124,7 +7386,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "text"],
+        "required": [
+          "tenant_id",
+          "text"
+        ],
         "title": "MemoryIngestRequest",
         "description": "Request body for memory ingestion (text content)."
       },
@@ -7165,7 +7430,9 @@
             ],
             "title": "Text",
             "description": "Raw text or markdown content to be indexed.",
-            "examples": ["# Introduction\n\nThis is the document content."]
+            "examples": [
+              "# Introduction\n\nThis is the document content."
+            ]
           },
           "user_assistant_pairs": {
             "anyOf": [
@@ -7330,7 +7597,9 @@
           }
         },
         "type": "object",
-        "required": ["source_id"],
+        "required": [
+          "source_id"
+        ],
         "title": "MemoryResultItem",
         "description": "Result for a single ingested memory item."
       },
@@ -7511,7 +7780,11 @@
           }
         },
         "type": "object",
-        "required": ["source", "relation", "target"],
+        "required": [
+          "source",
+          "relation",
+          "target"
+        ],
         "title": "PathTriplet"
       },
       "PipelineRunMetadata": {
@@ -7537,7 +7810,11 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "sub_tenant_id", "doc_id"],
+        "required": [
+          "tenant_id",
+          "sub_tenant_id",
+          "doc_id"
+        ],
         "title": "PipelineRunMetadata",
         "description": "Timeline of one or more ingestion runs for a (tenant, doc) pair."
       },
@@ -7792,7 +8069,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "question"],
+        "required": [
+          "tenant_id",
+          "question"
+        ],
         "title": "QnASearchRequest",
         "description": "Request model for the QnA search API."
       },
@@ -7842,7 +8122,9 @@
           }
         },
         "type": "object",
-        "required": ["answer"],
+        "required": [
+          "answer"
+        ],
         "title": "QnASearchResponse",
         "description": "Response model for the QnA search API."
       },
@@ -7882,7 +8164,10 @@
       },
       "QueryBy": {
         "type": "string",
-        "enum": ["hybrid", "text"],
+        "enum": [
+          "hybrid",
+          "text"
+        ],
         "title": "QueryBy",
         "description": "Query method to use for retrieval."
       },
@@ -8024,9 +8309,12 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "query"],
+        "required": [
+          "tenant_id",
+          "query"
+        ],
         "title": "QueryRequest",
-        "description": "Unified query request with query_by and type selection.\n\nOverrides ``graph_context`` to default ``True`` ."
+        "description": "Unified query request with query_by and source selection.\n\nOverrides ``graph_context`` to default ``True`` ."
       },
       "RawEmbeddingDocument": {
         "properties": {
@@ -8063,7 +8351,10 @@
           }
         },
         "type": "object",
-        "required": ["source_id", "embeddings"],
+        "required": [
+          "source_id",
+          "embeddings"
+        ],
         "title": "RawEmbeddingDocument",
         "description": "A raw embedding document for direct insert/upsert operations."
       },
@@ -8112,7 +8403,9 @@
           }
         },
         "type": "object",
-        "required": ["source_id"],
+        "required": [
+          "source_id"
+        ],
         "title": "RawEmbeddingSearchResult",
         "description": "Search result for raw embedding collections."
       },
@@ -8133,7 +8426,10 @@
           }
         },
         "type": "object",
-        "required": ["chunk_id", "embedding"],
+        "required": [
+          "chunk_id",
+          "embedding"
+        ],
         "title": "RawEmbeddingVector",
         "description": "Embedding payload containing the chunk identifier and vector."
       },
@@ -8260,7 +8556,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "query"],
+        "required": [
+          "tenant_id",
+          "query"
+        ],
         "title": "RecallSearchRequest",
         "description": "Request body for full recall (sources) and recall preferences (memories)."
       },
@@ -8415,7 +8714,10 @@
       },
       "RetrieveMode": {
         "type": "string",
-        "enum": ["fast", "thinking"],
+        "enum": [
+          "fast",
+          "thinking"
+        ],
         "title": "RetrieveMode"
       },
       "RetryResponse": {
@@ -8435,7 +8737,10 @@
           }
         },
         "type": "object",
-        "required": ["delivery_id", "queued"],
+        "required": [
+          "delivery_id",
+          "queued"
+        ],
         "title": "RetryResponse"
       },
       "ScoredPathResponse": {
@@ -8492,7 +8797,10 @@
           }
         },
         "type": "object",
-        "required": ["triplets", "relevancy_score"],
+        "required": [
+          "triplets",
+          "relevancy_score"
+        ],
         "title": "ScoredPathResponse"
       },
       "SourceDeleteApiResponse": {
@@ -8557,13 +8865,16 @@
             "type": "array",
             "minItems": 1,
             "title": "Ids",
-            "description": "List of IDs to delete."
+            "description": "List of source IDs to delete."
           }
         },
         "type": "object",
-        "required": ["tenant_id", "ids"],
+        "required": [
+          "tenant_id",
+          "ids"
+        ],
         "title": "SourceDeleteRequest",
-        "description": "Request to delete context items by their IDs."
+        "description": "Request to delete sources by their IDs."
       },
       "SourceDeleteResponse": {
         "properties": {
@@ -8622,7 +8933,9 @@
           }
         },
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "title": "SourceDeleteResultItem",
         "description": "Result for a single source deletion."
       },
@@ -8699,7 +9012,10 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "source_id"],
+        "required": [
+          "tenant_id",
+          "source_id"
+        ],
         "title": "SourceFetchRequest",
         "description": "Request to fetch source file content."
       },
@@ -8796,7 +9112,9 @@
           }
         },
         "type": "object",
-        "required": ["source_id"],
+        "required": [
+          "source_id"
+        ],
         "title": "SourceFetchResponse",
         "description": "Response for file fetch request."
       },
@@ -8849,7 +9167,9 @@
           }
         },
         "type": "object",
-        "required": ["relations"],
+        "required": [
+          "relations"
+        ],
         "title": "SourceGraphRelationsResponse"
       },
       "SourceInfo": {
@@ -8939,7 +9259,9 @@
           }
         },
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "title": "SourceInfo"
       },
       "SourceIngestApiResponse": {
@@ -9242,7 +9564,11 @@
           }
         },
         "type": "object",
-        "required": ["id", "tenant_id", "sub_tenant_id"],
+        "required": [
+          "id",
+          "tenant_id",
+          "sub_tenant_id"
+        ],
         "title": "SourceModel"
       },
       "SourceRelationsApiResponse": {
@@ -9281,7 +9607,12 @@
       },
       "SourceStatus": {
         "type": "string",
-        "enum": ["queued", "processing", "completed", "failed"],
+        "enum": [
+          "queued",
+          "processing",
+          "completed",
+          "failed"
+        ],
         "title": "SourceStatus"
       },
       "SourceStatusApiResponse": {
@@ -9320,7 +9651,11 @@
       },
       "SourceType": {
         "type": "string",
-        "enum": ["knowledge", "memory", "all"],
+        "enum": [
+          "knowledge",
+          "memory",
+          "all"
+        ],
         "title": "SourceType",
         "description": "What to query over."
       },
@@ -9410,7 +9745,9 @@
           }
         },
         "type": "object",
-        "required": ["source_id"],
+        "required": [
+          "source_id"
+        ],
         "title": "SourceUploadResultItem"
       },
       "SubTenantIdsResponse": {
@@ -9454,7 +9791,12 @@
           }
         },
         "type": "object",
-        "required": ["entity_id", "name", "type", "degree"],
+        "required": [
+          "entity_id",
+          "name",
+          "type",
+          "degree"
+        ],
         "title": "SuperNodeItem",
         "description": "A single super node in the response."
       },
@@ -9497,7 +9839,13 @@
       },
       "SupportedLLMProviders": {
         "type": "string",
-        "enum": ["groq", "cerebras", "openai", "anthropic", "gemini"],
+        "enum": [
+          "groq",
+          "cerebras",
+          "openai",
+          "anthropic",
+          "gemini"
+        ],
         "title": "SupportedLLMProviders"
       },
       "TenantCreateAcceptedResponse": {
@@ -9521,7 +9869,9 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "TenantCreateAcceptedResponse",
         "description": "Response when tenant creation is accepted and runs in the background."
       },
@@ -9620,7 +9970,9 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "TenantCreateRequest",
         "description": "Request model for creating a tenant with optional metadata schema.\n\nThe tenant_metadata_schema allows you to define custom fields that will be indexed\nin Milvus with configurable search capabilities:"
       },
@@ -9677,7 +10029,9 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "TenantDeleteResponse"
       },
       "TenantIdsResponse": {
@@ -9843,7 +10197,11 @@
           }
         },
         "type": "object",
-        "required": ["tenant_id", "knowledge_collection", "memory_collection"],
+        "required": [
+          "tenant_id",
+          "knowledge_collection",
+          "memory_collection"
+        ],
         "title": "TenantStatsResponse"
       },
       "TenantSubTenantsApiResponse": {
@@ -9986,7 +10344,12 @@
           }
         },
         "type": "object",
-        "required": ["source", "target", "relations", "chunk_id"],
+        "required": [
+          "source",
+          "target",
+          "relations",
+          "chunk_id"
+        ],
         "title": "TripletWithEvidence",
         "description": "Triple with multiple evidence items from different chunks"
       },
@@ -10004,7 +10367,10 @@
           }
         },
         "type": "object",
-        "required": ["user", "assistant"],
+        "required": [
+          "user",
+          "assistant"
+        ],
         "title": "UserAssistantPair",
         "description": "Represents a user-assistant conversation pair."
       },
@@ -10014,7 +10380,9 @@
             "type": "string",
             "title": "Memory Id",
             "description": "Unique identifier for the user memory",
-            "examples": ["CortexUserMemory1234..."]
+            "examples": [
+              "CortexUserMemory1234..."
+            ]
           },
           "memory_content": {
             "type": "string",
@@ -10029,11 +10397,16 @@
             "title": "Inferred Content",
             "description": "The inferred memory content generated by the inference stage, when available",
             "default": "",
-            "examples": ["User prefers keyboard-driven dark mode workflows"]
+            "examples": [
+              "User prefers keyboard-driven dark mode workflows"
+            ]
           }
         },
         "type": "object",
-        "required": ["memory_id", "memory_content"],
+        "required": [
+          "memory_id",
+          "memory_content"
+        ],
         "title": "UserMemory",
         "description": "Represents a user memory stored in the system."
       },
@@ -10085,7 +10458,9 @@
           }
         },
         "type": "object",
-        "required": ["statuses"],
+        "required": [
+          "statuses"
+        ],
         "title": "V2BatchProcessingStatus"
       },
       "V2Chunk": {
@@ -10099,7 +10474,9 @@
             "type": "string",
             "title": "Id",
             "description": "Unique identifier for the source document",
-            "examples": ["doc_12345"]
+            "examples": [
+              "doc_12345"
+            ]
           },
           "chunk_content": {
             "type": "string",
@@ -10197,7 +10574,11 @@
           }
         },
         "type": "object",
-        "required": ["chunk_uuid", "id", "chunk_content"],
+        "required": [
+          "chunk_uuid",
+          "id",
+          "chunk_content"
+        ],
         "title": "V2Chunk",
         "description": "A retrieved content chunk. Mirrors ``VectorStoreChunk`` with ``id``."
       },
@@ -10222,7 +10603,7 @@
           },
           "type": {
             "$ref": "#/components/schemas/IngestType",
-            "description": "Whether to list knowledge or user memories.",
+            "description": "Whether to list normal sources or user memories.",
             "default": "knowledge"
           },
           "ids": {
@@ -10280,11 +10661,13 @@
               }
             ],
             "title": "Include Fields",
-            "description": "Optional list of fields to include in the response. Allowed values: attachments, content, description, document_metadata, note, relations, tenant_metadata, timestamp, title, type, url."
+            "description": "Optional list of source fields to include in the response. Allowed values: attachments, content, description, document_metadata, note, relations, tenant_metadata, timestamp, title, type, url."
           }
         },
         "type": "object",
-        "required": ["tenant_id"],
+        "required": [
+          "tenant_id"
+        ],
         "title": "V2ListContentRequest",
         "description": "Unified list request keyed by ``ids`` (mirrors ``ListContentRequest``)."
       },
@@ -10344,7 +10727,9 @@
           }
         },
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "title": "V2MemoryResultItem"
       },
       "V2ProcessingStatus": {
@@ -10393,7 +10778,10 @@
           }
         },
         "type": "object",
-        "required": ["id", "indexing_status"],
+        "required": [
+          "id",
+          "indexing_status"
+        ],
         "title": "V2ProcessingStatus",
         "description": "Processing status for a single source. Mirrors ``ProcessingStatus`` with ``id``."
       },
@@ -10429,6 +10817,46 @@
         "type": "object",
         "title": "V2RetrievalResult",
         "description": "Result of a retrieval operation. Mirrors ``RetrievalResult`` with ``id`` chunks."
+      },
+      "V2SourceDeleteRequest": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "sub_tenant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub Tenant Id"
+          },
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Ids",
+            "description": "List of source IDs to delete."
+          },
+          "type": {
+            "$ref": "#/components/schemas/IngestType",
+            "description": "Type of content to delete: 'knowledge' or 'memory'.",
+            "default": "knowledge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "ids"
+        ],
+        "title": "V2SourceDeleteRequest",
+        "description": "v2 delete request \u2014 a flat body that carries the bucket selector inline.\n\nReplaces the legacy nested ``{\"request\": {...}, \"type\": ...}`` body so every\nfield (``tenant_id``, ``sub_tenant_id``, ``ids``, ``type``) lives at the top\nlevel of the request body."
       },
       "V2SourceFetchResponse": {
         "properties": {
@@ -10523,7 +10951,9 @@
           }
         },
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "title": "V2SourceFetchResponse",
         "description": "Response for a fetch request. Mirrors ``SourceFetchResponse`` with ``id``."
       },
@@ -10614,7 +11044,9 @@
           }
         },
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "title": "V2SourceUploadResultItem"
       },
       "ValidationError": {
@@ -10643,7 +11075,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       },
       "VectorStoreChunk": {
@@ -10652,47 +11088,61 @@
             "type": "string",
             "title": "Chunk Uuid",
             "description": "Unique identifier for this content chunk",
-            "examples": ["a1b2c3d4-e5f6-7890-1234-567890abcdef"]
+            "examples": [
+              "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+            ]
           },
           "source_id": {
             "type": "string",
             "title": "Source Id",
             "description": "Unique identifier for the source document",
-            "examples": ["doc_12345"]
+            "examples": [
+              "doc_12345"
+            ]
           },
           "chunk_content": {
             "type": "string",
             "title": "Chunk Content",
             "description": "The actual text content of this chunk",
-            "examples": ["This is a chunk of text from the source document."]
+            "examples": [
+              "This is a chunk of text from the source document."
+            ]
           },
           "source_type": {
             "type": "string",
             "title": "Source Type",
             "description": "Type of the source document (file, webpage, etc.)",
             "default": "",
-            "examples": ["file"]
+            "examples": [
+              "file"
+            ]
           },
           "source_upload_time": {
             "type": "string",
             "title": "Source Upload Time",
             "description": "When the source document was originally uploaded",
             "default": "",
-            "examples": ["2023-10-27T10:00:00Z"]
+            "examples": [
+              "2023-10-27T10:00:00Z"
+            ]
           },
           "source_title": {
             "type": "string",
             "title": "Source Title",
             "description": "Title or name of the source document",
             "default": "",
-            "examples": ["Project Phoenix Overview"]
+            "examples": [
+              "Project Phoenix Overview"
+            ]
           },
           "source_last_updated_time": {
             "type": "string",
             "title": "Source Last Updated Time",
             "description": "When the source document was last modified",
             "default": "",
-            "examples": ["2023-10-27T12:30:00Z"]
+            "examples": [
+              "2023-10-27T12:30:00Z"
+            ]
           },
           "layout": {
             "anyOf": [
@@ -10775,7 +11225,11 @@
           }
         },
         "type": "object",
-        "required": ["chunk_uuid", "source_id", "chunk_content"],
+        "required": [
+          "chunk_uuid",
+          "source_id",
+          "chunk_content"
+        ],
         "title": "VectorStoreChunk"
       },
       "VectorstoreStatus": {
@@ -10792,7 +11246,10 @@
           }
         },
         "type": "object",
-        "required": ["knowledge", "memories"],
+        "required": [
+          "knowledge",
+          "memories"
+        ],
         "title": "VectorstoreStatus"
       },
       "WebhookDeleteApiResponse": {
@@ -10842,7 +11299,9 @@
           }
         },
         "type": "object",
-        "required": ["deleted"],
+        "required": [
+          "deleted"
+        ],
         "title": "WebhookDeleteResponse"
       },
       "WebhookDeliveryItemApiResponse": {
@@ -11035,7 +11494,9 @@
             "type": "array",
             "title": "Event Types",
             "description": "List of event types to subscribe to. Supported: ['indexing.status_changed']",
-            "default": ["indexing.status_changed"]
+            "default": [
+              "indexing.status_changed"
+            ]
           },
           "signing_secret": {
             "anyOf": [
@@ -11052,7 +11513,9 @@
           }
         },
         "type": "object",
-        "required": ["url"],
+        "required": [
+          "url"
+        ],
         "title": "WebhookRegisterRequest"
       },
       "WebhookRegisterResponse": {
@@ -11183,7 +11646,9 @@
           }
         },
         "type": "object",
-        "required": ["delivered"],
+        "required": [
+          "delivered"
+        ],
         "title": "WebhookTestResponse"
       },
       "cortex__models__response__commons__ActualErrorResponse": {
@@ -11193,7 +11658,9 @@
           }
         },
         "type": "object",
-        "required": ["detail"],
+        "required": [
+          "detail"
+        ],
         "title": "ActualErrorResponse"
       },
       "cortex__models__response__commons__ErrorResponse": {
