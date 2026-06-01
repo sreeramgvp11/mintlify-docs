@@ -350,16 +350,16 @@ class AIRecruitingSearch {
     const enrichedQuery = hiringContext ? `${hiringContext}\n\n${query}` : query;
 
     const results = await this.client.query({
-      tenant_id: this.tenantId,
+      tenantId: this.tenantId,
       query: enrichedQuery,
 
       // Hiring-specific configurations
-      max_results: 20, // More candidates for review
+      maxResults: 20, // More candidates for review
       mode: 'thinking', // Multi-query with reranking for better results
 
       // Search tuning for candidate discovery
       alpha: 0.6, // Favor semantic understanding
-      recency_bias: 0.2 // Don't heavily favor recent profiles
+      recencyBias: 0.2 // Don't heavily favor recent profiles
     });
 
     return this.enhanceCandidateResults(results, query);
@@ -389,10 +389,10 @@ class AIRecruitingSearch {
   }
 
   enhanceCandidateResults(results, originalQuery) {
-    if (!results.chunks) return results;
+    if (!results.data?.chunks) return results;
 
     // Add hiring-specific analysis to each candidate
-    const enhancedSources = results.chunks.map(candidate => ({
+    const enhancedSources = results.data.chunks.map(candidate => ({
       ...candidate,
       fit_score: this.calculateFitScore(candidate, originalQuery),
       strengths: this.extractStrengths(candidate),
@@ -574,10 +574,10 @@ class PersonalizedRecruitingSearch extends AIRecruitingSearch {
     const personalizedResults = {
       ...results,
       personalized_insights: {
-        recommended_candidates: this.getRecommendedCandidates(results.chunks, recruiterProfile),
-        similar_to_past_hires: this.findSimilarToPastHires(results.chunks, recruiterProfile),
-        interview_suggestions: this.generatePersonalizedInterviewQuestions(results.chunks, recruiterProfile),
-        salary_insights: this.generateSalaryInsights(results.chunks, recruiterProfile)
+        recommended_candidates: this.getRecommendedCandidates(results.data?.chunks, recruiterProfile),
+        similar_to_past_hires: this.findSimilarToPastHires(results.data?.chunks, recruiterProfile),
+        interview_suggestions: this.generatePersonalizedInterviewQuestions(results.data?.chunks, recruiterProfile),
+        salary_insights: this.generateSalaryInsights(results.data?.chunks, recruiterProfile)
       }
     };
 
@@ -695,7 +695,7 @@ const complexQueries = [
       experience_requirement: "5+ years",
       domain_requirement: "machine learning", 
       company_requirement: "Apple",
-      additional_context: "Looking for proven ML expertise with big tech experience"
+      additionalContext: "Looking for proven ML expertise with big tech experience"
     }
   },
   

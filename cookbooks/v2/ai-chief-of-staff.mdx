@@ -153,9 +153,9 @@ import { HydraDBClient } from "@hydradb/sdk";
 const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY });
 
 await client.context.ingest({
-  tenant_id: "your_tenant_id",
-  sub_tenant_id: "your_sub_tenant_id",
-  app_knowledge: JSON.stringify([
+  tenantId: "your_tenant_id",
+  subTenantId: "your_sub_tenant_id",
+  appKnowledge: JSON.stringify([
     {
       id: "send_slack_message",
       title: "Send a Slack message",
@@ -197,17 +197,17 @@ class Orchestrator {
   async handleTask(task: string, userContext: { tenantId: string; subTenantId: string }) {
     // 1️⃣ Ask HydraDB which function best matches the task
     const result = await this.client.query({
-      tenant_id: userContext.tenantId,
-      sub_tenant_id: userContext.subTenantId,
+      tenantId: userContext.tenantId,
+      subTenantId: userContext.subTenantId,
       query: task,
       mode: "thinking",
-      max_results: 5
+      maxResults: 5
     });
 
-    if (!result.chunks || result.chunks.length === 0) return { status: "noop" };
+    if (!result.data?.chunks || result.data.chunks.length === 0) return { status: "noop" };
 
     // 2️⃣ Use the top-ranked chunk to identify and execute the function
-    const topChunk = result.chunks[0];
+    const topChunk = result.data.chunks[0];
     const functionId = topChunk.id;
     const exec = this.registry.get(functionId);
     if (!exec) return { status: "noop" };
@@ -216,8 +216,8 @@ class Orchestrator {
     // 3️⃣ Optional: feed result back to HydraDB as a user memory
     await this.client.context.ingest({
       type: 'memory',
-      tenant_id: userContext.tenantId,
-      sub_tenant_id: userContext.subTenantId,
+      tenantId: userContext.tenantId,
+      subTenantId: userContext.subTenantId,
       upsert: true,
       memories: [
         {
@@ -395,8 +395,8 @@ Auto-tune by feeding metrics back to HydraDB's memory:
 ```ts
 await client.context.ingest({
   type: 'memory',
-  tenant_id: "your_tenant_id",
-  sub_tenant_id: "your_sub_tenant_id",
+  tenantId: "your_tenant_id",
+  subTenantId: "your_sub_tenant_id",
   upsert: true,
   memories: [
     {

@@ -88,15 +88,15 @@ conversation_memory_result = client.context.ingest(
 const knowledgeResult = await client.context.ingest({
   // Knowledge requests can include documents, app_knowledge, or both.
   type: "knowledge",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "team_docs",
+  tenantId: "acme_corp",
+  subTenantId: "team_docs",
   upsert: true,
 
   // Use documents when HydraDB should parse PDFs, DOCX, CSV, Markdown, or text files.
   documents: [
     { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
   ],
-  document_metadata: JSON.stringify([
+  documentMetadata: JSON.stringify([
     {
       id: "policy_main",
       metadata: { department: "legal" },
@@ -105,7 +105,7 @@ const knowledgeResult = await client.context.ingest({
   ]),
 
   // Use app_knowledge when your app already extracted the source text/metadata.
-  app_knowledge: JSON.stringify([
+  appKnowledge: JSON.stringify([
     {
       id: "slack_thread_001",
       tenant_id: "acme_corp",
@@ -121,8 +121,8 @@ const knowledgeResult = await client.context.ingest({
 
 const textMemoryResult = await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   memories: JSON.stringify([
     {
       // Use text for raw notes or signals.
@@ -135,8 +135,8 @@ const textMemoryResult = await client.context.ingest({
 
 const conversationMemoryResult = await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   memories: JSON.stringify([
     {
       // Use user_assistant_pairs for conversation history instead of text.
@@ -257,12 +257,12 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```typescript TypeScript SDK
   const result = await client.context.ingest({
     type: "knowledge",
-    tenant_id: "acme_corp",
+    tenantId: "acme_corp",
     documents: [
       { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
       { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
     ],
-    document_metadata: JSON.stringify([
+    documentMetadata: JSON.stringify([
       { id: "policy_main", metadata: { department: "legal" } },
       { id: "runbook_deploy", metadata: { department: "ops" } },
     ]),
@@ -324,9 +324,9 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```typescript TypeScript SDK
   await client.context.ingest({
     type: "knowledge",
-    tenant_id: "acme_corp",
-    sub_tenant_id: "team_docs",
-    app_knowledge: JSON.stringify([
+    tenantId: "acme_corp",
+    subTenantId: "team_docs",
+    appKnowledge: JSON.stringify([
       {
         id: "slack_thread_001",
         tenant_id: "acme_corp",
@@ -402,8 +402,8 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```typescript TypeScript SDK
   await client.context.ingest({
     type: "memory",
-    tenant_id: "acme_corp",
-    sub_tenant_id: "user_alex",
+    tenantId: "acme_corp",
+    subTenantId: "user_alex",
     memories: JSON.stringify([
       {
         text: "Prefers dark mode and short answers.",
@@ -473,8 +473,8 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   ```typescript TypeScript SDK
   await client.context.ingest({
     type: "memory",
-    tenant_id: "acme_corp",
-    sub_tenant_id: "user_alex",
+    tenantId: "acme_corp",
+    subTenantId: "user_alex",
     memories: JSON.stringify([
       {
         title: "Support conversation about refunds",

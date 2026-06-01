@@ -31,15 +31,15 @@ sources = client.context.list(
 
 ```typescript TypeScript SDK
 const sources = await client.context.list({
-  tenant_id: "acme_corp",
+  tenantId: "acme_corp",
   type: "knowledge",
   page: 1,
-  page_size: 50,
+  pageSize: 50,
   filters: {
     tenant_metadata: { department: "legal" },
     source_fields: { type: "slack" },
   },
-  include_fields: ["title", "type", "url", "timestamp"],
+  includeFields: ["title", "type", "url", "timestamp"],
 });
 ```
 

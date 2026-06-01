@@ -57,31 +57,31 @@ result = client.query(
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   query: "What is our refund policy, and how should I explain it to this user?",
 
   // What to query: "knowledge", "memory", or "all".
   type: "all",
 
   // How to match: "hybrid" (default) or "text" (BM25).
-  query_by: "hybrid",
+  queryBy: "hybrid",
 
   // "thinking" improves quality; use "fast" for lowest latency.
   mode: "thinking",
 
   // Ranking and response controls.
-  max_results: 10,
+  maxResults: 10,
   alpha: "auto",
-  recency_bias: 0.2,
-  graph_context: true,
+  recencyBias: 0.2,
+  graphContext: true,
 
   // Pull author-declared related sources into additional_context.
   // Only applies when mode: "thinking".
-  query_forceful_relations: true,
+  queryForcefulRelations: true,
 
   // Top-level keys match metadata; additional_metadata is per-source.
-  metadata_filters: {
+  metadataFilters: {
     department: "support",
     additional_metadata: {
       source: "policy",
@@ -89,7 +89,7 @@ const result = await client.query({
   },
 
   // Short factual hint; not a hard filter.
-  additional_context: "User is asking from the billing help center.",
+  additionalContext: "User is asking from the billing help center.",
 });
 ```
 
@@ -146,13 +146,13 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
+  tenantId: "acme_corp",
   query: "What is our refund policy?",
   type: "knowledge",
-  query_by: "hybrid",
+  queryBy: "hybrid",
   mode: "thinking",
-  max_results: 10,
-  graph_context: true,
+  maxResults: 10,
+  graphContext: true,
 });
 ```
 
@@ -191,11 +191,11 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   query: "What is our refund policy, and how should I explain it to this user?",
   type: "all",
-  query_by: "hybrid",
+  queryBy: "hybrid",
   mode: "thinking",
 });
 ```
@@ -234,12 +234,12 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   query: "Does the user have any specific preferences for tone or response length?",
   type: "memory",
-  query_by: "hybrid",
-  query_apps: true,
+  queryBy: "hybrid",
+  queryApps: true,
 });
 ```
 
@@ -276,10 +276,10 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
+  tenantId: "acme_corp",
   query: "GDPR Article 17",
   type: "knowledge",
-  query_by: "text",
+  queryBy: "text",
   operator: "phrase",
 });
 ```

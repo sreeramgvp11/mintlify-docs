@@ -105,14 +105,14 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript
 const result = await client.query({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_john_123",
+  tenantId: "acme_corp",
+  subTenantId: "user_john_123",
   query: "How do I reset my password?",
   type: "all",
-  query_by: "hybrid",
+  queryBy: "hybrid",
   mode: "thinking",
-  max_results: 8,
-  graph_context: true,
+  maxResults: 8,
+  graphContext: true,
 });
 ```
 

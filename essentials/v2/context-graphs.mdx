@@ -86,19 +86,19 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenant_id: "acme_corp",
+  tenantId: "acme_corp",
   query: "How does the billing system handle failed payments?",
   type: "knowledge",
-  query_by: "hybrid",
+  queryBy: "hybrid",
   mode: "thinking",
-  graph_context: true,
+  graphContext: true,
 });
 
-if (result.graph_context) {
-  for (const path of result.graph_context.query_paths) {
+if (result.data?.graphContext) {
+  for (const path of result.data.graphContext.queryPaths) {
     for (const t of path.triplets) {
       console.log(
-        `${t.source.name} - ${t.relation.canonical_predicate} → ${t.target.name}`,
+        `${t.source.name} - ${t.relation.canonicalPredicate} → ${t.target.name}`,
       );
     }
   }
@@ -115,8 +115,8 @@ result = client.query(
     graph_context=True,
 )
 
-if result.graph_context:
-    for path in result.graph_context.query_paths:
+if result.data.graph_context:
+    for path in result.data.graph_context.query_paths:
         for t in path.triplets:
             print(
                 t.source.name,

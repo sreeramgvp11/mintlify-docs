@@ -113,7 +113,7 @@ def create_tenant():
             raise
 
     # Confirm tenant is ready
-    status = client.tenants.status(tenant_id=TENANT_ID)
+    status = client.tenants.status(tenant_id=TENANT_ID).data
     print(f"Status: {status.message}")
     print(f"  scheduler={status.infra.scheduler_status}")
     print(f"  graph={status.infra.graph_status}")
@@ -254,7 +254,7 @@ def retrieve_context(question: str):
 
 if __name__ == "__main__":
     result = retrieve_context("Why did we choose Postgres over MySQL?")
-    for chunk in result.chunks:
+    for chunk in result.data.chunks:
         print(f"\nSource: {chunk.source_title}")
         print(chunk.chunk_content[:500])
 ```
@@ -580,7 +580,7 @@ for question in TEST_QUESTIONS:
         mode="thinking",
         graph_context=True,
     )
-    top_chunk = result.chunks[0].chunk_content[:300] if result.chunks else "No context returned yet"
+    top_chunk = result.data.chunks[0].chunk_content[:300] if result.data.chunks else "No context returned yet"
     print(f"Context: {top_chunk}")
     print("-" * 60)
 ```
@@ -733,8 +733,8 @@ def ask_onboarding(hire_id: str, question: str, topic: str = "") -> str:
         max_results=3,
     )
     return {
-        "company_context": company_context.chunks,
-        "hire_context": hire_context.chunks,
+        "company_context": company_context.data.chunks,
+        "hire_context": hire_context.data.chunks,
     }
 
 if __name__ == "__main__":

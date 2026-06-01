@@ -163,7 +163,7 @@ def ingest_earnings_pdf(
             documents=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
-    id = result.results[0].id if result.results else str(result)
+    id = result.data.results[0].id if result.data.results else str(result)
     print(f"Uploaded {ticker} {period_label} {doc_type} → id: {id}")
     return id
 
@@ -296,7 +296,7 @@ def ingest_metrics_series(metrics_by_period: list[dict]) -> list[str]:
                 }
             }],
         )
-        memory_ids.append(result.results[0].id if result.results else "ok")
+        memory_ids.append(result.data.results[0].id if result.data.results else "ok")
         print(f"Stored metrics: {item['period_label']} ({item['ticker']})")
 
     return memory_ids
@@ -431,7 +431,7 @@ def ingest_board_memo(
             documents=[(os.path.basename(file_path), f, "application/pdf")],
         )
 
-    id = result.results[0].id if result.results else str(result)
+    id = result.data.results[0].id if result.data.results else str(result)
     print(f"Uploaded memo: {ticker} {period_label} → {id}")
     return id
 ```
@@ -464,7 +464,7 @@ def verify_all_indexed(ids: list[str], poll_interval: int = 3, max_polls: int = 
                 tenant_id=TENANT_ID,
                 ids=[fid],
             )
-            items = status.statuses or []
+            items = status.data.statuses or []
             s = items[0].indexing_status if items else "unknown"
 
             if s == "completed":
@@ -619,7 +619,7 @@ result = query_point_in_time(
     fiscal_year=2023,
     fiscal_quarter=2,
 )
-for chunk in (result.chunks or [])[:3]:
+for chunk in (result.data.chunks or [])[:3]:
     print(f"[{chunk.relevancy_score or 0:.2f}] {chunk.source_title or ''}")
     print((chunk.chunk_content or "")[:240])
 # Output:
@@ -673,8 +673,8 @@ def query_trend(
         metadata_filters=filters,
     )
 
-    chunks      = search.chunks or []
-    graph_ctx   = search.graph_context
+    chunks      = search.data.chunks or []
+    graph_ctx   = search.data.graph_context
     query_paths = graph_ctx.query_paths if graph_ctx else []
 
     if not chunks:
@@ -810,7 +810,7 @@ def cross_source_reconciliation(
                 "doc_type":       doc_type_filter,
             },
         )
-        return resp.chunks or []
+        return resp.data.chunks or []
 
     transcript_chunks = search(f"earnings-{ticker.lower()}", "earnings_transcript")
     metrics_chunks    = search("internal-metrics",            "internal_metrics")
@@ -934,7 +934,7 @@ def track_narrative_shift(
     )
 
     chunks = sorted(
-        search.chunks or [],
+        search.data.chunks or [],
         key=lambda c: (c.additional_metadata or {}).get("period_end_date", ""),
     )
 
@@ -1061,7 +1061,7 @@ def financial_recall(
 def context_for_llm(result) -> str:
     return "\n\n".join(
         chunk.chunk_content or ""
-        for chunk in (result.chunks or [])
+        for chunk in (result.data.chunks or [])
     )
 
 
@@ -1086,7 +1086,7 @@ r2 = financial_recall(
     fiscal_year=2023,
     recency_bias=0.3,   # spread across all quarters
 )
-print(f"Chunks: {len(r2.chunks or [])}")
+print(f"Chunks: {len(r2.data.chunks or [])}")
 
 # Cross-doc question - no source filter, let HydraDB find relevant sources
 r3 = financial_recall(
@@ -1178,7 +1178,7 @@ def generate_quarterly_briefing(
             "fiscal_quarter": fiscal_quarter,
         },
     )
-    current_chunks = current_q.chunks or []
+    current_chunks = current_q.data.chunks or []
 
     # ── 2. Prior quarters for trend context ──────────────────────────────
     print("[2/4] Searching trend data...")

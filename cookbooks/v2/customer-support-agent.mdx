@@ -109,7 +109,7 @@ const TENANT_ID = "customer-support";
 const client = new HydraDBClient({ token: API_KEY });
 
 // Create the shared tenant
-await client.tenants.create({ tenant_id: TENANT_ID });
+await client.tenants.create({ tenantId: TENANT_ID });
 
 // B2C pattern: each customer gets their own sub_tenant_id = their user_name.
 // Sub-tenants are created automatically on first write - no setup needed.
@@ -191,7 +191,7 @@ def _upload_kb_batch(batch: list) -> list:
         upsert=True,
         app_knowledge=json.dumps(batch),    # JSON string, not a list
     )
-    return [r.id for r in (result.results or [])]
+    return [r.id for r in (result.data.results or [])]
 ```
 ```typescript TypeScript SDK
 // ingest/help_docs.ts
@@ -204,12 +204,12 @@ const KB_SUB_TENANT = "knowledge-base";
 async function uploadKbBatch(batch: object[]): Promise<string[]> {
     // tenant_id / sub_tenant_id required as top-level SDK params AND inside each item
     const result = await client.context.ingest({
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: KB_SUB_TENANT,
+        tenantId:     TENANT_ID,
+        subTenantId: KB_SUB_TENANT,
         upsert:        true,
-        app_knowledge: JSON.stringify(batch),   // JSON string, not an array
+        appKnowledge: JSON.stringify(batch),   // JSON string, not an array
     });
-    return (result.results || []).map((r: any) => r.id);
+    return (result.data.results || []).map((r: any) => r.id);
 }
 
 async function ingestHelpDocs(articles: any[]): Promise<string[]> {
@@ -423,8 +423,8 @@ async function storeConversationTurn(
 
     await client.context.ingest({
         type: 'memory',
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: `customer-${customerId}`,
+        tenantId:     TENANT_ID,
+        subTenantId: `customer-${customerId}`,
         memories: [{
             text,
             user_name: customerId,  // ties memory to this customer
@@ -490,8 +490,8 @@ async function storeCustomerPreference(customerId: string, preference: string): 
      */
     await client.context.ingest({
         type: 'memory',
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: `customer-${customerId}`,
+        tenantId:     TENANT_ID,
+        subTenantId: `customer-${customerId}`,
         memories: [{
             text:      preference,
             user_name: customerId,  // ties memory to this customer
@@ -569,8 +569,8 @@ def recall_customer_context(
     # Merge: personal memory first (higher personalization weight),
     # then knowledge base chunks, then combined graph context
     return {
-        "chunks":        (mem_data.chunks or []) + (kb_data.chunks or []),
-        "graph_context": kb_data.graph_context or {},
+        "chunks":        (mem_data.data.chunks or []) + (kb_data.data.chunks or []),
+        "graph_context": kb_data.data.graph_context or {},
     }
     # chunks[n]["chunk_content"]   - the actual text
     # chunks[n]["source_title"]    - which doc or memory it came from
@@ -588,7 +588,7 @@ async function recallCustomerContext(
     customerId:  string,
     customerMsg: string,
     maxResults:  number = 12,
-): Promise<{ chunks: any[]; graph_context: any }> {
+): Promise<{ chunks: any[]; graphContext: any }> {
     /**
      * Two-call search pattern:
      * 1. fullRecall        - searches knowledge base (docs, resolved tickets)
@@ -599,30 +599,30 @@ async function recallCustomerContext(
      */
     // Call 1: knowledge base - help docs, resolved tickets, FAQs
     const kbData = await client.query({
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: KB_SUB_TENANT,
+        tenantId:     TENANT_ID,
+        subTenantId: KB_SUB_TENANT,
         query:         customerMsg,
-        max_results:   maxResults,
+        maxResults:   maxResults,
         mode:          "thinking",   // personalised ranking
-        graph_context: true,         // cross-document entity linking
+        graphContext: true,         // cross-document entity linking
         alpha:         0.8,          // balanced semantic + keyword
     });
 
     // Call 2: customer personal memory - preferences, history, account facts
     const memData = await client.query({
         type: "memory",
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: `customer-${customerId}`,
+        tenantId:     TENANT_ID,
+        subTenantId: `customer-${customerId}`,
         query:         customerMsg,
-        max_results:   8,
+        maxResults:   8,
         mode:          "thinking",
     });
 
     // Merge: personal memory first (higher personalization weight),
     // then knowledge base chunks, then combined graph context
     return {
-        chunks:        (memData.chunks || []).concat(kbData.chunks || []),
-        graph_context: kbData.graph_context || {},
+        chunks:        (memData.data?.chunks || []).concat(kbData.data?.chunks || []),
+        graphContext: kbData.data?.graphContext || {},
     };
     // chunks[n].chunk_content   - the actual text
     // chunks[n].source_title    - which doc or memory it came from
@@ -655,8 +655,8 @@ def handle_ticket(
     """
     # Step 1: Search
     context_data = recall_customer_context(customer_id, customer_msg)
-    chunks       = context_data.chunks or []
-    graph_ctx    = context_data.graph_context
+    chunks       = context_data["chunks"] or []
+    graph_ctx    = context_data["graph_context"]
 
     # Build context string for the LLM - ranked chunks, most useful first
     context_text = "\n\n".join(
@@ -721,7 +721,7 @@ async function handleTicket(
     // Step 1: Search
     const contextData = await recallCustomerContext(customerId, customerMsg);
     const chunks      = contextData.chunks || [];
-    const graphCtx    = contextData.graph_context || {};
+    const graphCtx    = contextData.graphContext || {};
 
     // Build context string for the LLM - ranked chunks, most useful first
     const contextText = chunks
@@ -729,7 +729,7 @@ async function handleTicket(
         .join("\n\n");
 
     // Include entity relationship paths if available
-    const entityPaths = (graphCtx.query_paths || []).slice(0, 3);
+    const entityPaths = (graphCtx.queryPaths || []).slice(0, 3);
     const entityText  = entityPaths.map((p: any) => String(p)).join("\n");
 
     // Step 2: Generate response
@@ -801,7 +801,7 @@ def escalate_to_human(
         query=f"{customer_msg} resolved escalated human agent",
         max_results=5,
     )
-    similar_tickets = similar_data.chunks or []
+    similar_tickets = similar_data.data.chunks or []
 
     escalation = {
         "ticket_id":    ticket_id,
@@ -853,18 +853,18 @@ async function escalateToHuman(
     // Search full customer memory profile
     const customerProfile = await client.query({
         type: "memory",
-        tenant_id:     TENANT_ID,
-        sub_tenant_id: `customer-${customerId}`,
+        tenantId:     TENANT_ID,
+        subTenantId: `customer-${customerId}`,
         query:         "customer account history preferences past issues plan",
     });
 
     // Search similar past tickets resolved by humans
     const similarData = await client.query({
-        tenant_id:   TENANT_ID,
+        tenantId:   TENANT_ID,
         query:       `${customerMsg} resolved escalated human agent`,
-        max_results: 5,
+        maxResults: 5,
     });
-    const similarTickets = similarData.chunks || [];
+    const similarTickets = similarData.data?.chunks || [];
 
     const escalation = {
         ticket_id:    ticketId,

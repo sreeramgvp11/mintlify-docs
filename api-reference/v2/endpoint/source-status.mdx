@@ -26,8 +26,8 @@ status = client.context.status(
 
 ```typescript TypeScript SDK
 const status = await client.context.status({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "team_docs",
+  tenantId: "acme_corp",
+  subTenantId: "team_docs",
   ids: ["policy_main", "runbook_deploy"],
 });
 ```
@@ -158,7 +158,7 @@ while True:
         sub_tenant_id="team_docs",
         ids=ids,
     )
-    statuses = [s.indexing_status for s in response.statuses]
+    statuses = [s.indexing_status for s in response.data.statuses]
 
     if all(s in ("graph_creation", "completed") for s in statuses):
         break
@@ -173,12 +173,12 @@ const ids = ["policy_main", "runbook_deploy"];
 
 while (true) {
   const response = await client.context.status({
-    tenant_id: "acme_corp",
-    sub_tenant_id: "team_docs",
+    tenantId: "acme_corp",
+    subTenantId: "team_docs",
     ids: ids,
   });
 
-  const statuses = response.statuses.map((s) => s.indexing_status);
+  const statuses = response.data.statuses.map((s) => s.indexingStatus);
   if (statuses.every((s) => s === "graph_creation" || s === "completed")) break;
   if (statuses.some((s) => s === "errored")) throw new Error("Context processing failed");
 
@@ -199,7 +199,7 @@ while True:
         sub_tenant_id="team_docs",
         ids=["policy_main", "runbook_deploy"],
     )
-    statuses = [s.indexing_status for s in response.statuses]
+    statuses = [s.indexing_status for s in response.data.statuses]
 
     if all(s == "completed" for s in statuses):
         break

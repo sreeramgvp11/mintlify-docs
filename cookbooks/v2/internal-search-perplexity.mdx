@@ -87,7 +87,7 @@ import { HydraDBClient } from "@hydradb/sdk";
 const client = new HydraDBClient({ token: process.env.HYDRA_DB_API_KEY! });
 const TENANT_ID = "company-knowledge";
 
-await client.tenants.create({ tenant_id: TENANT_ID });
+await client.tenants.create({ tenantId: TENANT_ID });
 ```
 </CodeGroup>
 
@@ -200,7 +200,7 @@ def _upload_batch(batch: list, sub_tenant: str) -> list:
             sub_tenant_id=sub_tenant,
             documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
-        items = result.results or []
+        items = result.data.results or []
         if items:
             ids.append(items[0].id)
         time.sleep(0.1)   # brief pause between individual uploads in a batch
@@ -257,11 +257,11 @@ async function ingestSlackChannel(
       writeFileSync(filename, content, "utf-8");
 
       const result = await client.context.ingest({
-        tenant_id: TENANT_ID,
-        sub_tenant_id: "slack",
+        tenantId: TENANT_ID,
+        subTenantId: "slack",
         documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
-      const results = (result as any).results ?? [];
+      const results = result.data?.results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
     }
 
@@ -341,7 +341,7 @@ def ingest_gmail_threads(credentials_path: str, query: str, max_threads: int = 2
             sub_tenant_id="email",
             documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
-        items = result.results or []
+        items = result.data.results or []
         if items:
             all_ids.append(items[0].id)
 
@@ -413,11 +413,11 @@ async function ingestGmailThreads(
     writeFileSync(filename, content, "utf-8");
 
     const result = await client.context.ingest({
-      tenant_id: TENANT_ID,
-      sub_tenant_id: "email",
+      tenantId: TENANT_ID,
+      subTenantId: "email",
       documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
     });
-    const results = (result as any).results ?? [];
+    const results = result.data?.results ?? [];
     if (results[0]?.id) allIds.push(results[0].id);
   }
 
@@ -483,7 +483,7 @@ def ingest_confluence_space(space_key: str):
                 sub_tenant_id="docs",
                 documents=[(filename, content.encode("utf-8"), "text/plain")],
             )
-            items = result.results or []
+            items = result.data.results or []
             if items:
                 all_ids.append(items[0].id)
             time.sleep(0.1)
@@ -538,11 +538,11 @@ async function ingestConfluenceSpace(spaceKey: string): Promise<string[]> {
       writeFileSync(filename, content, "utf-8");
 
       const result = await client.context.ingest({
-        tenant_id: TENANT_ID,
-        sub_tenant_id: "docs",
+        tenantId: TENANT_ID,
+        subTenantId: "docs",
         documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
-      const results = (result as any).results ?? [];
+      const results = result.data?.results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
     }
 
@@ -609,7 +609,7 @@ def ingest_github_issues(repo_name: str, state: str = "all", limit: int = 500):
             sub_tenant_id="github",
             documents=[(filename, content.encode("utf-8"), "text/plain")],
         )
-        items = result.results or []
+        items = result.data.results or []
         if items:
             all_ids.append(items[0].id)
         time.sleep(0.1)
@@ -667,11 +667,11 @@ async function ingestGithubIssues(
       writeFileSync(filename, content, "utf-8");
 
       const result = await client.context.ingest({
-        tenant_id: TENANT_ID,
-        sub_tenant_id: "github",
+        tenantId: TENANT_ID,
+        subTenantId: "github",
         documents: [{ data: readFileSync(filename), filename, contentType: "application/octet-stream" }],
       });
-      const results = (result as any).results ?? [];
+      const results = result.data?.results ?? [];
       if (results[0]?.id) allIds.push(results[0].id);
     }
     if (count >= limit) break;
@@ -732,7 +732,7 @@ def wait_until_indexed(id: str, max_tries: int = 20, interval: int = 3) -> None:
             tenant_id=TENANT_ID,
             ids=[id],
         )
-        items  = result.statuses or []
+        items  = result.data.statuses or []
         status = items[0].indexing_status if items else None
 
         if status == "completed":
@@ -762,12 +762,12 @@ async function waitUntilIndexed(
   for (let i = 0; i < maxTries; i++) {
     await new Promise((r) => setTimeout(r, intervalMs));
     const result = await client.context.status({
-      tenant_id: TENANT_ID,
-      sub_tenant_id: subTenant,
+      tenantId: TENANT_ID,
+      subTenantId: subTenant,
       ids: [id],
     });
-    const statuses = (result as any).statuses ?? [];
-    const status = statuses[0]?.indexing_status as string | undefined;
+    const statuses = result.data.statuses ?? [];
+    const status = statuses[0]?.indexingStatus as string | undefined;
 
     if (status === "completed") {
       console.log(`Indexed ✓ (${id})`);
@@ -853,7 +853,7 @@ def store_user_profile(user_id: str, profile_text: str) -> str:
             "user_name": user_id,
         }],
     )
-    items = result.results or []
+    items = result.data.results or []
     id = items[0].id if items else None
     print(f"Profile stored for {user_id} → id: {id}")
     return id
@@ -879,8 +879,8 @@ async function storeUserProfile(
    */
   const result = await client.context.ingest({
     type: 'memory',
-    tenant_id: TENANT_ID,
-    sub_tenant_id: `user-${userId}`,
+    tenantId: TENANT_ID,
+    subTenantId: `user-${userId}`,
     upsert: true,
     memories: [
       {
@@ -890,7 +890,7 @@ async function storeUserProfile(
       },
     ],
   });
-  const results = (result as any).results ?? [];
+  const results = result.data?.results ?? [];
   const id: string | null = results[0]?.id ?? null;
   console.log(`Profile stored for ${userId} → id: ${id}`);
   return id;
@@ -967,7 +967,7 @@ def search(
 
 
 def print_results(result) -> None:
-    chunks = result.chunks or []
+    chunks = result.data.chunks or []
     print(f"\n{len(chunks)} chunks retrieved:\n")
     for chunk in chunks:
         fname = chunk.additional_metadata or {}
@@ -1005,21 +1005,21 @@ async function search(
    * mode="thinking" enables multi-query reranking automatically.
    */
   const payload: Record<string, any> = {
-    tenant_id: TENANT_ID,
+    tenantId: TENANT_ID,
     query: question,
-    max_results: maxResults,
-    graph_context: true,
+    maxResults: maxResults,
+    graphContext: true,
     mode: "thinking",
     alpha: 0.5,
-    recency_bias: recencyBias,
+    recencyBias: recencyBias,
   };
-  if (subTenant) payload["sub_tenant_id"] = subTenant;
+  if (subTenant) payload["subTenantId"] = subTenant;
 
   return await client.query(payload);
 }
 
 function printResults(result: any): void {
-  const chunks = result?.chunks ?? [];
+  const chunks = result?.data?.chunks ?? [];
   console.log(`\n${chunks.length} chunks retrieved:\n`);
   for (const chunk of chunks) {
     const fname = chunk?.additional_metadata?.filename ?? "memory";
@@ -1064,7 +1064,7 @@ def get_user_profile(user_id: str) -> str:
         query="expertise background role preferences",
         mode="thinking",
     )
-    chunks = result.chunks or []
+    chunks = result.data.chunks or []
     if chunks:
         return chunks[0].chunk_content or ""
     return ""
@@ -1086,8 +1086,8 @@ def explain_decision(question: str, user_id: str) -> str:
         mode="thinking",
         recency_bias=0.4,   # low = surfaces both old and recent for decision trails
     )
-    chunks          = data.chunks or []
-    chunk_relations = (data.graph_context.chunk_relations if data.graph_context else [])
+    chunks          = data.data.chunks or []
+    chunk_relations = (data.data.graph_context.chunk_relations if data.data.graph_context else [])
 
     # Build context with source attribution
     ctx_parts = []
@@ -1157,12 +1157,12 @@ async function getUserProfile(userId: string): Promise<string> {
   /** Retrieve a user's stored memory profile via recallPreferences. */
   const resp = await client.query({
     type: "memory",
-    tenant_id: TENANT_ID,
-    sub_tenant_id: `user-${userId}`,
+    tenantId: TENANT_ID,
+    subTenantId: `user-${userId}`,
     query: "expertise background role preferences",
     mode: "thinking",
   });
-  const chunks = (resp as any).chunks ?? [];
+  const chunks = resp.data?.chunks ?? [];
   return chunks[0]?.chunk_content ?? "";
 }
 
@@ -1178,16 +1178,16 @@ async function explainDecision(
    */
   // Step 1: Search with graph context
   const data = await client.query({
-    tenant_id: TENANT_ID,
+    tenantId: TENANT_ID,
     query: question,
-    max_results: 18,
-    graph_context: true,
+    maxResults: 18,
+    graphContext: true,
     mode: "thinking",
-    recency_bias: 0.4,
+    recencyBias: 0.4,
   });
-  const chunks = (data as any).chunks ?? [];
+  const chunks = data.data?.chunks ?? [];
   const chunkRelations =
-    (data as any).graph_context?.chunk_relations ?? [];
+    data.data?.graphContext?.chunkRelations ?? [];
 
   // Build context with source attribution
   const ctxParts: string[] = [];
@@ -1265,7 +1265,7 @@ def smart_search(question: str, user_id: str) -> dict:
     recency_bias  = 0.3 if any(s in question.lower() for s in TREND_SIGNALS) else 0.5
 
     result = search(question, user_id, recency_bias=recency_bias)
-    return {"chunks": result.chunks or [], "type": "search"}
+    return {"chunks": result.data.chunks or [], "type": "search"}
 ```
 
 ---

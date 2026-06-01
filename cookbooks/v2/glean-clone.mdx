@@ -232,14 +232,14 @@ def upload_batch(sources: list, tenant_id: str, sub_tenant_id: str = None):
 def upload_with_verification(sources: list, tenant_id: str, sub_tenant_id: str = None):
     upload_result = upload_batch(sources, tenant_id, sub_tenant_id)
 
-    if upload_result.results:
-        for item in upload_result.results:
+    if upload_result.data.results:
+        for item in upload_result.data.results:
             id = item.id
             status = client.context.status(
                 tenant_id=tenant_id,
                 ids=[id]
             )
-            items = status.statuses or []
+            items = status.data.statuses or []
             if items and items[0].indexing_status == "errored":
                 raise Exception(f"Processing failed for source {id}")
 
@@ -259,8 +259,8 @@ const uploadBatch = async (sources: any[], tenantId: string, subTenantId?: strin
   }));
 
   const result = await client.context.ingest({
-    tenant_id: tenantId,
-    app_knowledge: JSON.stringify(appKnowledge)
+    tenantId: tenantId,
+    appKnowledge: JSON.stringify(appKnowledge)
   });
 
   return result;
@@ -270,15 +270,16 @@ const uploadBatch = async (sources: any[], tenantId: string, subTenantId?: strin
 const uploadWithVerification = async (sources: any[], tenantId: string, subTenantId?: string) => {
   const uploadResult = await uploadBatch(sources, tenantId, subTenantId);
 
-  if (uploadResult.ids) {
-    for (const id of uploadResult.ids) {
-      const status = await client.context.status({
-        tenant_id: tenantId,
-        ids: [id]
-      });
-      if (status.indexing_status === "errored") {
-        throw new Error(`Processing failed for source ${id}`);
-      }
+  const items = uploadResult.data?.results ?? [];
+  for (const item of items) {
+    const id = item.id;
+    const status = await client.context.status({
+      tenantId: tenantId,
+      ids: [id]
+    });
+    const statusItem = status.data.statuses[0];
+    if (statusItem?.indexingStatus === "errored") {
+      throw new Error(`Processing failed for source ${id}`);
     }
   }
 
@@ -348,12 +349,12 @@ const search = async (query: string, tenantId: string, options: SearchOptions = 
 
   return await client.query({
     query,
-    tenant_id: tenantId,
-    sub_tenant_id,
-    max_results,
+    tenantId: tenantId,
+    subTenantId: sub_tenant_id,
+    maxResults: max_results,
     mode,
     alpha: 0.5,         // Balance semantic vs keyword search (0.0 to 1.0)
-    recency_bias: 0.3,  // Recency preference (0.0 to 1.0)
+    recencyBias: 0.3,  // Recency preference (0.0 to 1.0)
     ...(metadata && { metadata }),
   });
 };
@@ -450,11 +451,11 @@ const searchWithFilters = async (
 
   return await client.query({
     query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
     ...(Object.keys(metadata).length > 0 && { metadata })
   });
 };
@@ -463,11 +464,11 @@ const searchWithFilters = async (
 const searchWithContext = async (query: string, tenantId: string, context: string) =>
   client.query({
     query: context ? `${context}\n\n${query}` : query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
   });
 
 // Conversational search — fold prior conversation turns into the query
@@ -480,11 +481,11 @@ const conversationalSearch = async (
     query: conversationHistory.length
       ? `Previous conversation context: ${JSON.stringify(conversationHistory)}\n\n${query}`
       : query,
-    tenant_id: tenantId,
-    max_results: 10,
+    tenantId: tenantId,
+    maxResults: 10,
     mode: "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
   });
 ```
 </CodeGroup>
@@ -572,14 +573,14 @@ def search_with_memory(query: str, tenant_id: str, user_id: str):
     profile["search_history"].append({
         "query": query,
         "timestamp": datetime.utcnow().isoformat(),
-        "result_count": len(search_results.chunks or [])
+        "result_count": len(search_results.data.chunks or [])
     })
     profile["search_history"] = profile["search_history"][-50:]
 
     if not any(query.lower() in q.lower() for q in profile["frequent_queries"]):
         profile["frequent_queries"] = ([query] + profile["frequent_queries"])[:10]
 
-    for chunk in (search_results.chunks or []):
+    for chunk in (search_results.data.chunks or []):
         if chunk.source_title and chunk.source_title not in profile["favorite_sources"]:
             profile["favorite_sources"].append(chunk.source_title)
     profile["favorite_sources"] = profile["favorite_sources"][:5]
@@ -636,19 +637,19 @@ const searchWithMemory = async (query: string, tenantId: string, userId: string)
 
   const searchResults = await client.query({
     query: enrichedQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: userId,
-    max_results: 10,
+    tenantId: tenantId,
+    subTenantId: userId,
+    maxResults: 10,
     mode: userProfile.preferredMode || "fast",
     alpha: 0.5,
-    recency_bias: 0.3,
+    recencyBias: 0.3,
     ...(userProfile.preferredSourceTypes?.length > 0 && {
       metadata: { source_type: userProfile.preferredSourceTypes }
     })
   });
 
   // Update local profile history
-  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.chunks?.length || 0 });
+  userProfile.searchHistory.push({ query, timestamp: new Date().toISOString(), resultCount: searchResults.data.chunks?.length || 0 });
   if (userProfile.searchHistory.length > 50) userProfile.searchHistory = userProfile.searchHistory.slice(-50);
 
   const queryLower = query.toLowerCase();
@@ -656,8 +657,8 @@ const searchWithMemory = async (query: string, tenantId: string, userId: string)
     userProfile.frequentQueries = [query, ...userProfile.frequentQueries].slice(0, 10);
   }
 
-  if (searchResults.chunks) {
-    for (const chunk of searchResults.chunks) {
+  if (searchResults.data.chunks) {
+    for (const chunk of searchResults.data.chunks) {
       if (chunk.source && !userProfile.favoriteSources.includes(chunk.source)) {
         userProfile.favoriteSources.push(chunk.source);
       }
@@ -1018,7 +1019,7 @@ const GleanSearchInterface = () => {
 
 ```javascript
 const SearchResults = ({ results }) => {
-  const { chunks, graph_context } = results;
+  const { chunks, graphContext } = results.data ?? {};
 
   return (
     <div className="search-results">
@@ -1031,10 +1032,10 @@ const SearchResults = ({ results }) => {
         </div>
       )}
 
-      {graph_context && graph_context.query_paths && (
+      {graphContext && graphContext.queryPaths && (
         <div className="graph-context">
           <h3>Related Knowledge Graph Paths</h3>
-          <pre>{JSON.stringify(graph_context.query_paths, null, 2)}</pre>
+          <pre>{JSON.stringify(graphContext.queryPaths, null, 2)}</pre>
         </div>
       )}
     </div>
@@ -1222,8 +1223,8 @@ app.post("/webhooks/slack", async (req, res) => {
     };
 
     await client.context.ingest({
-      tenant_id: process.env.TENANT_ID!,
-      app_knowledge: JSON.stringify([normalizedData])
+      tenantId: process.env.TENANT_ID!,
+      appKnowledge: JSON.stringify([normalizedData])
     });
   }
 
@@ -1284,12 +1285,12 @@ class TenantManager {
       tenantId,
       subTenantId,
       metadata: {
-        tenant_id: tenantId
+        tenantId: tenantId
       }
     };
 
     if (subTenantId) {
-      searchOptions.metadata.sub_tenant_id = subTenantId;
+      searchOptions.metadata.subTenantId = subTenantId;
     }
 
     return await searchClient.search(query, searchOptions);
@@ -1326,6 +1327,7 @@ class DataPrivacyManager {
 
   async deleteOldData(tenantId, memoryId, subTenantId = null) {
     // Use HydraDB's context deletion endpoint for memory deletion.
+    // Raw fetch to the REST API: the JSON body uses snake_case wire keys.
     const request = { tenant_id: tenantId, ids: [memoryId] };
     if (subTenantId) {
       request.sub_tenant_id = subTenantId;
@@ -1494,8 +1496,8 @@ class SearchAnalytics {
     );
 
     // Track source type usage
-    if (results && results.chunks) {
-      results.chunks.forEach(chunk => {
+    if (results && results.data?.chunks) {
+      results.data.chunks.forEach(chunk => {
         const sourceType = chunk.source;
         this.metrics.sourceTypeUsage.set(
           sourceType,

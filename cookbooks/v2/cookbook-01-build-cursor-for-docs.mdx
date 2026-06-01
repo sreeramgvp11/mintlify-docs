@@ -100,7 +100,7 @@ def _poll_until_ready(timeout=180, interval=4):
     print("Polling for readiness...")
     deadline = time.time() + timeout
     while time.time() < deadline:
-        status = client.tenants.status(tenant_id=TENANT_ID)
+        status = client.tenants.status(tenant_id=TENANT_ID).data
         infra = status.infra
         if infra.scheduler_status and infra.graph_status and infra.vectorstore_status.knowledge and infra.vectorstore_status.memories:
             print("✓ Tenant ready."); return
@@ -222,7 +222,7 @@ def verify_item(id: str, timeout: int = 120, interval: int = 3):
         )
         print("STATUS:", status)
 
-        items = status.statuses or []
+        items = status.data.statuses or []
         if items:
             s = items[0].indexing_status
             if   s == "completed": print(f"✓ '{id}' ready."); return
@@ -289,8 +289,8 @@ def search(query: str, max_results: int = 10):
 
 if __name__ == "__main__":
     data   = search("internal IP auth skip logic")
-    chunks  = data.chunks or []     # iterate the "chunks" array
-    sources = data.sources or []    # sources list for citations
+    chunks  = data.data.chunks or []     # iterate the "chunks" array
+    sources = data.data.sources or []    # sources list for citations
 
     print(f"\nChunks returned: {len(chunks)}")
     for i, chunk in enumerate(chunks, 1):
@@ -404,7 +404,7 @@ def upload_batch(batch: list) -> list:
         tenant_id=TENANT_ID,
         app_knowledge=json.dumps(batch),
     )
-    ids = [r.id for r in (result.results or []) if r.id]
+    ids = [r.id for r in (result.data.results or []) if r.id]
     print(f"  Uploaded {len(ids)} items")
     return ids
 
@@ -785,7 +785,7 @@ def multi_source_recall(question: str):
 if __name__ == "__main__":
     result = multi_source_recall(
         "Why does the auth middleware skip token validation for internal IPs?")
-    for chunk in (result.chunks or [])[:5]:
+    for chunk in (result.data.chunks or [])[:5]:
         score = chunk.relevancy_score if chunk.relevancy_score is not None else 0
         print(f"[{score:.2f}] {chunk.source_title or ''}")
         print((chunk.chunk_content or "")[:240])
@@ -966,8 +966,8 @@ def build_context_block(recall_payload) -> str:
     chunk_content is the canonical field to pass into the LLM.
     Always iterate chunks[], never a "results" key - the correct key is "chunks".
     """
-    chunks  = recall_payload.chunks or []
-    sources = recall_payload.sources or []
+    chunks  = recall_payload.data.chunks or []
+    sources = recall_payload.data.sources or []
 
     context_parts = []
     for chunk in chunks:
@@ -1115,7 +1115,7 @@ async def chat(body: dict):
 
     async def stream():
         # Emit sources first so the client can render citations immediately
-        sources_list = [{"title": s.title, "id": s.id} for s in (recall_payload.sources or [])]
+        sources_list = [{"title": s.title, "id": s.id} for s in (recall_payload.data.sources or [])]
         yield json.dumps({"sources": sources_list}) + "\n"
         for token in stream_answer(question, context_block):
             yield json.dumps({"text": token}) + "\n"
@@ -1140,9 +1140,9 @@ def ask(body: dict):
 
     return {
         "answer":        full_answer,
-        "sources":       [{"title": s.title, "id": s.id} for s in (recall_payload.sources or [])],
+        "sources":       [{"title": s.title, "id": s.id} for s in (recall_payload.data.sources or [])],
         "chunks":        [{"chunk_content": c.chunk_content, "relevancy_score": c.relevancy_score,
-                           "source_title": c.source_title} for c in (recall_payload.chunks or [])],
+                           "source_title": c.source_title} for c in (recall_payload.data.chunks or [])],
         "graph_context": None,
     }
 ```
@@ -1412,7 +1412,7 @@ client.context.ingest(
     { "id": "<id>", "indexing_status": "completed" }
   ]
 }
-// indexing_status: "processing" | "completed" | "errored"
+// indexingStatus: "processing" | "completed" | "errored"
 ```
 
 ### Search - Validated Minimal Request

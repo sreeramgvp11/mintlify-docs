@@ -101,9 +101,9 @@ const uploadHotelData = async (hotels, tenantId, subTenantId) => {
   }));
 
   await client.context.ingest({
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
-    app_knowledge: JSON.stringify(hotelSources),
+    tenantId: tenantId,
+    subTenantId: subTenantId,
+    appKnowledge: JSON.stringify(hotelSources),
     upsert: true,
   });
 };
@@ -143,9 +143,9 @@ const uploadFlightData = async (flights, tenantId, subTenantId) => {
   }));
 
   await client.context.ingest({
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
-    app_knowledge: JSON.stringify(flightSources),
+    tenantId: tenantId,
+    subTenantId: subTenantId,
+    appKnowledge: JSON.stringify(flightSources),
     upsert: true,
   });
 };
@@ -185,9 +185,9 @@ const uploadRestaurantData = async (restaurants, tenantId, subTenantId) => {
   }));
 
   await client.context.ingest({
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
-    app_knowledge: JSON.stringify(restaurantSources),
+    tenantId: tenantId,
+    subTenantId: subTenantId,
+    appKnowledge: JSON.stringify(restaurantSources),
     upsert: true,
   });
 };
@@ -227,9 +227,9 @@ const uploadActivityData = async (activities, tenantId, subTenantId) => {
   }));
 
   await client.context.ingest({
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
-    app_knowledge: JSON.stringify(activitySources),
+    tenantId: tenantId,
+    subTenantId: subTenantId,
+    appKnowledge: JSON.stringify(activitySources),
     upsert: true,
   });
 };
@@ -253,11 +253,11 @@ class TravelAssistant {
     // Use HydraDB's thinking mode for complex travel planning
     const response = await this.client.query({
       query: query,
-      tenant_id: userProfile.tenantId,
-      sub_tenant_id: userProfile.subTenantId,
+      tenantId: userProfile.tenantId,
+      subTenantId: userProfile.subTenantId,
       mode: "thinking",
       alpha: "auto",
-      max_results: 20
+      maxResults: 20
     });
 
     return this.processResponse(response);
@@ -266,9 +266,9 @@ class TravelAssistant {
   async processResponse(response) {
     // Generate structured itinerary from AI response
     return {
-      chunks: response.chunks,
-      graphRelations: response.graph_context.chunk_relations,
-      queryPaths: response.graph_context.query_paths
+      chunks: response.data?.chunks,
+      graphRelations: response.data?.graphContext?.chunkRelations,
+      queryPaths: response.data?.graphContext?.queryPaths
     };
   }
 }
@@ -290,8 +290,8 @@ class PersonalizationEngine {
     // Generate memories based on user's travel preferences and booking patterns
     await client.context.ingest({
       type: 'memory',
-      tenant_id: userInteraction.tenantId,
-      sub_tenant_id: userInteraction.userId,
+      tenantId: userInteraction.tenantId,
+      subTenantId: userInteraction.userId,
       upsert: true,
       memories: [{
         id: `user_${userInteraction.userId}`,
@@ -308,15 +308,15 @@ class PersonalizationEngine {
     // Retrieve user memories to provide personalized recommendations
     const memories = await this.client.query({
       type: "memory",
-      tenant_id: tenantId,
-      sub_tenant_id: subTenantId,
+      tenantId: tenantId,
+      subTenantId: subTenantId,
       query: `travel preferences for ${destination}`,
-      max_results: 10
+      maxResults: 10
     });
 
     // memories.chunks contains the user's past preference signals ranked by relevance.
     // Pass these as context to your LLM to generate personalized recommendations.
-    return memories.chunks;
+    return memories.data?.chunks;
   }
 }
 ```
@@ -337,11 +337,11 @@ const searchTravelExperiences = async (query, tenantId, subTenantId, filters = {
 
   const response = await client.query({
     query: searchQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "fast",
     alpha: 1.0,
-    max_results: 20
+    maxResults: 20
   });
 
   return response;
@@ -363,13 +363,13 @@ const handleTravelQuery = async (query, context) => {
 
   const response = await client.query({
     query,
-    tenant_id: context.tenantId,
-    sub_tenant_id: context.subTenantId,
+    tenantId: context.tenantId,
+    subTenantId: context.subTenantId,
     mode: isComplex ? "thinking" : "fast",
-    max_results: isComplex ? 20 : 10
+    maxResults: isComplex ? 20 : 10
   });
 
-  return response.chunks;
+  return response.data.chunks;
 };
 ```
 
@@ -385,19 +385,19 @@ const handleTravelQuery = async (query, context) => {
 const planFamilyVacation = async (query, userProfile) => {
   const response = await client.query({
     query: query,
-    tenant_id: userProfile.tenantId,
-    sub_tenant_id: userProfile.subTenantId,
+    tenantId: userProfile.tenantId,
+    subTenantId: userProfile.subTenantId,
     mode: "thinking",
-    max_results: 20
+    maxResults: 20
   });
 
   // Filter chunks by type to build a structured itinerary.
-  // response.chunks are ranked by AI relevance — filter by metadata type to categorize.
+  // response.data.chunks are ranked by AI relevance — filter by metadata type to categorize.
   const itinerary = {
-    accommodation: response.chunks.filter(c => c.metadata?.type === "accommodation"),
-    activities:    response.chunks.filter(c => c.metadata?.type === "activity"),
-    dining:        response.chunks.filter(c => c.metadata?.type === "dining"),
-    transportation: response.chunks.filter(c => c.metadata?.type === "transportation")
+    accommodation: response.data.chunks.filter(c => c.metadata?.type === "accommodation"),
+    activities:    response.data.chunks.filter(c => c.metadata?.type === "activity"),
+    dining:        response.data.chunks.filter(c => c.metadata?.type === "dining"),
+    transportation: response.data.chunks.filter(c => c.metadata?.type === "transportation")
   };
 
   return itinerary;
@@ -414,14 +414,14 @@ const planFamilyVacation = async (query, userProfile) => {
 const planBusinessTravel = async (query, userProfile) => {
   const response = await client.query({
     query: query,
-    tenant_id: userProfile.tenantId,
-    sub_tenant_id: userProfile.subTenantId,
+    tenantId: userProfile.tenantId,
+    subTenantId: userProfile.subTenantId,
     mode: "fast",
-    max_results: 10
+    maxResults: 10
   });
 
   // Return ranked chunks directly. Filter by metadata.amenities or metadata.location as needed.
-  return response.chunks;
+  return response.data.chunks;
 };
 ```
 
@@ -435,14 +435,14 @@ const planBusinessTravel = async (query, userProfile) => {
 const planAdventureTravel = async (query, userProfile) => {
   const response = await client.query({
     query: query,
-    tenant_id: userProfile.tenantId,
-    sub_tenant_id: userProfile.subTenantId,
+    tenantId: userProfile.tenantId,
+    subTenantId: userProfile.subTenantId,
     mode: "thinking",
-    max_results: 15
+    maxResults: 15
   });
 
   // Return ranked chunks directly. Sort or filter by metadata.difficulty for hiking-specific results.
-  return response.chunks;
+  return response.data.chunks;
 };
 ```
 
@@ -458,10 +458,10 @@ const getWeatherBasedRecommendations = async (destination, travelDate, tenantId,
 
   const response = await client.query({
     query: weatherQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "fast",
-    max_results: 10
+    maxResults: 10
   });
 
   return response;
@@ -478,10 +478,10 @@ const getCulturalEventRecommendations = async (destination, travelDate, tenantId
 
   const response = await client.query({
     query: eventQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "fast",
-    max_results: 10
+    maxResults: 10
   });
 
   return response;
@@ -501,8 +501,8 @@ const analyzeBookingPatterns = async (tenantId, subTenantId, bookingData) => {
   // Generate memory for future personalization
   await client.context.ingest({
     type: 'memory',
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     upsert: true,
     memories: [{
       id: `booking_${tenantId}`,
@@ -524,10 +524,10 @@ const refineSearch = async (originalQuery, userFeedback, tenantId, subTenantId) 
 
   const response = await client.query({
     query: refinedQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "thinking",
-    max_results: 10
+    maxResults: 10
   });
 
   return response;
@@ -546,10 +546,10 @@ const handleMultiLanguageQuery = async (query, language, destination, tenantId, 
 
   const response = await client.query({
     query: localizedQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "fast",
-    max_results: 10
+    maxResults: 10
   });
 
   return response;
@@ -567,8 +567,8 @@ const monitorPriceChanges = async (travelPlan) => {
   // Set up monitoring using HydraDB memories
   await client.context.ingest({
     type: 'memory',
-    tenant_id: travelPlan.tenantId,
-    sub_tenant_id: travelPlan.userId,
+    tenantId: travelPlan.tenantId,
+    subTenantId: travelPlan.userId,
     upsert: true,
     memories: [{
       id: `price_${travelPlan.userId}`,
@@ -628,10 +628,10 @@ const checkAvailability = async (hotelId, checkIn, checkOut, tenantId, subTenant
 
   const response = await client.query({
     query: availabilityQuery,
-    tenant_id: tenantId,
-    sub_tenant_id: subTenantId,
+    tenantId: tenantId,
+    subTenantId: subTenantId,
     mode: "fast",
-    max_results: 5
+    maxResults: 5
   });
 
   return response;
@@ -648,10 +648,10 @@ const getDynamicPricing = async (searchResults, userProfile) => {
 
   const response = await client.query({
     query: pricingQuery,
-    tenant_id: userProfile.tenantId,
-    sub_tenant_id: userProfile.subTenantId,
+    tenantId: userProfile.tenantId,
+    subTenantId: userProfile.subTenantId,
     mode: "fast",
-    max_results: 10
+    maxResults: 10
   });
 
   return response;

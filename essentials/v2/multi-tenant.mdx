@@ -170,8 +170,8 @@ const client = new HydraDBClient({
 // 1. Write a per-user memory under the user's sub_tenant_id.
 await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_123",
+  tenantId: "acme_corp",
+  subTenantId: "user_123",
   upsert: true,
   memories: JSON.stringify([
     {
@@ -184,11 +184,11 @@ await client.context.ingest({
 
 // 2. Search Knowledge + Memories together with type: "all".
 const result = await client.query({
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_123",
+  tenantId: "acme_corp",
+  subTenantId: "user_123",
   query: "refund policy",
   type: "all",
-  query_by: "hybrid",
+  queryBy: "hybrid",
   mode: "thinking",
 });
 ```

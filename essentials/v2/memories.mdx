@@ -195,8 +195,8 @@ client.context.ingest(
 ```typescript TypeScript SDK
 await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_alex",
+  tenantId: "acme_corp",
+  subTenantId: "user_alex",
   memories: JSON.stringify([
     {
       text: "User prefers concise answers",
@@ -276,8 +276,8 @@ const client = new HydraDBClient({
 
 const result = await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_john_123",
+  tenantId: "acme_corp",
+  subTenantId: "user_john_123",
   upsert: true,
   memories: JSON.stringify([
     {
@@ -401,8 +401,8 @@ client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "memory",
-  tenant_id: "acme_corp",
-  sub_tenant_id: "user_john_123",
+  tenantId: "acme_corp",
+  subTenantId: "user_john_123",
   memories: JSON.stringify([
     {
       text:

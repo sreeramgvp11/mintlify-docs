@@ -31,20 +31,20 @@ response = client.tenants.create(
 
 ```typescript TypeScript SDK
 const response = await client.tenants.create({
-  tenant_id: "my_first_tenant",
-  tenant_metadata_schema: [
+  tenantId: "my_first_tenant",
+  tenantMetadataSchema: [
     {
       name: "category",
-      data_type: "VARCHAR",
-      max_length: 256,
-      enable_match: true,
+      dataType: "VARCHAR",
+      maxLength: 256,
+      enableMatch: true,
     },
     {
       name: "product_description",
-      data_type: "VARCHAR",
-      max_length: 4096,
-      enable_dense_embedding: true,
-      enable_sparse_embedding: true,
+      dataType: "VARCHAR",
+      maxLength: 4096,
+      enableDenseEmbedding: true,
+      enableSparseEmbedding: true,
     },
   ],
 });
