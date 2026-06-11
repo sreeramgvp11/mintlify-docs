@@ -5969,7 +5969,7 @@
               }
             ],
             "title": "Graph Payload",
-            "description": "JSON map of source id -> graph; replaces LLM graph extraction for each keyed source (knowledge only). Key = a document_metadata id or app_knowledge item id. Each graph: entities {key:{name,type,namespace,identifier?}}; relations [{source,target,predicate,context?,temporal_details?}] referencing entity keys. Caps per graph: <=5000 entities, <=10000 relations, <=500 relations/entity, context <=2000 chars, name/predicate <=256 chars."
+            "description": "JSON map of source id -> graph; replaces LLM graph extraction for each keyed source. For type=knowledge, key = a document_metadata id or app_knowledge item id. For type=memory, key = a memory id. Each graph: entities {key:{name,type,namespace,identifier?}}; relations [{source,target,predicate,context?,temporal_details?}] referencing entity keys. Caps per graph: <=5000 entities, <=10000 relations, <=500 relations/entity, context <=2000 chars, name/predicate <=256 chars."
           },
           "memories": {
             "anyOf": [

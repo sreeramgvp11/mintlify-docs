@@ -225,7 +225,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
 | <Field name="documents" type="file[]" /> | Binary uploads, **knowledge only**. Required when `type=knowledge` and you want HydraDB to parse documents. Omit when ingesting memories. (default=`[]`) |
 | <Field name="document_metadata" type="string (JSON array)" /> | One entry per file in `documents`, in the same order. If omitted, documents index with inferred defaults such as filename/title. See the item shape below. |
 | <Field name="app_knowledge" type="string (JSON object or array)" /> | Pre-extracted source objects (Slack, Notion, web pages, etc.), **knowledge only**. See the `app_knowledge` item shape below. |
-| <Field name="graph_payload" type="string (JSON map)" /> | Map of source id → your own entities + relations — replaces LLM graph extraction for each keyed source. Works for `type=knowledge` (key = a `document_metadata` id or `app_knowledge` item id) and `type=memory` (key = a memory `id`). See [Bring Your Own Graph](/essentials/v2/bring-your-own-graph) and the shape below. |
+| <Field name="graph_payload" type="string (JSON map)" /> | Map of source id → your own entities + relations - replaces LLM graph extraction for each keyed source. Works for `type=knowledge` (key = a `document_metadata` id or `app_knowledge` item id) and `type=memory` (key = a memory `id`). See [Bring Your Own Graph](/essentials/v2/bring-your-own-graph) and the shape below. |
 | <Field name="memories" type="string (JSON array)" /> | Memory items, **memory only**. Required and non-empty when `type=memory`. Use plural `memories` for the form field, even though `type` is singular `memory`. See the `memories` item shape below. |
 
 ## Common use-cases and their configurations
@@ -510,7 +510,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
 </Accordion>
 
 <Accordion title="Bring your own graph - supply entities and relations">
-  `graph_payload` is a **map of source id → graph** that **replaces LLM graph extraction** for each keyed source. The key is a `document_metadata` id or an `app_knowledge` item id; keyed sources are still chunked and embedded, so they stay searchable. See [Bring Your Own Graph](/essentials/v2/bring-your-own-graph) for the full guide.
+  `graph_payload` is a **map of source id → graph** that **replaces LLM graph extraction** for each keyed source. For `type=knowledge`, the key is a `document_metadata` id or an `app_knowledge` item id; for `type=memory`, the key is a memory `id`. Keyed sources are still chunked and embedded, so they stay searchable. See [Bring Your Own Graph](/essentials/v2/bring-your-own-graph) for the full guide.
 
   <CodeGroup>
 
@@ -585,7 +585,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
 
   | Field | Description |
   | --- | --- |
-  | <Field name="<source_id>" type="object" /> | Top-level key: a `document_metadata` id or `app_knowledge` item id. Value is that source's graph. A key matching no source returns `400`. |
+  | <Field name="<source_id>" type="object" /> | Top-level key: a `document_metadata` id or `app_knowledge` item id for `type=knowledge`, or a memory `id` for `type=memory`. Value is that source's graph. A key matching no source returns `400`. |
   | <Field name="entities" type="object (map)" /> | Map keyed by a caller-local id; each value is an entity. The key is only a handle for `relations` to reference - it is not stored. |
   | <Field name="entities[].name" type="string" required /> | Entity name. Normalized (lowercased) server-side so it matches at query time. ≤ 256 chars. |
   | <Field name="entities[].type" type="string" /> | Entity type (e.g. `PERSON`, `POLICY`). Stored as supplied. |
@@ -599,7 +599,7 @@ Per-document metadata (`id`, `metadata`, `additional_metadata`, `title`, etc.) c
   | <Field name="relations[].temporal_details" type="string" /> | Optional timing info (e.g. "since 2021", "in Q3"). |
 
   <Note>
-  **Per-source replace mode.** Each top-level key must match a `document_metadata` id or `app_knowledge` item id in the same request; attach graphs to multiple sources at once. Extraction is skipped for keyed sources. Caps per graph: ≤ 5,000 entities, ≤ 10,000 relations, ≤ 500 relations per entity; over-cap returns `400`. Graphs survive re-ingest (re-upload or connector re-sync re-applies the stored graph).
+  **Per-source replace mode.** Each top-level key must match a `document_metadata` id or `app_knowledge` item id for `type=knowledge`, or a memory `id` for `type=memory`, in the same request; attach graphs to multiple sources at once. Extraction is skipped for keyed sources. Caps per graph: ≤ 5,000 entities, ≤ 10,000 relations, ≤ 500 relations per entity; over-cap returns `400`. Graphs survive re-ingest (re-upload or connector re-sync re-applies the stored graph).
   </Note>
 </Accordion>
 
