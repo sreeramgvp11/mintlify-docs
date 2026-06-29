@@ -10,7 +10,7 @@ import { Field } from "/snippets/field.jsx";
 
 ```python Python SDK
 response = client.tenants.create(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     tenant_metadata_schema=[
         {
             "name": "category",
@@ -31,7 +31,7 @@ response = client.tenants.create(
 
 ```typescript TypeScript SDK
 const response = await client.tenants.create({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   tenantMetadataSchema: [
     {
       name: "category",
@@ -56,7 +56,7 @@ curl -X POST 'https://api.hydradb.com/tenants' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "my_first_tenant",
+    "database": "my_first_tenant",
     "tenant_metadata_schema": [
       {
         "name": "category",
@@ -79,9 +79,13 @@ curl -X POST 'https://api.hydradb.com/tenants' \
 
 ## Request body
 
+<Note>
+`database` and `collection` are the current field names (formerly `tenant_id` and `sub_tenant_id`). The old names remain accepted as deprecated aliases for full backward compatibility.
+</Note>
+
 | Name | Description |
 | --- | --- |
-| <Field name="tenant_id" type="string" required /> | Account-scoped tenant identifier. Use a stable, case-sensitive ID up to 25 characters; prefer lowercase letters, numbers, and underscores for portability. |
+| <Field name="database" type="string" required /> | Account-scoped tenant identifier. Use a stable, case-sensitive ID up to 25 characters; prefer lowercase letters, numbers, and underscores for portability. Formerly `tenant_id`; the `tenant_id` alias is still accepted (deprecated). |
 | <Field name="tenant_metadata_schema" type="array" /> | Defines tenant-level metadata fields. See the [Scoping using metadata](/essentials/v2/metadata#schema-declaration-set-at-tenant-creation) guide for detailed schema parameters. (default=`null`) |
 
 ## Successful response

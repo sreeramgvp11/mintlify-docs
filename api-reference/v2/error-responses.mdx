@@ -58,7 +58,7 @@ Use `error.code` for branching and log `meta.request_id` for every failed reques
 | `INVALID_PARAMETERS` | `400` | A required parameter is missing, malformed, or mutually incompatible with another parameter. |
 | `UNAUTHORIZED` | `401` | The `Authorization: Bearer <your_api_key>` header is missing or invalid. |
 | `FORBIDDEN` | `403` | The API key is valid but does not have access to the requested resource, or the account/plan limit prevents the operation. |
-| `TENANT_ALREADY_EXISTS` | `409` | `POST /tenants` received a `tenant_id` that is already in use. |
+| `TENANT_ALREADY_EXISTS` | `409` | `POST /tenants` received a `database` (formerly `tenant_id`) that is already in use. |
 | `TENANT_NOT_FOUND` | `404` | The requested tenant does not exist or is not visible to the current API key. |
 | `SOURCE_NOT_FOUND` | `404` | The requested source or memory ID does not exist in the selected tenant/sub-tenant. |
 | `VALIDATION_ERROR` | `422` | The request shape was valid JSON/form data, but one or more fields failed semantic validation. |
@@ -102,7 +102,7 @@ async function withRetry<T>(
 
 const result = await withRetry(() =>
   client.query({
-        tenantId: "my_first_tenant",
+        database: "my_first_tenant",
         query: "What are the pricing tiers?",
         type: "knowledge",
   })
@@ -127,7 +127,7 @@ def with_retry(operation, max_retries=3):
             time.sleep(delay)
 
 result = with_retry(lambda: client.query(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     query="What are the pricing tiers?",
     type="knowledge",
 ))
@@ -160,7 +160,7 @@ import { HydraDBError } from "@hydradb/sdk";
 try {
   await client.context.ingest({
     type: "knowledge",
-    tenantId: "my_first_tenant",
+    database: "my_first_tenant",
     documents: [{ path: "policy.pdf", filename: "policy.pdf" }],
   });
 } catch (error) {
@@ -187,7 +187,7 @@ from hydra_db import HydraDBError
 try:
     client.context.ingest(
     type="knowledge",
-        tenant_id="my_first_tenant",
+        database="my_first_tenant",
         documents=[("policy.pdf", open("policy.pdf", "rb"), "application/pdf")],
     )
 except HydraDBError as exc:
@@ -233,7 +233,7 @@ Empty results are not always errors. Check these first:
 
 - Context status may still be `queued` or `processing`; poll [`GET /context/status`](/api-reference/v2/endpoint/source-status).
 - `metadata_filters` may be too restrictive or may target the wrong metadata namespace.
-- The query may be scoped to the wrong `tenant_id` or `sub_tenant_id`.
+- The query may be scoped to the wrong `database` or `collection` (formerly `tenant_id` / `sub_tenant_id`).
 - The `type` value may exclude the collection you need. Use `type: "all"` when combining knowledge and memories in `POST /query`.
 
 ## Related sections

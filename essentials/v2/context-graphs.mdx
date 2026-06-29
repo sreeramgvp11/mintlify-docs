@@ -75,7 +75,7 @@ curl -X POST 'https://api.hydradb.com/query' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "acme_corp",
+    "database": "acme_corp",
     "query": "How does the billing system handle failed payments?",
     "type": "knowledge",
     "query_by": "hybrid",
@@ -86,7 +86,7 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenantId: "acme_corp",
+  database: "acme_corp",
   query: "How does the billing system handle failed payments?",
   type: "knowledge",
   queryBy: "hybrid",
@@ -107,7 +107,7 @@ if (result.data?.graphContext) {
 
 ```python Python SDK
 result = client.query(
-    tenant_id="acme_corp",
+    database="acme_corp",
     query="How does the billing system handle failed payments?",
     type="knowledge",
     query_by="hybrid",

@@ -14,7 +14,7 @@ Knowledge is the counterpart to [Memories](/essentials/v2/memories), which holds
 | | Knowledge | Memories |
 |---|---|---|
 | **Content** | Documents, files, app-generated content | User preferences, conversations, inferred traits |
-| **Scope** | Shared across all users in a tenant | Per-user, scoped by `sub_tenant_id` |
+| **Scope** | Shared across all users in a tenant | Per-user, scoped by `collection` (formerly `sub_tenant_id`) |
 | **Mutability** | Versioned  -  replaced or deleted explicitly | Dynamic  -  evolves with every interaction |
 | **Query via** | [`POST /query`](/api-reference/v2/endpoint/query) with `type: "knowledge"` | [`POST /query`](/api-reference/v2/endpoint/query) with `type: "memory"` |
 | **`vectorstore_status`** | `vectorstore_status.knowledge` | `vectorstore_status.memories` |
@@ -80,7 +80,7 @@ import json
 with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb") as f2:
     result = client.context.ingest(
         type="knowledge",
-        tenant_id="acme_corp",
+        database="acme_corp",
         documents=[
             ("policy.pdf", f1, "application/pdf"),
             ("runbook.pdf", f2, "application/pdf"),
@@ -94,7 +94,7 @@ with open("/path/to/policy.pdf", "rb") as f1, open("/path/to/runbook.pdf", "rb")
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenantId: "acme_corp",
+  database: "acme_corp",
   documents: [
     { path: "/path/to/policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
     { path: "/path/to/runbook.pdf", filename: "runbook.pdf", contentType: "application/pdf" },
@@ -110,7 +110,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -H "API-Version: 2" \
   -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
+  -F "database=acme_corp" \
   -F "documents=@/path/to/policy.pdf" \
   -F "documents=@/path/to/runbook.pdf" \
   -F 'document_metadata=[
@@ -130,11 +130,11 @@ import json
 
 result = client.context.ingest(
     type="knowledge",
-    tenant_id="acme_corp",
+    database="acme_corp",
     app_knowledge=json.dumps([
         {
-            "tenant_id": "acme_corp",
-            "sub_tenant_id": "default",
+            "database": "acme_corp",
+            "collection": "default",
             "id": "slack_C01_1716213600_000100",
             "title": "Pricing discussion - Slack #product",
             "type": "slack",
@@ -157,11 +157,11 @@ result = client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenantId: "acme_corp",
+  database: "acme_corp",
   appKnowledge: JSON.stringify([
     {
-      tenant_id: "acme_corp",
-      sub_tenant_id: "default",
+      database: "acme_corp",
+      collection: "default",
       id: "slack_C01_1716213600_000100",
       title: "Pricing discussion - Slack #product",
       type: "slack",
@@ -186,11 +186,11 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -H "API-Version: 2" \
   -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
+  -F "database=acme_corp" \
   -F 'app_knowledge=[
     {
-      "tenant_id": "acme_corp",
-      "sub_tenant_id": "default",
+      "database": "acme_corp",
+      "collection": "default",
       "id": "slack_C01_1716213600_000100",
       "title": "Pricing discussion - Slack #product",
       "type": "slack",
@@ -254,8 +254,8 @@ terminal = {"completed", "errored"}
 
 while True:
     status = client.context.status(
-        tenant_id="acme_corp",
-        sub_tenant_id="default",
+        database="acme_corp",
+        collection="default",
         ids=ids,
     )
     if all(s.indexing_status in terminal for s in status.data.statuses):
@@ -269,8 +269,8 @@ const terminal = new Set(["completed", "errored"]);
 let status;
 while (true) {
   status = await client.context.status({
-    tenantId: "acme_corp",
-    subTenantId: "default",
+    database: "acme_corp",
+    collection: "default",
     ids: ids,
   });
 
@@ -285,8 +285,8 @@ while true; do
   response=$(curl -s -G 'https://api.hydradb.com/context/status' \
     -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
     -H "API-Version: 2" \
-    --data-urlencode "tenant_id=acme_corp" \
-    --data-urlencode "sub_tenant_id=default" \
+    --data-urlencode "database=acme_corp" \
+    --data-urlencode "collection=default" \
     --data-urlencode "ids=policy_v2" \
     --data-urlencode "ids=runbook_deploy")
 
@@ -343,8 +343,8 @@ The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ing
 | Field | Description |
 |---|---|
 | <Field name="id" type="string" recommended /> | Stable ID. Used as the upsert/delete/status key. |
-| <Field name="tenant_id" type="string" recommended /> | Tenant that owns the item. Must match form-level `tenant_id` when present. |
-| <Field name="sub_tenant_id" type="string" recommended /> | Logical partition. Must match form-level `sub_tenant_id` when present. |
+| <Field name="database" type="string" recommended /> | Tenant that owns the item. Must match form-level `database` (formerly `tenant_id`) when present. |
+| <Field name="collection" type="string" recommended /> | Logical partition. Must match form-level `collection` when present. |
 | <Field name="title" type="string" recommended /> | Short title, subject, ticket title, or page name. |
 | <Field name="type" type="string" recommended /> | Source category for display/analytics, such as `slack`, `notion`, `gmail`, or `jira`. |
 | <Field name="kind" type="email, message, ticket, knowledge_base, comment, custom" recommended /> | App object kind. Selects the app parser for `fields`. |
@@ -363,8 +363,8 @@ The full schema lives on [`POST /context/ingest`](/api-reference/v2/endpoint/ing
 
 | Field | Default | Description |
 |---|---|---|
-| <Field name="tenant_id" type="string" required /> |  -  | Target tenant. |
-| <Field name="sub_tenant_id" type="string" /> | none | Scope this knowledge to a sub-tenant. If omitted, knowledge is available to all sub-tenants. |
+| <Field name="database" type="string" required /> |  -  | Target tenant. |
+| <Field name="collection" type="string" /> | none | Scope this knowledge to a sub-tenant. If omitted, knowledge is available to all sub-tenants. |
 | <Field name="upsert" type="boolean" /> | `true` | Replace existing items with the same `id`. |
 
 ---
@@ -401,11 +401,11 @@ For file uploads, set `relations.ids` on the matching `document_metadata` item. 
 ```python Python SDK
 client.context.ingest(
     type="knowledge",
-    tenant_id="acme_corp",
+    database="acme_corp",
     app_knowledge=json.dumps([
         {
-            "tenant_id": "acme_corp",
-            "sub_tenant_id": "default",
+            "database": "acme_corp",
+            "collection": "default",
             "id": "auth-guide",
             "title": "Authentication Guide",
             "type": "notion",
@@ -424,7 +424,7 @@ client.context.ingest(
 ```typescript TypeScript SDK
 await client.context.ingest({
   type: "knowledge",
-  tenantId: "acme_corp",
+  database: "acme_corp",
   appKnowledge: JSON.stringify([
     {
       id: "auth-guide",
@@ -447,7 +447,7 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -H "API-Version: 2" \
   -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
+  -F "database=acme_corp" \
   -F 'app_knowledge=[
     {
       "id": "auth-guide",
@@ -509,7 +509,7 @@ See [Metadata](/essentials/v2/metadata) for schema design, filter examples, and 
 | Using `additional_metadata` for filterable fields | Filters are silently ignored unless nested correctly | Put filterable keys in `metadata` and declare them in the [tenant schema](/api-reference/v2/endpoint/create-tenant), or filter under `metadata_filters: {"additional_metadata": {...}}`  -  see [Metadata](/essentials/v2/metadata). |
 | Not polling [`/context/status`](/api-reference/v2/endpoint/source-status) before querying | Chunks aren't indexed yet  -  empty query results | Wait for `indexing_status: completed` (or `graph_creation` for partial availability). |
 | Sending `document_metadata` as a JSON object instead of a JSON string | `multipart/form-data` validation fails | Stringify `document_metadata` before sending in the `-F` field. |
-| Omitting `tenant_id` | `422` validation error | Required on every call. |
+| Omitting `database` | `422` validation error | Required on every call. |
 | Pointing forceful relations at memory IDs from a knowledge source | Silently returns nothing at query | Forceful relations work **within the same store**  -  knowledge→knowledge, memory→memory. |
 
 ---

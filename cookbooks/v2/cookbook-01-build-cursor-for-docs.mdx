@@ -92,7 +92,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import client, TENANT_ID
 
 def create_tenant():
-    client.tenants.create(tenant_id=TENANT_ID)
+    client.tenants.create(database=TENANT_ID)
     print("Accepted")
     _poll_until_ready()
 
@@ -100,7 +100,7 @@ def _poll_until_ready(timeout=180, interval=4):
     print("Polling for readiness...")
     deadline = time.time() + timeout
     while time.time() < deadline:
-        status = client.tenants.status(tenant_id=TENANT_ID).data
+        status = client.tenants.status(database=TENANT_ID).data
         infra = status.infra
         if infra.scheduler_status and infra.graph_status and infra.vectorstore_status.knowledge and infra.vectorstore_status.memories:
             print("✓ Tenant ready."); return
@@ -165,7 +165,7 @@ def upload_file(filepath: str):
 
     with open(filepath, "rb") as f:
         result = client.context.ingest(
-            tenant_id=TENANT_ID,
+            database=TENANT_ID,
             documents=[(filename, f, "text/markdown")],
         )
 
@@ -190,7 +190,7 @@ Copy your id for use in verify.py: {'results': [{'id': 'YOUR_ID_HERE', 'filename
 The exact value of `id` depends on HydraDB's internal file registration. Copy the value returned and use it in Step 3.
 
 **If it fails:**
-- `404 Tenant does not exist` - Step 1 not complete, or `tenant_id` mismatch.
+- `404 Tenant does not exist` - Step 1 not complete, or `database` mismatch.
 - `400 / missing files` - Confirm the field name is `documents` (not `file`), and that `Content-Type` is NOT manually set in headers.
 
 ---
@@ -217,7 +217,7 @@ def verify_item(id: str, timeout: int = 120, interval: int = 3):
     deadline = time.time() + timeout
     while time.time() < deadline:
         status = client.context.status(
-            tenant_id=TENANT_ID,
+            database=TENANT_ID,
             ids=[id],
         )
         print("STATUS:", status)
@@ -258,12 +258,12 @@ RESPONSE: {"statuses": [{"id": "YOUR_ID_HERE", "indexing_status": "completed"}]}
 
 ```json
 {
-  "tenant_id":   "engineering-docs",
+  "database":   "engineering-docs",
   "query":       "internal IP auth skip logic",
   "max_results": 10
 }
 
-// sub_tenant_id is NOT required for this working flow.
+// collection is NOT required for this working flow.
 // HydraDB handles scope internally when omitted.
 // Response contains a "chunks" array - read chunk_content from each item.
 ```
@@ -276,12 +276,12 @@ from config import client, TENANT_ID
 def search(query: str, max_results: int = 10):
     """
     Minimal working search.
-    Only tenant_id + query + max_results are required.
-    sub_tenant_id is NOT required - HydraDB handles scope internally.
+    Only database + query + max_results are required.
+    collection is NOT required - HydraDB handles scope internally.
     Returns SDK object with .chunks and .sources attributes.
     """
     data = client.query(
-        tenant_id=TENANT_ID,
+        database=TENANT_ID,
         query=query,
         max_results=max_results,
     )
@@ -401,7 +401,7 @@ def git_timestamp(repo_path: str, rel_path: str) -> str:
 
 def upload_batch(batch: list) -> list:
     result = client.context.ingest(
-        tenant_id=TENANT_ID,
+        database=TENANT_ID,
         app_knowledge=json.dumps(batch),
     )
     ids = [r.id for r in (result.data.results or []) if r.id]
@@ -486,9 +486,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import client, TENANT_ID
 
 def tuned_recall(query: str, scope: str = None, max_results: int = 15):
-    """scope: optional sub_tenant_id. Omit to search all sub-tenants automatically."""
+    """scope: optional collection. Omit to search all sub-tenants automatically."""
     kwargs = {
-        "tenant_id":     TENANT_ID,
+        "database":     TENANT_ID,
         "query":         query,
         "max_results":   max_results,
         "mode":          "thinking",
@@ -496,7 +496,7 @@ def tuned_recall(query: str, scope: str = None, max_results: int = 15):
         "alpha":         0.75,
         "recency_bias":  0.2,
     }
-    if scope: kwargs["sub_tenant_id"] = scope
+    if scope: kwargs["collection"] = scope
     return client.query(**kwargs)
 
 def build_context(chunks: list, min_score: float = 0.5) -> tuple[str, list]:
@@ -773,7 +773,7 @@ from config import client, TENANT_ID
 
 def multi_source_recall(question: str):
     return client.query(
-        tenant_id=TENANT_ID,
+        database=TENANT_ID,
         query=question,
         max_results=15,
         mode="thinking",
@@ -911,13 +911,13 @@ def search_docs(
     """
     PRIMARY VERIFIED PATH - build and test your backend on this function first.
 
-    Calls /query. scope (sub_tenant_id) is optional - omit to
+    Calls /query. scope (collection) is optional - omit to
     search all sub-tenants automatically. Response contains:
       "chunks"  - iterate this array; read chunk_content from each item for LLM context
       "sources" - deduplicated source list; use for citations
     """
     kwargs = {
-        "tenant_id":     TENANT_ID,
+        "database":     TENANT_ID,
         "query":         query,
         "max_results":   max_results,
         "mode":          "thinking",
@@ -926,7 +926,7 @@ def search_docs(
         "recency_bias":  recency_bias,
     }
     if scope:
-        kwargs["sub_tenant_id"] = scope
+        kwargs["collection"] = scope
     return client.query(**kwargs)
 
 ```
@@ -950,7 +950,7 @@ def recall_context(query: str, max_results: int = 10):
     return search_docs(
         query=query,
         max_results=max_results,
-        scope=None,            # no sub_tenant_id needed - HydraDB handles scope
+        scope=None,            # no collection needed - HydraDB handles scope
         graph_context=True,
         recency_bias=0.2,
     )
@@ -1275,21 +1275,21 @@ A good progression: Phase 0 search in the terminal → FastAPI `/ask` in Postman
 
 ### 404 - Tenant Does Not Exist
 
-**Cause:** You are attempting to upload or query before the tenant was created, or the `tenant_id` in your request does not match the one you created. Tenant IDs are case-sensitive.
+**Cause:** You are attempting to upload or query before the tenant was created, or the `database` in your request does not match the one you created. Tenant IDs are case-sensitive.
 
 **Fix:** Run `python3 phase0/create_tenant.py` and wait for "✓ Tenant ready." before proceeding. Confirm `TENANT_ID` in `config.py` exactly matches what you passed to `create_tenant`.
 
 ### 404 - Not Found (on search or ingestion endpoint)
 
-**Cause:** The endpoint path has a typo, extra slash, or missing segment. Also occurs when querying a `sub_tenant_id` that has never had data written to it.
+**Cause:** The endpoint path has a typo, extra slash, or missing segment. Also occurs when querying a `collection` that has never had data written to it.
 
-**Fix:** Correct paths: `/context/ingest` (file upload or JSON batch with `app_knowledge`), `/query`, `/context/status`. If using `sub_tenant_id`, confirm at least one batch was successfully uploaded to that sub-tenant first.
+**Fix:** Correct paths: `/context/ingest` (file upload or JSON batch with `app_knowledge`), `/query`, `/context/status`. If using `collection`, confirm at least one batch was successfully uploaded to that sub-tenant first.
 
 ### 400 - Provide at least one of: documents or app_knowledge
 
 **Cause:** For file upload: the field name is wrong (`file` instead of `documents`), or `Content-Type: application/json` was manually set (which breaks multipart). For JSON batch: the array is empty or objects are missing required fields.
 
-**Fix:** For file upload: use `files={"documents": (filename, f, "text/markdown")}` and `data={"tenant_id": TENANT_ID}`. Do NOT set `Content-Type` manually. For JSON batch: confirm each item has `id`, `type`, and `content.text`.
+**Fix:** For file upload: use `files={"documents": (filename, f, "text/markdown")}` and `data={"database": TENANT_ID}`. Do NOT set `Content-Type` manually. For JSON batch: confirm each item has `id`, `type`, and `content.text`.
 
 ### Empty Search - chunks: []
 
@@ -1338,27 +1338,27 @@ All endpoints used in this cookbook. Base URL: `https://api.hydradb.com`. Header
 **POST** `/tenants` - Async, poll `/tenants/status` before ingesting
 
 ```json
-Request:  { "tenant_id": "engineering-docs" }
+Request:  { "database": "engineering-docs" }
 
 Response:
 {
-  "tenant_id": "engineering-docs",
+  "database": "engineering-docs",
   "status":    "accepted",
   "message":   "Tenant accepted. Poll /tenants/status for readiness."
 }
 
-GET /tenants/status?tenant_id=engineering-docs
+GET /tenants/status?database=engineering-docs
 → { "status": "ready" }
 ```
 
 ### Upload File - Beginner Path
 
-**POST** `/context/ingest` - Multipart form-data · field name `"files"` · tenant_id as form field
+**POST** `/context/ingest` - Multipart form-data · field name `"files"` · database as form field
 
 ```python
 # Correct multipart file upload
 client.context.ingest(
-    tenant_id=TENANT_ID,
+    database=TENANT_ID,
     documents=[(filename, f, "text/markdown")],
 )
 
@@ -1383,7 +1383,7 @@ client.context.ingest(
 import json
 
 client.context.ingest(
-    tenant_id="engineering-docs",
+    database="engineering-docs",
     app_knowledge=json.dumps([{
         "id":          "myrepo/auth/middleware.py",
         "title":       "auth/middleware.py",
@@ -1404,7 +1404,7 @@ client.context.ingest(
 **GET** `/context/status` - Returns `statuses[]` array · poll until `"completed"`
 
 ```json
-// Required: ?ids=<id>&tenant_id=engineering-docs
+// Required: ?ids=<id>&database=engineering-docs
 
 // Response:
 {
@@ -1417,16 +1417,16 @@ client.context.ingest(
 
 ### Search - Validated Minimal Request
 
-**POST** `/query` - Primary verified path · `sub_tenant_id` optional · returns `chunks[]` and `sources[]`
+**POST** `/query` - Primary verified path · `collection` optional · returns `chunks[]` and `sources[]`
 
 ```json
 {
-  "tenant_id":   "engineering-docs",
+  "database":   "engineering-docs",
   "query":       "internal IP auth skip logic",
   "max_results": 10
 }
 
-// sub_tenant_id is NOT required. HydraDB handles scope internally.
+// collection is NOT required. HydraDB handles scope internally.
 // Response: {"chunks": [...], "sources": [...]}
 // Read chunk_content from each item in chunks[] for LLM context.
 // relevancy_score on each chunk indicates ranked relevance.
@@ -1438,7 +1438,7 @@ client.context.ingest(
 
 ```json
 {
-  "tenant_id":     "engineering-docs",
+  "database":     "engineering-docs",
   "query":         "Why does auth middleware skip token validation for internal IPs?",
   "max_results":   15,
   "mode":          "thinking",

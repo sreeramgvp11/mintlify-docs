@@ -54,8 +54,8 @@ For filter design, read [Usage - Metadata](/essentials/v2/metadata) before creat
 |---|---|
 | Fast document RAG | `type="knowledge"`, `query_by="hybrid"`, `mode="fast"`, `max_results=5-10`, `graph_context=false` |
 | Highest-quality document RAG | `type="knowledge"`, `query_by="hybrid"`, `mode="thinking"`, `graph_context=true`, `alpha="auto"` |
-| Personalized answer | `type="all"`, include `sub_tenant_id`, `query_by="hybrid"`, `mode="thinking"` |
-| User preferences only | `type="memory"`, include `sub_tenant_id`, `query_by="hybrid"` |
+| Personalized answer | `type="all"`, include `collection`, `query_by="hybrid"`, `mode="thinking"` |
+| User preferences only | `type="memory"`, include `collection`, `query_by="hybrid"` |
 | Exact keyword or phrase | `type="knowledge"`, `query_by="text"`, `operator="phrase"` |
 | Recent operational updates | `query_by="hybrid"`, `recency_bias=0.2-0.4`, filter to the right document type |
 
@@ -68,7 +68,7 @@ Use this for standard RAG over docs, PDFs, tickets, pages, or app sources.
 
 ```json
 {
-  "tenant_id": "acme",
+  "database": "acme",
   "query": "What is our refund policy?",
   "type": "knowledge",
   "query_by": "hybrid",
@@ -82,12 +82,12 @@ Use this for standard RAG over docs, PDFs, tickets, pages, or app sources.
 
   <Accordion title="Personalized answer with memories">
 
-Use this when the answer should combine shared knowledge with user-specific context. Always pass the same `sub_tenant_id` used at memory ingestion.
+Use this when the answer should combine shared knowledge with user-specific context. Always pass the same `collection` used at memory ingestion.
 
 ```json
 {
-  "tenant_id": "acme",
-  "sub_tenant_id": "user_alex",
+  "database": "acme",
+  "collection": "user_alex",
   "query": "What is our refund policy, and how should I explain it to this user?",
   "type": "all",
   "query_by": "hybrid",
@@ -103,7 +103,7 @@ Use `metadata_filters` when you already know the slice you want. Top-level keys 
 
 ```json
 {
-  "tenant_id": "acme",
+  "database": "acme",
   "query": "What launch constraints apply to enterprise customers?",
   "type": "knowledge",
   "query_by": "hybrid",
@@ -124,7 +124,7 @@ Use text query when literal wording matters: legal clauses, SKUs, error codes, I
 
 ```json
 {
-  "tenant_id": "acme",
+  "database": "acme",
   "query": "GDPR Article 17",
   "type": "knowledge",
   "query_by": "text",

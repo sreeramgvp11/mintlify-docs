@@ -58,7 +58,7 @@ Memories and Knowledge are distinct at the storage layer, not just conceptually:
 |  | Memories | Knowledge |
 | --- | --- | --- |
 | **Content** | User preferences, conversation history, inferred traits | Documents, files, app-generated content |
-| **Scope** | Per-user (scoped by `sub_tenant_id`) | Can be shared across all users in a tenant |
+| **Scope** | Per-user (scoped by `collection`) | Can be shared across all users in a tenant |
 | **Mutability** | Dynamic - evolves with every interaction | Versioned - replaced or deleted explicitly |
 | **Query `type`** | `"memory"` | `"knowledge"` |
 | **Inference** | `infer` flag extracts traits automatically | Not applicable - content is parsed and chunked |
@@ -89,6 +89,10 @@ A **sub-tenant** is a logical partition within a tenant - a user, team, project,
 
 - **B2B** - each customer is a tenant; their departments are sub-tenants
 - **B2C** - one tenant for the organization; each end user is a sub-tenant
+
+<Note>
+  In API requests, a tenant is set with the **`database`** field (formerly `tenant_id`) and a sub-tenant with the **`collection`** field (formerly `sub_tenant_id`). The old names still work as deprecated aliases, so existing code keeps running unchanged.
+</Note>
 
 Read More: [Concepts → Multi-Tenant Support](/essentials/v2/multi-tenant)
 

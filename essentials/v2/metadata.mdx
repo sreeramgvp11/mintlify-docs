@@ -28,7 +28,9 @@ If a field will be scoped on **every** query, it belongs in `metadata` and the [
 
 ## 2. Parameter reference
 
-[Follow this for when to use `tenant_id` and `sub_tenant_id`](./multi-tenant#2-when-to-use-each)
+[Follow this for when to use `database` and `collection`](./multi-tenant#2-when-to-use-each)
+
+The `database` field was formerly `tenant_id` and `collection` was formerly `sub_tenant_id`; the old names still work as deprecated aliases.
 
 ### Schema declaration (set at tenant creation)
 
@@ -78,7 +80,7 @@ Most of the time the defaults are right. When they aren't, here's where to start
 - **Use exact-equality only.** `metadata_filters` are equality constraints across all categories. Range, contains, or fuzzy matching belong in the query, query mode, or downstream reranking  -  not here.
 - **Keep keys stable.** Renaming a metadata key requires re-ingesting affected sources. Same goes for changing `enable_match` flags.
 - **Ingested metadata is immutable.** Once a source is indexed, its `metadata` and `additional_metadata` values are locked. To change them, re-ingest the source with the new values (use `upsert: true` and the same `id`).
-- **Don't substitute `metadata_filters` for `sub_tenant_id`.** `metadata_filters` scopes results *inside* a partition. For partitioning by user, team, or workspace, use [`sub_tenant_id`](/essentials/v2/multi-tenant).
+- **Don't substitute `metadata_filters` for `collection`.** `metadata_filters` scopes results *inside* a partition. For partitioning by user, team, or workspace, use [`collection`](/essentials/v2/multi-tenant).
 
 ---
 
@@ -99,7 +101,7 @@ curl -X POST 'https://api.hydradb.com/tenants' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "acme_corp",
+    "database": "acme_corp",
     "tenant_metadata_schema": [
       {
         "name": "compliance_framework",
@@ -111,7 +113,7 @@ curl -X POST 'https://api.hydradb.com/tenants' \
 ```
 ```typescript TypeScript SDK
 await client.tenants.create({
-  tenantId: "acme_corp",
+  database: "acme_corp",
   tenantMetadataSchema: [
     {
       name: "compliance_framework",
@@ -123,7 +125,7 @@ await client.tenants.create({
 ```
 ```python Python SDK
 client.tenants.create(
-    tenant_id="acme_corp",
+    database="acme_corp",
     tenant_metadata_schema=[
         {
             "name": "compliance_framework",
@@ -145,11 +147,11 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
   -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
   -H "API-Version: 2" \
   -F "type=knowledge" \
-  -F "tenant_id=acme_corp" \
+  -F "database=acme_corp" \
   -F 'app_knowledge=[
     {
-      "tenant_id": "acme_corp",
-      "sub_tenant_id": "default",
+      "database": "acme_corp",
+      "collection": "default",
       "id": "auth-controls-001",
       "kind": "knowledge_base",
       "fields": {
@@ -164,11 +166,11 @@ curl -X POST 'https://api.hydradb.com/context/ingest' \
 ```typescript TypeScript SDK
 await client.context.ingest({
   type: "knowledge",
-  tenantId: "acme_corp",
+  database: "acme_corp",
   appKnowledge: JSON.stringify([
     {
-      tenant_id: "acme_corp",
-      sub_tenant_id: "default",
+      database: "acme_corp",
+      collection: "default",
       id: "auth-controls-001",
       kind: "knowledge_base",
       fields: {
@@ -186,11 +188,11 @@ import json
 
 client.context.ingest(
     type="knowledge",
-    tenant_id="acme_corp",
+    database="acme_corp",
     app_knowledge=json.dumps([
         {
-            "tenant_id": "acme_corp",
-            "sub_tenant_id": "default",
+            "database": "acme_corp",
+            "collection": "default",
             "id": "auth-controls-001",
             "kind": "knowledge_base",
             "fields": {
@@ -220,7 +222,7 @@ curl -X POST 'https://api.hydradb.com/query' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "acme_corp",
+    "database": "acme_corp",
     "query": "How does authentication control review work?",
     "type": "knowledge",
     "query_by": "hybrid",
@@ -232,7 +234,7 @@ curl -X POST 'https://api.hydradb.com/query' \
 ```
 ```typescript TypeScript SDK
 const result = await client.query({
-  tenantId: "acme_corp",
+  database: "acme_corp",
   query: "How does authentication control review work?",
   type: "knowledge",
   queryBy: "hybrid",
@@ -244,7 +246,7 @@ const result = await client.query({
 ```
 ```python Python SDK
 result = client.query(
-    tenant_id="acme_corp",
+    database="acme_corp",
     query="How does authentication control review work?",
     type="knowledge",
     query_by="hybrid",
@@ -277,7 +279,7 @@ Top-level `compliance_framework` is the fast scope, applied in the vector store 
 
 ## 6. Advanced patterns
 
-**Stacked scopes with sub-tenant partitioning.** Use `sub_tenant_id` for the partition (per-user, per-workspace), and use `metadata_filters` to scope *inside* that partition. They're complementary, not interchangeable. See [Multi-Tenant](/essentials/v2/multi-tenant).
+**Stacked scopes with sub-tenant partitioning.** Use `collection` for the partition (per-user, per-workspace), and use `metadata_filters` to scope *inside* that partition. They're complementary, not interchangeable. See [Multi-Tenant](/essentials/v2/multi-tenant).
 
 **Published vs draft.** Add a `status` field with `enable_match: true` to your schema; tag every source with `metadata.status = "draft" | "published"`; pass `metadata_filters: { status: "published" }` on user-facing queries. Keeps work-in-progress out of customer answers automatically.
 

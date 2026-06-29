@@ -17,7 +17,7 @@ Supports pagination, metadata filters, and field projection. For more details on
 
 ```python Python SDK
 sources = client.context.list(
-    tenant_id="acme_corp",
+    database="acme_corp",
     type="knowledge",
     page=1,
     page_size=50,
@@ -31,7 +31,7 @@ sources = client.context.list(
 
 ```typescript TypeScript SDK
 const sources = await client.context.list({
-  tenantId: "acme_corp",
+  database: "acme_corp",
   type: "knowledge",
   page: 1,
   pageSize: 50,
@@ -49,7 +49,7 @@ curl -X POST 'https://api.hydradb.com/context/list' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "acme_corp",
+    "database": "acme_corp",
     "type": "knowledge",
     "page": 1,
     "page_size": 50,
@@ -67,8 +67,8 @@ curl -X POST 'https://api.hydradb.com/context/list' \
 
 | Name | Description |
 | --- | --- |
-| <Field name="tenant_id" type="string" required /> | Owning tenant. |
-| <Field name="sub_tenant_id" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. (default=`null`) |
+| <Field name="database" type="string" required /> | Owning tenant. Formerly `tenant_id`; the `tenant_id` alias is still accepted (deprecated). |
+| <Field name="collection" type="string or null" /> | Sub-tenant scope. If omitted, the default sub-tenant is used. Formerly `sub_tenant_id`; the `sub_tenant_id` alias is still accepted (deprecated). (default=`null`) |
 | <Field name="type" type="&#x22;knowledge&#x22; or &#x22;memory&#x22;" /> | Bucket to list. (default=`"knowledge"`) |
 | <Field name="ids" type="string[] or null" /> | When provided and non-empty, only items with these IDs are returned (pagination \+ filters still apply). (default=`null`) |
 | <Field name="page" type="integer" /> | Page number (1-indexed). (default=`1`) |

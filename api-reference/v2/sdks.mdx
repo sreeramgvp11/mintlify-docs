@@ -58,14 +58,16 @@ The REST API uses **snake_case** for all request and response fields, and both S
 
 | | Method naming | Parameter field naming | Example |
 |---|---|---|---|
-| **Raw HTTP / cURL** |  -  | snake_case | `tenant_id`, `sub_tenant_id` |
-| **Python SDK** | snake_case | snake_case | method: `query()`, params: `tenant_id`, `query_by` |
-| **TypeScript SDK** | camelCase for multi-word methods | snake_case | method: `query()`, params: `tenant_id`, `query_by` |
+| **Raw HTTP / cURL** |  -  | snake_case | `database`, `collection`, `query_by` |
+| **Python SDK** | snake_case | snake_case | method: `query()`, params: `database`, `query_by` |
+| **TypeScript SDK** | camelCase for multi-word methods | snake_case | method: `query()`, params: `database`, `query_by` |
 
 <Info>
-**Use snake_case request fields in TypeScript examples too** (e.g., `client.context.list({ tenant_id: "...", page_size: 50 })`). The SDK sends the same names on the wire, matching the OpenAPI schema.
+**Use snake_case request fields in TypeScript examples too** (e.g., `client.context.list({ database: "...", page_size: 50 })`). The SDK sends the same names on the wire, matching the OpenAPI schema.
 
-The Python SDK also uses snake_case throughout (e.g., `client.context.list(tenant_id="...", page_size=50)`).
+The Python SDK also uses snake_case throughout (e.g., `client.context.list(database="...", page_size=50)`).
+
+`database` and `collection` are the current field names (formerly `tenant_id` and `sub_tenant_id`). The old names remain accepted as deprecated aliases for full backward compatibility.
 </Info>
 
 Your IDE's autocomplete and type checking work directly off the API contract  -  if a field is optional in the API, it's optional in the SDK.
@@ -152,18 +154,18 @@ A tenant is an isolated workspace. Most organizations create one tenant total, w
 <CodeGroup>
 ```python Python SDK
 response = client.tenants.create(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     tenant_metadata_schema=[
         {"name": "department", "data_type": "VARCHAR", "enable_match": True},
     ],
 )
 ```
 ```python Python (Async)
-response = await async_client.tenants.create(tenant_id="my_first_tenant")
+response = await async_client.tenants.create(database="my_first_tenant")
 ```
 ```typescript TypeScript SDK
 const response = await client.tenants.create({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   tenantMetadataSchema: [
     { name: "department", dataType: "VARCHAR", enableMatch: true },
   ],
@@ -178,7 +180,7 @@ Tenant creation is asynchronous. Poll [`tenants.status`](/api-reference/v2/endpo
 import time
 
 while True:
-    status = client.tenants.status(tenant_id="my_first_tenant")
+    status = client.tenants.status(database="my_first_tenant")
     infra = status.data.infra
     if (
         infra.scheduler_status
@@ -192,7 +194,7 @@ while True:
 ```typescript TypeScript SDK
 while (true) {
   const status = await client.tenants.status({
-    tenantId: "my_first_tenant",
+    database: "my_first_tenant",
   });
   const { schedulerStatus, graphStatus, vectorstoreStatus } = status.data.infra;
   if (
@@ -217,7 +219,7 @@ import json
 with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
     result = client.context.ingest(
         type="knowledge",
-        tenant_id="my_first_tenant",
+        database="my_first_tenant",
         documents=[
             ("contract.pdf", f1, "application/pdf"),
             ("policy.pdf", f2, "application/pdf"),
@@ -239,7 +241,7 @@ with open("contract.pdf", "rb") as f1, open("policy.pdf", "rb") as f2:
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "knowledge",
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   documents: [
     { path: "contract.pdf", filename: "contract.pdf", contentType: "application/pdf" },
     { path: "policy.pdf", filename: "policy.pdf", contentType: "application/pdf" },
@@ -272,8 +274,8 @@ import json
 
 result = client.context.ingest(
     type="memory",
-    tenant_id="my_first_tenant",
-    sub_tenant_id="user_alex",
+    database="my_first_tenant",
+    collection="user_alex",
     memories=json.dumps([
         {
             "text": "User prefers detailed technical explanations and dark mode",
@@ -288,8 +290,8 @@ result = client.context.ingest(
 ```typescript TypeScript SDK
 const result = await client.context.ingest({
   type: "memory",
-  tenantId: "my_first_tenant",
-  subTenantId: "user_alex",
+  database: "my_first_tenant",
+  collection: "user_alex",
   memories: JSON.stringify([
     {
       text: "User prefers detailed technical explanations and dark mode",
@@ -314,13 +316,13 @@ Poll `context.status` with the IDs from the ingest response:
 <CodeGroup>
 ```python Python SDK
 status = client.context.status(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     ids=["contract_q4", "policy_2025"],
 )
 ```
 ```typescript TypeScript SDK
 const status = await client.context.status({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   ids: ["contract_q4", "policy_2025"],
 });
 ```
@@ -336,7 +338,7 @@ A single method covers every retrieval pattern  -  switch `type` and `query_by` 
 ```python Python SDK
 # Knowledge over documents
 knowledge = client.query(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     query="What are the pricing tiers?",
     type="knowledge",
     query_by="hybrid",
@@ -346,8 +348,8 @@ knowledge = client.query(
 
 # Personalized — searches knowledge AND user memories together
 personalized = client.query(
-    tenant_id="my_first_tenant",
-    sub_tenant_id="user_alex",
+    database="my_first_tenant",
+    collection="user_alex",
     query="What are the pricing tiers, and how should I explain them to this user?",
     type="all",
     query_by="hybrid",
@@ -356,7 +358,7 @@ personalized = client.query(
 
 # Exact-phrase BM25 search
 exact = client.query(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     query="ERROR_429 rate limit",
     type="knowledge",
     query_by="text",
@@ -366,7 +368,7 @@ exact = client.query(
 ```typescript TypeScript SDK
 // Knowledge over documents
 const knowledge = await client.query({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   query: "What are the pricing tiers?",
   type: "knowledge",
   queryBy: "hybrid",
@@ -376,8 +378,8 @@ const knowledge = await client.query({
 
 // Personalized — searches knowledge AND user memories together
 const personalized = await client.query({
-  tenantId: "my_first_tenant",
-  subTenantId: "user_alex",
+  database: "my_first_tenant",
+  collection: "user_alex",
   query: "What are the pricing tiers, and how should I explain them to this user?",
   type: "all",
   queryBy: "hybrid",
@@ -386,7 +388,7 @@ const personalized = await client.query({
 
 // Exact-phrase BM25 search
 const exact = await client.query({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   query: "ERROR_429 rate limit",
   type: "knowledge",
   queryBy: "text",
@@ -403,7 +405,7 @@ For the full parameter reference, see [Query – Overview](/api-reference/v2/end
 ```python Python SDK
 # List knowledge sources with pagination
 sources = client.context.list(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     type="knowledge",
     page=1,
     page_size=50,
@@ -411,13 +413,13 @@ sources = client.context.list(
 
 # Inspect graph relationships for a specific source
 relations = client.context.relations(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     id="doc_12345",
 )
 
 # Inspect original source content or get a presigned URL
 file = client.context.inspect(
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     id="doc_12345",
     mode="url",
 )
@@ -425,14 +427,14 @@ file = client.context.inspect(
 # Delete a knowledge source
 client.context.delete(
     type="knowledge",
-    tenant_id="my_first_tenant",
+    database="my_first_tenant",
     ids=["doc_12345"],
 )
 ```
 ```typescript TypeScript SDK
 // List knowledge sources with pagination
 const sources = await client.context.list({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   type: "knowledge",
   page: 1,
   pageSize: 50,
@@ -440,13 +442,13 @@ const sources = await client.context.list({
 
 // Inspect graph relationships for a specific source
 const relations = await client.context.relations({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   id: "doc_12345",
 });
 
 // Inspect original source content or get a presigned URL
 const file = await client.context.inspect({
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   id: "doc_12345",
   mode: "url",
 });
@@ -454,7 +456,7 @@ const file = await client.context.inspect({
 // Delete a knowledge source
 await client.context.delete({
   type: "knowledge",
-  tenantId: "my_first_tenant",
+  database: "my_first_tenant",
   ids: ["doc_12345"],
 });
 ```
@@ -509,7 +511,7 @@ from hydra_db.errors import NotFoundError, TooManyRequestsError
 
 try:
     result = client.query(
-        tenant_id="my_first_tenant",
+        database="my_first_tenant",
         query="...",
         type="knowledge",
     )
@@ -529,7 +531,7 @@ import { HydraDBError } from "@hydradb/sdk";
 
 try {
   const result = await client.query({
-    tenantId: "my_first_tenant",
+    database: "my_first_tenant",
     query: "...",
     type: "knowledge",
   });

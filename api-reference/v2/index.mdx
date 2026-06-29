@@ -24,8 +24,8 @@ description: "Single reference to all HydraDB endpoints"
 
 | Concept | What it means | When you use it |
 |---|---|---|
-| `tenant_id` | Your isolated workspace for data, metadata schema, and query. | Send it on every API call so HydraDB knows which workspace to read or write. |
-| `sub_tenant_id` | Optional partition inside a tenant, often a user, team, account, or customer. | Use it when one tenant contains data for multiple users or customers. Read more about our [multi-tenant architecture](/essentials/v2/multi-tenant) |
+| `database` | Your isolated workspace for data, metadata schema, and query. | Send it on every API call so HydraDB knows which workspace to read or write. Formerly `tenant_id`; the `tenant_id` alias is still accepted (deprecated). |
+| `collection` | Optional partition inside a database, often a user, team, account, or customer. | Use it when one database contains data for multiple users or customers. Formerly `sub_tenant_id`; the `sub_tenant_id` alias is still accepted (deprecated). Read more about our [multi-tenant architecture](/essentials/v2/multi-tenant) |
 | [Knowledge](/essentials/v2/knowledge) | Shared source material such as PDFs, docs, app pages, tickets, Slack threads, or webpages. | Use `type=knowledge` when many users or agents should query the same content. |
 | [Memory](/essentials/v2/memories) | User-specific context such as preferences, conversation history, notes, and inferred traits. | Use `type=memory` when the content should personalize answers for a specific user or sub-tenant. |
 | `tenant_metadata_schema` | Tenant-level fields you define up front so metadata can be filtered or quired consistently. | Use it for stable fields like department, customer, region, plan, category, or compliance label. |
@@ -119,7 +119,7 @@ curl -X POST 'https://api.hydradb.com/query' \
   -H "API-Version: 2" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "my_first_tenant",
+    "database": "my_first_tenant",
     "query": "What are the pricing tiers?",
     "type": "knowledge",
     "query_by": "hybrid"
@@ -144,7 +144,7 @@ Errors use the same envelope with `success: false`, `data: null`, and an `error`
 
 - **Quick reference vs API details.** Each endpoint page starts with a short cheat sheet (what to send, what to save, common gotchas). Later on the page you will see a complete field reference with types, defaults, and examples that is kept in sync with the API. Use the cheat sheet to get moving quickly, and the API details when you need exact request/response shapes (especially for agents and strict validators).
 
-- **Tenant scoping.** Most tenant-scoped endpoints require a `tenant_id`. Many source and query endpoints also accept an optional `sub_tenant_id` for finer-grained scoping. If omitted, the default sub-tenant is used.
+- **Tenant scoping.** Most tenant-scoped endpoints require a `database` (formerly `tenant_id`). Many source and query endpoints also accept an optional `collection` (formerly `sub_tenant_id`) for finer-grained scoping. If omitted, the default sub-tenant is used. The old `tenant_id`/`sub_tenant_id` names remain accepted as deprecated aliases.
 
 - **Async operations.** Tenant creation, deletion, and content ingestion are asynchronous. They return immediately after queuing. Use the relevant status endpoint to confirm completion before downstream operations.
 
