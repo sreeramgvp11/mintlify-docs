@@ -103,8 +103,8 @@ const response = await fetch("https://api.hydradb.com/tenants/acme_corp/metadata
 
 Each `add_fields[]` item uses the same field shape as `tenant_metadata_schema` on [Create Tenant](/api-reference/v2/endpoint/create-tenant):
 
-| Field | Type / values | Description |
-| --- | --- | --- |
+| Field | Description |
+| --- | --- |
 | <Field name="name" type="string" required /> | New metadata key. Must start with a letter or `_`, contain only letters/numbers/underscores, and not be a reserved system name. |
 | <Field name="data_type" type="string" /> | `VARCHAR`, `BOOL`, `INT8`, `INT16`, `INT32`, `INT64`, `FLOAT`, `DOUBLE`, `JSON`, `ARRAY`, or friendly aliases such as `string`, `integer`, `float`, `boolean`, `object`, `array`. Defaults to `VARCHAR`. |
 | <Field name="max_length" type="integer" /> | Max length for `VARCHAR`. Default `1024`; maximum `65535`. |
