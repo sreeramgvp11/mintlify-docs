@@ -146,6 +146,20 @@
                 ]
               },
               {
+                "group": "Connectors",
+                "pages": [
+                  "api-reference/v2/endpoint/connectors-overview",
+                  "api-reference/v2/endpoint/create-connector",
+                  "api-reference/v2/endpoint/list-connectors",
+                  "api-reference/v2/endpoint/get-connector",
+                  "api-reference/v2/endpoint/delete-connector",
+                  "api-reference/v2/endpoint/discover-connector-resources",
+                  "api-reference/v2/endpoint/configure-connector",
+                  "api-reference/v2/endpoint/sync-connector",
+                  "api-reference/v2/endpoint/connector-resources"
+                ]
+              },
+              {
                 "group": "Miscellaneous",
                 "pages": ["api-reference/v2/error-responses"]
               }

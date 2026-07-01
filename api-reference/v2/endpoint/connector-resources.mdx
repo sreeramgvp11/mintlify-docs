@@ -1,0 +1,129 @@
+---
+title: "Connector Resources"
+description: "List, add, or remove resources on a connector."
+---
+
+import { Field } from "/snippets/field.jsx";
+
+Resources are the individual syncable units within a connector: Slack channels, GitHub repos, Linear teams/projects, Notion databases/pages, or Gmail labels. These endpoints let you inspect sync state or manage resources individually.
+
+---
+
+## List resources
+
+`GET /connectors/:id/resources`
+
+Returns all configured resources and their sync state.
+
+<RequestExample>
+
+```bash cURL
+curl 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d9437978/resources' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+### Response
+
+`200 OK`
+
+```json
+{
+  "resources": [
+    {
+      "resource_id": "C04AKFHN78S",
+      "resource_type": "channel",
+      "name": "general",
+      "sub_tenant_id": "all-hands",
+      "provider_cursor": "1717200000.000100",
+      "sync_status": "active",
+      "last_synced_at": "2026-06-01T12:05:00Z"
+    }
+  ]
+}
+```
+
+Poll this endpoint after triggering a sync. A non-empty `provider_cursor` indicates the sync ran successfully. Use `sync_status` and `error_message` to detect failures.
+
+---
+
+## Add a resource
+
+`POST /connectors/:id/resources`
+
+Adds a single resource without going through the full [configure](/api-reference/v2/endpoint/configure-connector) flow. Useful for adding one resource at a time.
+
+<RequestExample>
+
+```bash cURL
+curl -X POST 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d9437978/resources' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resource_id": "C04AKFHN78S",
+    "resource_type": "channel",
+    "display_name": "general",
+    "sub_tenant_id_override": "all-hands"
+  }'
+```
+
+</RequestExample>
+
+### Request body
+
+| Name | Description |
+| --- | --- |
+| <Field name="resource_id" type="string" required /> | Resource identifier from `GET /connectors/:id/discover`. |
+| <Field name="resource_type" type="string" required /> | Resource type from `GET /connectors/:id/discover`. |
+| <Field name="display_name" type="string" /> | Human-readable name for this resource. |
+| <Field name="sub_tenant_id_override" type="string" /> | Routes synced objects from this resource into a specific sub-tenant partition. |
+
+### Response
+
+`201 Created`
+
+```json
+{
+  "resource_id": "C04AKFHN78S"
+}
+```
+
+---
+
+## Delete a resource
+
+`DELETE /connectors/:id/resources/:resource_id`
+
+Removes a resource from the connector and stops syncing it. Objects already ingested are not removed.
+
+<RequestExample>
+
+```bash cURL
+curl -X DELETE 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d9437978/resources/C04AKFHN78S' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+### Response
+
+`200 OK`
+
+```json
+{
+  "deleted": true,
+  "resource_id": "C04AKFHN78S"
+}
+```
+
+<div className="api-before-related-resources" />
+
+## Related Resources
+
+- [Configure Connector](/api-reference/v2/endpoint/configure-connector) — activate multiple resources at once with metadata and lookback settings
+- [Sync Connector](/api-reference/v2/endpoint/sync-connector) — trigger a sync after adding resources
+- [Connectors guide — What each connector stores](/essentials/v2/connectors#what-each-connector-stores)

@@ -1,0 +1,42 @@
+---
+title: "Delete Connector"
+description: "Permanently remove a connector and stop all associated syncs."
+---
+
+`DELETE /connectors/:id`
+
+Deletes the connector and all its configured resources. Synced objects already ingested into the knowledge store are not removed.
+
+<RequestExample>
+
+```bash cURL
+curl -X DELETE 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d9437978' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+## Path parameters
+
+| Name | Description |
+| --- | --- |
+| `id` | Connector UUID returned by `POST /connectors`. |
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "deleted": true,
+  "connector_id": "2438363e-bea9-4044-bda0-7a90d9437978"
+}
+```
+
+<div className="api-before-related-resources" />
+
+## Related Resources
+
+- [List Connectors](/api-reference/v2/endpoint/list-connectors) — verify the connector no longer appears
+- [Create Connector](/api-reference/v2/endpoint/create-connector) — start fresh

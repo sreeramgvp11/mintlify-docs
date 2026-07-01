@@ -1,0 +1,47 @@
+---
+title: "List Connectors"
+description: "List all connectors for the authenticated organization."
+---
+
+`GET /connectors`
+
+Returns all connectors belonging to the organization associated with the API key.
+
+<RequestExample>
+
+```bash cURL
+curl 'https://api.hydradb.com/connectors' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "connectors": [
+    {
+      "connector_id": "2438363e-bea9-4044-bda0-7a90d9437978",
+      "provider": "slack",
+      "name": "acme-engineering",
+      "tenant_id": "acme_corp",
+      "sub_tenant_id": "engineering",
+      "status": "active",
+      "created_at": "2026-06-01T12:00:00Z",
+      "next_sync_at": "2026-06-01T13:00:00Z"
+    }
+  ]
+}
+```
+
+<div className="api-before-related-resources" />
+
+## Related Resources
+
+- [Get Connector](/api-reference/v2/endpoint/get-connector) — fetch a single connector by ID
+- [Create Connector](/api-reference/v2/endpoint/create-connector)
+- [Delete Connector](/api-reference/v2/endpoint/delete-connector)

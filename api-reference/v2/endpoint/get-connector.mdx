@@ -1,0 +1,46 @@
+---
+title: "Get Connector"
+description: "Fetch metadata and status for a single connector."
+---
+
+`GET /connectors/:id`
+
+<RequestExample>
+
+```bash cURL
+curl 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d9437978' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
+
+</RequestExample>
+
+## Path parameters
+
+| Name | Description |
+| --- | --- |
+| `id` | Connector UUID returned by `POST /connectors`. |
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "connector_id": "2438363e-bea9-4044-bda0-7a90d9437978",
+  "provider": "slack",
+  "name": "acme-engineering",
+  "tenant_id": "acme_corp",
+  "sub_tenant_id": "engineering",
+  "status": "active",
+  "created_at": "2026-06-01T12:00:00Z",
+  "next_sync_at": "2026-06-01T13:00:00Z"
+}
+```
+
+<div className="api-before-related-resources" />
+
+## Related Resources
+
+- [List Connectors](/api-reference/v2/endpoint/list-connectors)
+- [Connector Resources](/api-reference/v2/endpoint/connector-resources) — see per-resource sync state
