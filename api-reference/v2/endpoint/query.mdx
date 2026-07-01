@@ -408,14 +408,14 @@ result = client.query(
   </Accordion>
 
   <Accordion title="Filters">
-    `metadata_filters` runs before ranking. The shape combines two filter scopes:
+    `metadata_filters` are hard exact-match constraints applied before ranking and re-checked after hydration. The shape combines two filter scopes:
 
     ```json
     {
       "metadata_filters": {
-          "department": "engineering",
-          "region": "us-east",
-          "additional_metadata": {
+        "department": "engineering",
+        "region": "us-east",
+        "additional_metadata": {
           "source": "account_plan",
           "author": "alex"
         }
@@ -425,8 +425,10 @@ result = client.query(
 
     | Where | What it matches |
     |---|---|
-    | **Top-level keys** (`department`, `region`) | The source's `metadata`. Keys must be declared in the database's `tenant_metadata_schema` with `enable_match: true`, otherwise they are silently ignored. |
-    | **Nested under `additional_metadata`** | The source's free-form per-document fields. No schema declaration required. |
+    | **Top-level keys** (`department`, `region`) | The source's schema-backed `metadata`. Keys must be declared in the database's `tenant_metadata_schema` with `enable_match: true`, otherwise they are silently ignored. |
+    | **Nested under `additional_metadata`** | The source's free-form per-document fields. No schema declaration required. `document_metadata` is accepted as a legacy alias. |
+
+    Multiple filters are ANDed. Range, contains, fuzzy, and OR operators are not supported in user-provided `metadata_filters`; run multiple queries or post-process client-side for those cases.
   </Accordion>
 </AccordionGroup>
 
@@ -621,7 +623,7 @@ A zero-result query returns empty arrays/maps rather than an error, as shown in 
 <Warning>
 **Important Considerations & Common Mistakes**
 - **`query_forceful_relations` requires `mode: "thinking"`.** In `fast` mode the flag is silently ignored. The server does not error or warn  -  your `additional_context` will simply be empty.
-- **`metadata_filters` top-level keys need a schema.** Top-level keys must be declared in `tenant_metadata_schema` with `enable_match: true`. Undeclared keys are silently ignored. To filter free-form per-document fields, nest them under an `additional_metadata` key.
+- **Use the right metadata namespace.** Top-level `metadata_filters` keys match `metadata`; free-form per-document fields must be nested under `additional_metadata` (`document_metadata` is only a legacy alias). Declare hot top-level filter fields in `tenant_metadata_schema` with `enable_match: true`.
 - **Common mistakes.** Check [Ingestion Status](/api-reference/v2/endpoint/source-status) for recently ingested documents before querying. If you omit `collection`, HydraDB queries the default collection; use [List Collections](/api-reference/v2/endpoint/list-sub-tenants) to discover available IDs.
 </Warning>
 
