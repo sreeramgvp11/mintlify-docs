@@ -62,11 +62,11 @@ curl -X POST 'https://api.hydradb.com/connectors' \
 
 | Provider | Value to use | Where to find it |
 |---|---|---|
-| Slack | Workspace ID (starts with `T`) | Open Slack in a browser. The URL is `app.slack.com/client/TXXXXXXXX/...` — the `T...` segment is your workspace ID. |
+| Slack | Workspace ID (starts with `T`) | Open Slack in a browser. The URL is `app.slack.com/client/TXXXXXXXX/...` - the `T...` segment is your workspace ID. |
 | GitHub | Organization or user login | The org or username in your GitHub URL: `github.com/my-github-org` |
 | Linear | Workspace name | Settings → Workspace → the name shown under your workspace |
 | Notion | Workspace name | Settings → Workspace → the name shown at the top |
-| Gmail | Leave empty | Gmail does not use this field — use `account_email` in `additional_metadata` to scope by account instead |
+| Gmail | Leave empty | Gmail does not use this field - use `account_email` in `additional_metadata` to scope by account instead |
 
 **Why it matters:** if you create two Slack connectors for different workspaces but give them the same `provider_account_scope` (or omit it on both), their synced messages share a deduplication namespace and will overwrite each other. Set a distinct value per connector whenever you connect more than one account of the same provider.
 
