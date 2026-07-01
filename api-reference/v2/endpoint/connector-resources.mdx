@@ -30,13 +30,18 @@ curl 'https://api.hydradb.com/connectors/{id}/resources' \
 {
   "resources": [
     {
+      "connector_id": "{connector_id}",
       "resource_id": "{resource_id}",
       "resource_type": "channel",
-      "name": "general",
-      "sub_tenant_id": "all-hands",
+      "display_name": "general",
+      "status": "active",
       "provider_cursor": "{cursor}",
-      "sync_status": "active",
-      "last_synced_at": "2026-06-01T12:05:00Z"
+      "tenant_id_override": "",
+      "sub_tenant_id_override": "all-hands",
+      "provider_metadata": null,
+      "filters": {
+        "lookback_days": 30
+      }
     }
   ]
 }
@@ -44,7 +49,7 @@ curl 'https://api.hydradb.com/connectors/{id}/resources' \
 
 </ResponseExample>
 
-Use `sync_status` and `error_message` to detect sync failures.
+Use `status` and `provider_cursor` to track sync state. A non-empty `provider_cursor` confirms the first sync has run.
 
 <div className="api-before-related-resources" />
 

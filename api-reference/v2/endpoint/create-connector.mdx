@@ -49,8 +49,10 @@ curl -X POST 'https://api.hydradb.com/connectors' \
   "name": "acme-engineering",
   "tenant_id": "acme_corp",
   "sub_tenant_id": "engineering",
+  "provider_account_scope": "T12345ACME",
   "status": "active",
-  "created_at": "2026-06-01T12:00:00Z"
+  "next_sync_at": "2026-06-01T13:00:00Z",
+  "sync_interval_seconds": 3600
 }
 ```
 

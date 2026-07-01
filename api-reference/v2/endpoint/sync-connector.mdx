@@ -26,9 +26,8 @@ curl -X POST 'https://api.hydradb.com/connectors/{connector_id}/sync' \
 
 ```json 202
 {
-  "connector_id": "{connector_id}",
-  "workflow_id": "{workflow_id}",
-  "run_id": "{run_id}"
+  "run_id": "{run_id}",
+  "workflow_id": "connector-sync-{connector_id}"
 }
 ```
 

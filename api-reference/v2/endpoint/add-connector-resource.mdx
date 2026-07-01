@@ -44,7 +44,16 @@ curl -X POST 'https://api.hydradb.com/connectors/{id}/resources' \
 
 ```json 201
 {
-  "resource_id": "{resource_id}"
+  "connector_id": "{connector_id}",
+  "resource_id": "{resource_id}",
+  "resource_type": "channel",
+  "display_name": "general",
+  "status": "active",
+  "provider_cursor": "",
+  "tenant_id_override": "",
+  "sub_tenant_id_override": "all-hands",
+  "provider_metadata": null,
+  "filters": null
 }
 ```
 
