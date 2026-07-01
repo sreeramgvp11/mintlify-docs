@@ -22,17 +22,17 @@ curl -X POST 'https://api.hydradb.com/connectors/2438363e-bea9-4044-bda0-7a90d94
 | --- | --- |
 | `id` | Connector UUID returned by `POST /connectors`. |
 
-## Response
+<ResponseExample>
 
-`202 Accepted`
-
-```json
+```json 202
 {
   "connector_id": "2438363e-bea9-4044-bda0-7a90d9437978",
   "workflow_id": "sync-workflow-abc123",
   "run_id": "run-xyz789"
 }
 ```
+
+</ResponseExample>
 
 `202` means the sync was queued, not that it completed. Poll [Connector Resources](/api-reference/v2/endpoint/connector-resources) and check that `provider_cursor` advances to confirm the sync ran.
 

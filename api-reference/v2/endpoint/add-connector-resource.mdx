@@ -40,15 +40,15 @@ curl -X POST 'https://api.hydradb.com/connectors/{id}/resources' \
 | <Field name="display_name" type="string" /> | Human-readable name for this resource. |
 | <Field name="sub_tenant_id_override" type="string" /> | Routes synced objects from this resource into a specific sub-tenant partition. |
 
-## Response
+<ResponseExample>
 
-`201 Created`
-
-```json
+```json 201
 {
   "resource_id": "C04AKFHN78S"
 }
 ```
+
+</ResponseExample>
 
 <div className="api-before-related-resources" />
 

@@ -23,16 +23,16 @@ curl -X DELETE 'https://api.hydradb.com/connectors/{id}/resources/{resource_id}'
 | `id` | Connector UUID returned by `POST /connectors`. |
 | `resource_id` | Resource identifier (from `GET /connectors/:id/resources`). |
 
-## Response
+<ResponseExample>
 
-`200 OK`
-
-```json
+```json 200
 {
   "deleted": true,
   "resource_id": "C04AKFHN78S"
 }
 ```
+
+</ResponseExample>
 
 <div className="api-before-related-resources" />
 
