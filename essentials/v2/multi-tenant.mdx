@@ -97,7 +97,7 @@ Examples:
 
 ### Reads
 
-Query requests include `tenant_id`, and should use `sub_tenant_ids` for sub-tenant scope. Send a single-item list for one scope, a longer list to fan out across multiple scopes with equal normalized weights, or an object mapping sub-tenant IDs to positive relative ranking weights. If both `sub_tenant_ids` and legacy `sub_tenant_id` are omitted, query uses the tenant's default sub-tenant.
+Query requests include `tenant_id`, and should use `sub_tenant_ids` for sub-tenant scope. Send a single-item list for one scope, a longer list to fan out across multiple scopes with equal normalized weights, or an object mapping sub-tenant IDs to positive relative ranking weights with at most one decimal place. If both `sub_tenant_ids` and legacy `sub_tenant_id` are omitted, query uses the tenant's default sub-tenant.
 
 Use the same scoping values on query that you used when writing the data. A query request should not be expected to retrieve data written under a sub-tenant unless that ID is included in `sub_tenant_ids`.
 

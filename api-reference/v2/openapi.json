@@ -8322,7 +8322,7 @@
           },
           "sub_tenant_ids": {
             "title": "Sub Tenant Ids",
-            "description": "Preferred /query sub-tenant selector. Send either a list of sub-tenant IDs for equal normalized weighting, or an object mapping sub-tenant ID to a positive relative ranking weight. Do not send together with deprecated sub_tenant_id.",
+            "description": "Preferred /query sub-tenant selector. Send either a list of sub-tenant IDs for equal normalized weighting, or an object mapping sub-tenant ID to a positive relative ranking weight with at most one decimal place. Do not send together with deprecated sub_tenant_id.",
             "x-preferred": true,
             "oneOf": [
               {
@@ -8343,7 +8343,8 @@
                 "maxProperties": 100,
                 "additionalProperties": {
                   "type": "number",
-                  "exclusiveMinimum": 0
+                  "exclusiveMinimum": 0,
+                  "multipleOf": 0.1
                 },
                 "example": {
                   "finance": 1.5,

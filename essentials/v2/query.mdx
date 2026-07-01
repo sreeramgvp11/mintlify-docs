@@ -30,7 +30,7 @@ Pick the row that matches your goal and use the parameters as a starting point:
 
 | Parameter | Type / values | Purpose |
 | --- | --- | --- |
-| `sub_tenant_ids` | `string[]` or `{ [sub_tenant_id]: positive number }` | Preferred query-time scope selector. Use a single-item list for one user/workspace, a longer list to fan out with equal normalized weights, or an object to provide relative ranking weights. Maximum 100 sub-tenants. |
+| `sub_tenant_ids` | `string[]` or `{ [sub_tenant_id]: positive number (max one decimal place) }` | Preferred query-time scope selector. Use a single-item list for one user/workspace, a longer list to fan out with equal normalized weights, or an object to provide relative ranking weights with at most one decimal place. Maximum 100 sub-tenants. |
 | `sub_tenant_id` | string | Legacy/deprecated query-time single-scope selector. Use `sub_tenant_ids: ["user_123"]` for new query calls. Ingest still uses singular `sub_tenant_id`. |
 
 ### Graph
@@ -158,7 +158,7 @@ const completion = await openai.chat.completions.create({
 });
 ```
 
-If you need to query several users, teams, or workspaces at once, pass `sub_tenant_ids`. A list gives every scope equal normalized weight; an object applies relative ranking weights before the final merged ranking:
+If you need to query several users, teams, or workspaces at once, pass `sub_tenant_ids`. A list gives every scope equal normalized weight; an object applies relative ranking weights with at most one decimal place before the final merged ranking:
 
 ```json
 {

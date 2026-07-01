@@ -147,7 +147,7 @@ Use `sub_tenant_ids` when one query should fan out across multiple user, workspa
 }
 ```
 
-A list gives every sub-tenant equal normalized weight. An object treats values as positive relative ranking weights and normalizes them server-side. You can send at most 100 sub-tenants. When `max_results` is omitted, HydraDB uses up to 10 results per sub-tenant, capped at 1000 fanout candidates before the final ranked response is shaped.
+A list gives every sub-tenant equal normalized weight. An object treats values as positive relative ranking weights with at most one decimal place and normalizes them server-side. You can send at most 100 sub-tenants. When `max_results` is omitted, HydraDB uses up to 10 results per sub-tenant, capped at 1000 fanout candidates before the final ranked response is shaped.
 
 ### Transforming the response into LLM context
 
@@ -377,7 +377,7 @@ result = client.query(
 | Name | Description |
 | --- | --- |
 | <Field name="tenant_id" type="string" required /> | Owning tenant. |
-| <Field name="sub_tenant_ids" type='string[] or { [sub_tenant_id]: positive number }' /> | Preferred query-time sub-tenant selector. Send a list for equal normalized weights, or an object to fan out with relative ranking weights. Maximum 100 sub-tenants. |
+| <Field name="sub_tenant_ids" type='string[] or { [sub_tenant_id]: positive number (max one decimal place) }' /> | Preferred query-time sub-tenant selector. Send a list for equal normalized weights, or an object to fan out with relative ranking weights with at most one decimal place. Maximum 100 sub-tenants. |
 | <Field name="sub_tenant_id" type="string or null" /> | Deprecated query-time single sub-tenant selector. Use `sub_tenant_ids: ["your-sub-tenant"]` instead. Ingest endpoints still use singular `sub_tenant_id`. |
 | <Field name="query" type="string" required /> | Query terms or natural-language question. Cannot be empty. |
 | <Field name="type" type='"knowledge" or "memory" or "all"' /> | What collection to query. `"all"` runs knowledge and memory in parallel and merges by `relevancy_score`. (default=`"knowledge"`) |
