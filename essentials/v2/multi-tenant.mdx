@@ -269,16 +269,19 @@ Backward compatibility is total across every surface:
 |---|---|---|
 | Routes | `/tenants`, `/tenants/status`, `/tenants/{tenant_id}/metadata-schema`, … | `/databases`, `/databases/status`, `/databases/{database}/metadata-schema`, … |
 | Request fields | `tenant_id`, `sub_tenant_id` | `database`, `collection` |
+| `/query` multi-scope selector | `sub_tenant_ids` | `collections` |
 | Query params | `?tenant_id=…&sub_tenant_id=…` | `?database=…&collection=…` |
 
 Both prefixes dispatch to the same handlers, and the legacy fields are accepted in the query string, JSON body, and multipart form. An existing integration that uses only the old names is a pure no-op and behaves exactly as before.
+
+On `/query`, `collections` is the canonical way to scope to one or more collections (send a list, or an object mapping collection ID to a relative ranking weight). `sub_tenant_ids` remains accepted as its deprecated alias, and the singular `sub_tenant_id` still works too — see [Query](/api-reference/v2/endpoint/query).
 
 ### Deprecation signals
 
 When a request uses a legacy route **or** a legacy field, HydraDB adds a non-breaking migration nudge — never an error, and the status code is unchanged:
 
 - **`Deprecation: true`** response header, plus a `Warning` header carrying the migration message.
-- **`meta.deprecation`** — a human-readable string in the response envelope's `meta` object (for endpoints that return the envelope). Fully-migrated requests (canonical route + canonical fields) omit it.
+- **`meta.deprecation`** — a list of structured notices in the response envelope's `meta` object (for endpoints that return the envelope). Each entry carries `deprecated`, the `deprecated_field` and `preferred_field`, a human-readable `message`, and `deprecated_since` (e.g. `"2.0.1"`). Fully-migrated requests omit it.
 
 ```json
 {
@@ -288,19 +291,25 @@ When a request uses a legacy route **or** a legacy field, HydraDB adds a non-bre
   "meta": {
     "request_id": "9d13aef4-02f4-4e73-8c62-4c2601d04f9d",
     "latency_ms": 12.3,
-    "deprecation": "The /tenants routes are deprecated. Migrate to the /databases routes."
+    "deprecation": [
+      {
+        "deprecated": true,
+        "message": "The /tenants routes are deprecated. Migrate to the /databases routes.",
+        "deprecated_since": "2.0.1"
+      }
+    ]
   }
 }
 ```
 
-Use these signals to find and retire legacy usage; once you send only `database`/`collection` on the `/databases` routes, the header and `meta.deprecation` disappear.
+Use these signals to find and retire legacy usage; once you send only the canonical names on the `/databases` routes, the header and `meta.deprecation` disappear.
 
 ### Sending both names
 
 If you send **both** a canonical field and its deprecated alias:
 
-- **Same value** (for example `database` and `tenant_id` both `"acme"`) — accepted; HydraDB uses the `database`/`collection` value.
-- **Different values** (for example `database: "acme"` and `tenant_id: "other"`) — rejected with `400`, since the two names refer to the same thing and must agree. Send only one.
+- **Same value** (for example `database` and `tenant_id` both `"acme"`) — accepted; HydraDB uses the canonical value.
+- **Different values** (for example `database: "acme"` and `tenant_id: "other"`) — rejected with `400`, since the two names refer to the same thing and must agree. Send only one. The same rule applies to `collection`/`sub_tenant_id` and to `collections`/`sub_tenant_ids` on `/query`.
 
 ---
 

@@ -144,7 +144,7 @@ curl -X POST 'https://api.hydradb.com/query' \
 
 Errors use the same envelope with `success: false`, `data: null`, and an `error` object containing `code` and `message`.
 
-`meta` may also include a `deprecation` string when a request uses a legacy `/tenants` route or the legacy `tenant_id`/`sub_tenant_id` fields; it is a non-breaking migration nudge (the status code is unchanged) and is accompanied by a `Deprecation: true` response header. See [Migrating from `tenant_id` / `sub_tenant_id`](/essentials/v2/multi-tenant#7-migrating-from-tenant_id-sub_tenant_id).
+`meta` may also include a `deprecation` list when a request uses a legacy `/tenants` route or a deprecated field (`tenant_id`/`sub_tenant_id`, or `sub_tenant_ids` on `/query`); each entry carries `deprecated_field`, `preferred_field`, a `message`, and `deprecated_since`. It is a non-breaking migration nudge (the status code is unchanged) and is accompanied by a `Deprecation: true` response header. See [Migrating from `tenant_id` / `sub_tenant_id`](/essentials/v2/multi-tenant#7-migrating-from-tenant_id-sub_tenant_id).
 
 - **Quick reference vs API details.** Each endpoint page starts with a short cheat sheet (what to send, what to save, common gotchas). Later on the page you will see a complete field reference with types, defaults, and examples that is kept in sync with the API. Use the cheat sheet to get moving quickly, and the API details when you need exact request/response shapes (especially for agents and strict validators).
 
