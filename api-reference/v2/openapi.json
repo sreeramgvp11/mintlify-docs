@@ -3607,9 +3607,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/handler.discoverPreviewReq",
-                "description": "Provider and credentials",
-                "summary": "request"
+                "$ref": "#/components/schemas/handler.discoverPreviewReq"
               }
             }
           },
@@ -3717,9 +3715,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/handler.connectorCreateReq",
-                "description": "Connector configuration",
-                "summary": "request"
+                "$ref": "#/components/schemas/handler.connectorCreateReq"
               }
             }
           },
@@ -3919,9 +3915,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/handler.configureReq",
-                "description": "Resource selection and sync options",
-                "summary": "request"
+                "$ref": "#/components/schemas/handler.configureReq"
               }
             }
           },
@@ -4143,9 +4137,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/handler.resourceCreateReq",
-                "description": "Resource configuration",
-                "summary": "request"
+                "$ref": "#/components/schemas/handler.resourceCreateReq"
               }
             }
           },
@@ -4366,9 +4358,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/sources.V2SourceDeleteRequest",
-                "description": "Delete request",
-                "summary": "request"
+                "$ref": "#/components/schemas/sources.V2SourceDeleteRequest"
               }
             }
           },
@@ -4643,9 +4633,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/list.V2ListContentRequest",
-                "description": "List request",
-                "summary": "request"
+                "$ref": "#/components/schemas/list.V2ListContentRequest"
               }
             }
           },
@@ -4817,9 +4805,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/handler.contextMetadataUpdateRequest",
-                "description": "Metadata update request",
-                "summary": "request"
+                "$ref": "#/components/schemas/handler.contextMetadataUpdateRequest"
               }
             }
           },
@@ -5092,9 +5078,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/tenants.TenantCreateRequest",
-                "description": "Database creation request",
-                "summary": "request"
+                "$ref": "#/components/schemas/tenants.TenantCreateRequest"
               }
             }
           },
@@ -5395,9 +5379,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/tenants.TenantMetadataSchemaUpdateRequest",
-                "description": "Metadata schema fields to add",
-                "summary": "request"
+                "$ref": "#/components/schemas/tenants.TenantMetadataSchemaUpdateRequest"
               }
             }
           },
@@ -5476,9 +5458,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/search.QueryRequest",
-                "description": "Unified query request",
-                "summary": "request"
+                "$ref": "#/components/schemas/search.QueryRequest"
               }
             }
           },
@@ -5606,9 +5586,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/webhooks.WebhookRegisterRequest",
-                "description": "Webhook registration request",
-                "summary": "request"
+                "$ref": "#/components/schemas/webhooks.WebhookRegisterRequest"
               }
             }
           },
