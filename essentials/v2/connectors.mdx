@@ -1,9 +1,9 @@
 ---
 title: "Connectors"
-description: "How HydraDB connectors continuously sync app data from Slack, GitHub, Linear, Notion, and Gmail into the knowledge store."
+description: "How HydraDB connectors continuously sync external app data into the knowledge store."
 ---
 
-Connectors bring external app data into HydraDB automatically. Instead of manually ingesting documents, you authenticate once, pick which resources to sync, and HydraDB continuously replicates new content  -  Slack messages, GitHub issues, Linear tickets, Notion pages, Gmail threads  -  as searchable [app sources](/essentials/v2/app-sources) in your knowledge store.
+Connectors bring external app data into HydraDB automatically. Instead of manually ingesting documents, you authenticate once, pick which resources to sync, and HydraDB continuously replicates provider content as searchable [app sources](/essentials/v2/app-sources) in your knowledge store.
 
 ---
 
@@ -47,7 +47,7 @@ curl -X POST 'https://api.hydradb.com/connectors' \
 
 | Field | Purpose |
 |---|---|
-| `provider` | One of `slack`, `github`, `linear`, `notion`, `gmail` |
+| `provider` | A supported provider identifier returned by `GET /connector-catalog` |
 | `name` | Human-readable label for this connector |
 | `tenant_id` | Which tenant receives the synced data |
 | `sub_tenant_id` | Which sub-tenant partition receives the data |
@@ -155,170 +155,58 @@ This is what you filter on when you want to scope a query to a specific connecto
 
 ---
 
-## What each connector stores
+## Inspect what a connector stores
 
-### Slack
+Connector schemas are provider-owned and available through the API for every supported connector. Use the provider identifier from `GET /connector-catalog`:
 
-**Resources:** Channels
+```bash
+curl 'https://api.hydradb.com/connector-catalog/linear/info' \
+  -H "Authorization: Bearer $HYDRA_DB_API_KEY" \
+  -H "API-Version: 2"
+```
 
-**Syncs:** Messages and thread replies (replies are attached as comments on the parent message)
+The response describes the resources you can select, the object types HydraDB syncs, and the normalized fields and metadata it stores:
 
-**`fields`** (searchable):
+```json
+{
+  "resources": ["teams", "projects"],
+  "syncs": ["issues", "comments", "attachments", "parent relations"],
+  "fields": [
+    {
+      "name": "body",
+      "data_type": "string",
+      "filterable": false,
+      "searchable": true,
+      "description": "Issue description"
+    }
+  ],
+  "metadata": [
+    {
+      "name": "linear_identifier",
+      "data_type": "string",
+      "filterable": true,
+      "searchable": false,
+      "description": "Human-readable issue identifier"
+    }
+  ]
+}
+```
 
-| Field | Content |
+Each field entry includes:
+
+| Property | Meaning |
 |---|---|
-| `body` | Message text, attachment text, file titles |
-| `author` | Slack user ID or bot ID |
-| `thread_id` | `{channel_id}:{thread_ts}` |
-| `parent_id` | Set for thread replies; empty for root messages |
-| `created_at` | RFC3339 timestamp |
-| `is_edited` | Whether the message was edited |
-| `edited_by` / `edited_at` | Editor and edit time (when edited) |
-| `attachment_count` / `file_count` | Rich attachment and file counts |
+| `name` | The normalized field or metadata key stored by HydraDB |
+| `data_type` | Its JSON type: `string`, `integer`, `number`, `boolean`, `array`, or `object` |
+| `searchable` | Whether its content participates in app-source text search |
+| `filterable` | Whether it supports exact-match metadata filtering |
+| `description` | Optional provider-specific context |
 
-**`additional_metadata`** (auto-indexed by connector):
+<Note>
+  Connector contracts come from the same normalizers that prepare synced data. Query this endpoint instead of relying on a static field list: it covers the complete connector catalog and stays current as connector normalization changes.
+</Note>
 
-| Key | Value |
-|---|---|
-| `connector_id` | Connector UUID |
-| `resource_id` | Channel ID |
-| `provider_account_scope` | Workspace identifier (e.g. `T12345ACME`) |
-| `slack_ts` | Message timestamp |
-| `slack_thread_ts` | Thread root timestamp |
-| `slack_subtype` | Message subtype |
-| `slack_bot_id` | Bot ID when applicable |
-| `slack_reply_count` | Number of thread replies |
-| `slack_files` | File metadata array |
-
----
-
-### GitHub
-
-**Resources:** Repositories
-
-**Syncs:** Issues and pull requests
-
-**`fields`**:
-
-| Field | Content |
-|---|---|
-| `body` | Issue or PR description |
-| `author` | GitHub login of opener |
-| `state` | `open` or `closed` |
-| `assignees` | List of assignee logins |
-| `labels` | List of label names |
-| `is_pr` | `true` for pull requests |
-| `created_at` / `updated_at` / `closed_at` | Timestamps |
-| `url` | GitHub permalink |
-| `milestone` / `milestone_due` | Milestone title and due date |
-
-**`additional_metadata`**:
-
-| Key | Value |
-|---|---|
-| `connector_id` | Connector UUID |
-| `resource_id` | `{owner}/{repo}` |
-| `provider_account_scope` | GitHub account (e.g. `my-github-org`) |
-| `github_repo` | `{owner}/{repo}` |
-| `github_issue_number` | Integer issue/PR number |
-
----
-
-### Linear
-
-**Resources:** Teams and projects
-
-**Syncs:** Issues (with comments, attachments, and parent relations)
-
-**`fields`**:
-
-| Field | Content |
-|---|---|
-| `body` | Issue description |
-| `state` | Workflow state name |
-| `priority` / `priority_label` | Integer (0–4) and label (`Urgent`, etc.) |
-| `assignee` / `creator` | Display names |
-| `team_key` / `team_name` | Team identifier and name |
-| `project_name` | Project name (when assigned) |
-| `created_at` / `updated_at` | Timestamps |
-| `url` | Linear issue permalink |
-
-**`additional_metadata`**:
-
-| Key | Value |
-|---|---|
-| `connector_id` | Connector UUID |
-| `resource_id` | Team or project ID |
-| `resource_type` | `linear_team` or `linear_project` |
-| `provider_account_scope` | Linear account identifier |
-| `linear_issue_id` | Linear UUID |
-| `linear_identifier` | Human identifier (e.g. `ENG-142`) |
-
----
-
-### Notion
-
-**Resources:** Databases and top-level pages
-
-**Syncs:** Pages (full block content as body, file attachments)
-
-**`fields`**:
-
-| Field | Content |
-|---|---|
-| `title` | Page title |
-| `body` | Full page block content as text |
-| `created_at` / `last_edited_time` | Timestamps |
-| `url` | Notion page URL |
-| `created_by` / `last_edited_by` | Notion user IDs |
-
-**`additional_metadata`**:
-
-| Key | Value |
-|---|---|
-| `connector_id` | Connector UUID |
-| `resource_id` | Database or page ID |
-| `resource_type` | `notion_database` or `notion_page` |
-| `provider_account_scope` | Notion account identifier |
-| `notion_page_id` | Notion page UUID |
-
----
-
-### Gmail
-
-**Resources:** Labels (`INBOX`, `[Gmail]/All Mail`, custom labels)
-
-**Syncs:** Emails (with thread relations linking replies to parent messages)
-
-<Warning>
-  Gmail does not populate `provider_account_scope` in `additional_metadata`. Use `account_email` instead to scope queries to a specific Gmail account. `thread_id` appears in both `fields` (for full-text search) and `additional_metadata` (for exact-match filtering)  -  this is intentional and specific to Gmail.
-</Warning>
-
-**`fields`**:
-
-| Field | Content |
-|---|---|
-| `subject` | Email subject |
-| `body` | Plain-text email body |
-| `from` | Sender address |
-| `to` / `cc` / `reply_to` | Recipient lists |
-| `message_id` | RFC2822 Message-ID header |
-| `thread_id` | Gmail thread ID (also available in `additional_metadata` for filtering) |
-| `gmail_msg_id` | Gmail numeric message ID |
-| `created_at` | Send timestamp |
-| `account_email` | Gmail account address |
-
-**`additional_metadata`**:
-
-| Key | Value |
-|---|---|
-| `connector_id` | Connector UUID |
-| `resource_id` | Gmail label ID (e.g. `INBOX`) |
-| `account_email` | Gmail account address  -  use this to scope by account (replaces `provider_account_scope` for Gmail) |
-| `imap_uid` | IMAP UID |
-| `thread_id` | Gmail thread ID (also exposed in `fields` for search) |
-
----
+For Gmail, use `account_email` rather than `provider_account_scope` when filtering to a connected account. The Gmail provider response calls out this exception in its description.
 
 ## Multiple connectors per provider
 
