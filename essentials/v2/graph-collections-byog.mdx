@@ -135,23 +135,33 @@ graph collections in it), only the collections are dropped and `deleted` is
 
 ## Supported Cypher
 
-> **Coverage in one line:** essentially all of openCypher is supported - only
-> server-side procedures and file loading are excluded - which is the entire
-> surface a real application needs for modelling, loading, querying and
-> maintaining its own graph.
+<Note>
+  **Coverage in one line:** essentially all of openCypher is supported - only
+  server-side procedures and file loading are excluded - which is the entire
+  surface a real application needs for modelling, loading, querying and
+  maintaining its own graph.
+</Note>
 
 Your query is executed **verbatim**. The full Cypher CRUD surface is
 supported - pattern matching, aggregation, `UNWIND`, `WITH` pipelines,
 `MERGE`, `shortestPath`, indexes (`CREATE INDEX FOR (n:Label) ON (n.prop)`),
 and `CALL { ... }` subqueries.
 
-Two constructs are rejected (with a `400` explaining why):
+Two constructs are **rejected**. "Rejected" means the query is refused
+*before it runs*: the whole request fails with a `400` and a message
+explaining the reason, and **nothing is executed** - no partial writes, no
+side effects. It is a validation error, not a runtime one, so retrying the
+same query fails identically until you change it.
 
-- **Procedure calls** - `CALL some.procedure(...)`. Procedures are
-  engine-specific internals that HydraDB does not commit to supporting.
-  (`CALL { ... }` *subqueries* are fine.)
-- **`LOAD CSV`** - server-side file/URL loading. Send data through `params`
-  instead.
+<Warning>
+  The following constructs always return `400` and are never executed:
+
+  - **Procedure calls** - `CALL some.procedure(...)`. Procedures are
+    engine-specific internals that HydraDB does not commit to supporting.
+    (`CALL { ... }` *subqueries* are fine.)
+  - **`LOAD CSV`** - server-side file/URL loading. Send data through `params`
+    instead.
+</Warning>
 
 A few dialect notes (each verified against the live service):
 
@@ -240,7 +250,7 @@ class HydraGraph:
             raise RuntimeError(f"{r.status_code} {err.get('error_code')}: {err.get('message')}")
         return body["data"]          # always a list of row dicts
 
-g = HydraGraph("https://<endpoint>", "<api key>", "crm", "contacts")
+g = HydraGraph("https://api.hydradb.com", "<api key>", "crm", "contacts")
 ```
 
 ```typescript
