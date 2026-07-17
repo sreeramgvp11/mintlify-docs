@@ -13,8 +13,10 @@ their Cypher and their data model as-is.
   dashboard and in the standard database APIs like any other HydraDB database.
 - **Collections** are independent graphs inside a database. Queries run
   against exactly one collection - collections never see each other's data.
-- **Full CRUD**: `CREATE`, `MERGE`, `MATCH`, `SET`, `DELETE` - reads and
-  writes alike, sent verbatim. HydraDB never rewrites your query.
+- **Full Cypher support**: reads and writes alike - `CREATE`, `MERGE`,
+  `MATCH`, `SET`, `DELETE` - plus the graph-native surface: multi-hop and
+  variable-length traversal, relationship expansion, and shortest-path
+  finding. Your query is sent verbatim; HydraDB never rewrites it.
 - **Isolation is structural.** Each collection is a completely separate graph
   owned by your organization. There is no cross-tenant data to reach:
   `MATCH (n) RETURN n` returns *your* nodes and nothing else.
@@ -164,8 +166,8 @@ chains of edges, and find paths between nodes:
 - **Neighborhood expansion** - pull a node's edges and neighbors in a single
   query, in any direction:
   `MATCH (p:Person {name:$n})-[r]-(nbr) RETURN type(r) AS rel, nbr.name AS neighbor`.
-- **Path finding** - `shortestPath` and `allShortestPaths` return the actual
-  path - nodes and edges in traversal order, not just the two endpoints. See
+- **Path finding** - `shortestPath` returns the actual path - nodes and edges
+  in traversal order, not just the two endpoints. See
   [Relationships and paths](#relationships-and-paths).
 - **Directed, typed, filtered traversal** - restrict to outgoing (`->`),
   incoming (`<-`), or either (`-`) edges, filter by relationship type
@@ -195,9 +197,39 @@ A few dialect notes (each verified against the live service):
   accepted.
 - **`shortestPath`** goes in a `RETURN` or `WITH` clause (not `MATCH p = …`)
   and the traversal must be directed - see the paths example above.
-- **`allShortestPaths`** is the reverse: it goes in a `MATCH`, with both
-  endpoints resolved in a prior clause:
-  `MATCH (a:…), (b:…) WITH a, b MATCH p = allShortestPaths((a)-[*..6]->(b)) RETURN p`.
+
+### Traversal examples
+
+Expand a node's relationships, follow chains of edges, and find the shortest
+path between two nodes - all in plain Cypher:
+
+```cypher Expand a node's neighborhood
+-- Every relationship on Alice and the node on the other end, in any direction.
+MATCH (p:Person {name: $name})-[r]-(nbr)
+RETURN type(r) AS rel, labels(nbr) AS kind, nbr.name AS neighbor
+ORDER BY rel, neighbor
+```
+
+```cypher Multi-hop relationship expansion
+-- Friends-of-friends up to 3 hops away, following only outgoing KNOWS edges.
+MATCH (a:Person {name: $name})-[:KNOWS*1..3]->(reach:Person)
+WHERE reach.name <> $name
+RETURN DISTINCT reach.name AS name
+ORDER BY name
+```
+
+```cypher Shortest path between two nodes
+-- The actual path (nodes + edges in order), not just the endpoints.
+MATCH (a:Person {name: $from}), (b:Person {name: $to})
+RETURN shortestPath((a)-[:KNOWS*..8]->(b)) AS path
+```
+
+```cypher Filtered, typed traversal
+-- Who does Alice know that works at a company in "fintech"?
+MATCH (a:Person {name: $name})-[:KNOWS]->(f:Person)-[:WORKS_AT]->(c:Company)
+WHERE c.sector = "fintech"
+RETURN f.name AS person, c.name AS company
+```
 
 ## Response format
 
