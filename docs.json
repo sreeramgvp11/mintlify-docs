@@ -85,12 +85,6 @@
                 ]
               },
               {
-                "group": "Graph Collections",
-                "pages": [
-                  "essentials/v2/graph-collections-byog"
-                ]
-              },
-              {
                 "group": "Plugins",
                 "public": true,
                 "pages": [
