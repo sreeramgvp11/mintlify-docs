@@ -48,7 +48,7 @@ curl -G 'https://api.hydradb.com/context/status' \
 
 | Name | Description |
 | --- | --- |
-| <Field name="ids" type="string[]" required /> | One or more `id` values returned at ingestion. Accepts IDs for documents, app sources, or memories. |
+| <Field name="ids" type="string[]" required /> | One or more `id` values returned at ingestion. Accepts IDs for documents, app sources, or memories. Pass either repeated params (`ids=a&ids=b`) or a single comma-joined value (`ids=a,b`). Source IDs never contain commas (they are rejected at ingest), so the comma-joined form always splits unambiguously. |
 | <Field name="database" type="string" required /> | Database the items belong to. Formerly `tenant_id`; the `tenant_id` alias is still accepted (deprecated). |
 | <Field name="collection" type="string or null" /> | Collection scope. If omitted, the default collection is used. Formerly `sub_tenant_id`; the `sub_tenant_id` alias is still accepted (deprecated). (default=`null`) |
 
